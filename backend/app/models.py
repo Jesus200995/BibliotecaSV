@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer, String, Text, BigInteger, TIMESTAMP, ForeignKey, ARRAY
+from sqlalchemy import Column, Integer, String, Text, BigInteger, TIMESTAMP, ForeignKey
 from sqlalchemy.orm import relationship
 from .database import Base
+import json
+from typing import List, Optional
 
 class CatalogoArchivo(Base):
     __tablename__ = "catalogo_archivos"
@@ -11,7 +13,7 @@ class CatalogoArchivo(Base):
     tipo_archivo = Column(String(20))
     fecha_actualizacion = Column(TIMESTAMP)
     tamano_bytes = Column(BigInteger)
-    etiquetas = Column(ARRAY(Text))
+    etiquetas = Column(Text)  # Guardaremos como JSON string para compatibilidad con SQLite
     ruta_archivo = Column(Text, nullable=False)
     tema = Column(String(100))
     entidad = Column(String(100))
@@ -23,6 +25,16 @@ class CatalogoArchivo(Base):
     observaciones = Column(Text)
 
     campos = relationship("ArchivoCampo", back_populates="archivo", cascade="all, delete-orphan")
+    
+    @property
+    def etiquetas_list(self) -> Optional[List[str]]:
+        """Convierte las etiquetas JSON a lista"""
+        if not self.etiquetas:
+            return None
+        try:
+            return json.loads(self.etiquetas)
+        except (json.JSONDecodeError, TypeError):
+            return None
 
 class ArchivoCampo(Base):
     __tablename__ = "archivo_campos"

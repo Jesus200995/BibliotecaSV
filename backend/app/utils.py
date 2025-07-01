@@ -1,7 +1,8 @@
 import os
 import hashlib
+import json
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 def generar_nombre_archivo(filename: str) -> str:
     """Genera un nombre único para el archivo basado en timestamp y hash"""
@@ -49,3 +50,18 @@ def validar_campo_personalizado(nombre_campo: str, valor_campo: str, tipo_campo:
     
     # Para tipo "texto" o cualquier otro, siempre es válido
     return True
+
+def etiquetas_a_json(etiquetas: Optional[List[str]]) -> Optional[str]:
+    """Convierte una lista de etiquetas a string JSON"""
+    if not etiquetas:
+        return None
+    return json.dumps(etiquetas)
+
+def etiquetas_de_json(etiquetas_json: Optional[str]) -> Optional[List[str]]:
+    """Convierte un string JSON a lista de etiquetas"""
+    if not etiquetas_json:
+        return None
+    try:
+        return json.loads(etiquetas_json)
+    except (json.JSONDecodeError, TypeError):
+        return None

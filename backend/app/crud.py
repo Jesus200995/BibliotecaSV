@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List, Optional
-from . import models, schemas
+from . import models, schemas, utils
 
 # CRUD básico para CatalogoArchivo
 def get_archivos(db: Session, skip: int = 0, limit: int = 100):
@@ -41,13 +41,16 @@ def get_archivos_count(db: Session, search: Optional[str] = None):
     return query.scalar()
 
 def create_archivo(db: Session, archivo: schemas.CatalogoArchivoCreate):
+    # Convertir etiquetas a JSON string si están presentes
+    etiquetas_json = utils.etiquetas_a_json(archivo.etiquetas)
+    
     db_archivo = models.CatalogoArchivo(
         nombre_archivo=archivo.nombre_archivo,
         descripcion=archivo.descripcion,
         tipo_archivo=archivo.tipo_archivo,
         fecha_actualizacion=archivo.fecha_actualizacion,
         tamano_bytes=archivo.tamano_bytes,
-        etiquetas=archivo.etiquetas,
+        etiquetas=etiquetas_json,
         ruta_archivo=archivo.ruta_archivo,
         tema=archivo.tema,
         entidad=archivo.entidad,
@@ -63,22 +66,34 @@ def create_archivo(db: Session, archivo: schemas.CatalogoArchivoCreate):
     db.refresh(db_archivo)
     return db_archivo
 
-# CRUD para ArchivoCampo
-def get_campo_archivo(db: Session, campo_id: int):
-    return db.query(models.ArchivoCampo).filter(models.ArchivoCampo.id == campo_id).first()
-
-def create_campo_archivo(db: Session, campo: schemas.ArchivoCampoCreate, archivo_id: int):
-    db_campo = models.ArchivoCampo(
-        archivo_id=archivo_id,
-        nombre_campo=campo.nombre_campo,
-        tipo_campo=campo.tipo_campo,
-        descripcion=campo.descripcion,
-        orden=campo.orden
-    )
-    db.add(db_campo)
+def update_archivo(db: Session, archivo_id: int, archivo: schemas.CatalogoArchivoUpdate):
+    db_archivo = get_archivo(db, archivo_id)
+    if not db_archivo:
+        return None
+    
+    update_data = archivo.dict(exclude_unset=True)
+    
+    # Manejar etiquetas si están en los datos de actualización
+    if 'etiquetas' in update_data:
+        update_data['etiquetas'] = utils.etiquetas_a_json(update_data['etiquetas'])
+    
+    for field, value in update_data.items():
+        setattr(db_archivo, field, value)
+    
     db.commit()
-    db.refresh(db_campo)
-    return db_campo
+    db.refresh(db_archivo)
+    return db_archivo
+
+def delete_archivo(db: Session, archivo_id: int):
+    db_archivo = get_archivo(db, archivo_id)
+    if not db_archivo:
+        return None
+    
+    db.delete(db_archivo)
+    db.commit()
+    return db_archivo
+
+# CRUD para ArchivoCampo
 def get_campo_archivo(db: Session, campo_id: int):
     return db.query(models.ArchivoCampo).filter(models.ArchivoCampo.id == campo_id).first()
 

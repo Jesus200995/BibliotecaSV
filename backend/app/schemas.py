@@ -1,6 +1,7 @@
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
+import json
 
 class ArchivoCampoBase(BaseModel):
     nombre_campo: str
@@ -46,6 +47,16 @@ class CatalogoArchivoUpdate(CatalogoArchivoBase):
 class CatalogoArchivo(CatalogoArchivoBase):
     id: int
     campos: Optional[List[ArchivoCampo]] = []
+
+    @field_validator('etiquetas', mode='before')
+    @classmethod
+    def parse_etiquetas(cls, v):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError:
+                return None
+        return v
 
     class Config:
         from_attributes = True
