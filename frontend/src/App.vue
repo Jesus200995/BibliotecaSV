@@ -53,19 +53,11 @@
             </a>
           </li>
           <li class="menu-item">
-            <a href="#" class="menu-link" @click="setActiveMenu('estadisticas')">
+            <a href="#" class="menu-link" @click="setActiveMenu('subir')">
               <el-icon class="menu-icon" :size="20">
-                <DataAnalysis />
+                <Upload />
               </el-icon>
-              <span class="menu-text">Estadísticas</span>
-            </a>
-          </li>
-          <li class="menu-item">
-            <a href="#" class="menu-link" @click="setActiveMenu('configuracion')">
-              <el-icon class="menu-icon" :size="20">
-                <Setting />
-              </el-icon>
-              <span class="menu-text">Configuración</span>
+              <span class="menu-text">Subir Archivos</span>
             </a>
           </li>
         </ul>
@@ -98,17 +90,11 @@
       <!-- Contenido dinámico con animación -->
       <div class="content-wrapper animate__animated animate__fadeInUp">
         <FileList v-if="activeMenu === 'archivos'" />
-        <!-- Componentes futuros para otras secciones -->
-        <div v-else-if="activeMenu === 'estadisticas'" class="placeholder-content">
+        <!-- Componente futuro para subir archivos -->
+        <div v-else-if="activeMenu === 'subir'" class="placeholder-content">
           <el-card shadow="hover">
-            <h3>Estadísticas</h3>
-            <p>Panel de estadísticas en desarrollo...</p>
-          </el-card>
-        </div>
-        <div v-else-if="activeMenu === 'configuracion'" class="placeholder-content">
-          <el-card shadow="hover">
-            <h3>Configuración</h3>
-            <p>Panel de configuración en desarrollo...</p>
+            <h3>Subir Archivos</h3>
+            <p>Panel para subir archivos en desarrollo...</p>
           </el-card>
         </div>
       </div>
@@ -127,8 +113,7 @@ import FileList from './components/FileList.vue'
 import { 
   Document, 
   Folder, 
-  DataAnalysis, 
-  Setting, 
+  Upload, 
   User 
 } from '@element-plus/icons-vue'
 import 'animate.css'
@@ -174,8 +159,7 @@ const setActiveMenu = (menu) => {
 const getPageTitle = () => {
   const titles = {
     archivos: 'Catálogo de Archivos',
-    estadisticas: 'Estadísticas del Sistema',
-    configuracion: 'Configuración'
+    subir: 'Subir Archivos'
   }
   return titles[activeMenu.value] || 'BibliotecaSV'
 }
@@ -184,8 +168,7 @@ const getPageTitle = () => {
 const getPageDescription = () => {
   const descriptions = {
     archivos: 'Gestión centralizada de documentos y archivos institucionales',
-    estadisticas: 'Análisis y métricas del sistema de archivos',
-    configuracion: 'Configuración del sistema y preferencias'
+    subir: 'Carga y gestión de nuevos documentos al sistema'
   }
   return descriptions[activeMenu.value] || ''
 }
