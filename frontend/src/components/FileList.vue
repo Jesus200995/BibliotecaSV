@@ -212,6 +212,8 @@
       :close-on-click-modal="false"
       class="detail-dialog"
       align-center
+      append-to-body
+      :z-index="3000"
     >
       <template #header>
         <div class="dialog-header">
