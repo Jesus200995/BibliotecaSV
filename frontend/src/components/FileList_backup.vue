@@ -1,4 +1,5 @@
 <template>
+<template>
   <!-- Contenedor responsivo del catálogo de archivos -->
   <div class="file-list-container">
     <!-- Header con estadísticas responsivas -->
@@ -203,6 +204,34 @@
         </el-table>
       </div>
     </el-card>
+            <span class="size-text">{{ formatFileSize(scope.row.tamano_bytes) }}</span>
+          </template>
+        </el-table-column>
+
+          <!-- Columna Acciones - Siempre fija a la derecha -->
+          <el-table-column 
+            label="Acciones" 
+            width="80" 
+            align="center" 
+            fixed="right"
+            class-name="actions-column"
+          >
+            <template #default="scope">
+              <el-tooltip content="Ver detalles" placement="top">
+                <el-button 
+                  type="primary" 
+                  :icon="View" 
+                  size="small" 
+                  circle 
+                  @click.stop="verDetalle(scope.row)"
+                  class="action-btn"
+                />
+              </el-tooltip>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </el-card>
 
     <!-- Modal moderno para detalles del archivo -->
     <el-dialog 
@@ -291,7 +320,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import 'element-plus/dist/index.css'
 import 'animate.css'
@@ -413,6 +442,35 @@ const getFileTypeColor = (tipo) => {
 onMounted(() => {
   fetchArchivos()
 })
+</script>
+  return date.toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+// Función para obtener el color del tipo de archivo
+const getFileTypeColor = (tipo) => {
+  const colors = {
+    'pdf': 'danger',
+    'doc': 'primary',
+    'docx': 'primary',
+    'xls': 'success',
+    'xlsx': 'success',
+    'txt': 'info',
+    'jpg': 'warning',
+    'jpeg': 'warning',
+    'png': 'warning',
+    'gif': 'warning'
+  }
+  return colors[tipo?.toLowerCase()] || 'info'
+}
+
+// Cargar datos al montar el componente
+onMounted(fetchArchivos)
 </script>
 
 <style scoped>
@@ -811,9 +869,9 @@ onMounted(() => {
   }
   
   /* Ocultar columnas menos importantes en móvil */
-  .responsive-table :deep(.id-column),
-  .responsive-table :deep(.description-column),
-  .responsive-table :deep(.type-column) {
+  .responsive-table .id-column,
+  .responsive-table .description-column,
+  .responsive-table .type-column {
     display: none;
   }
   
@@ -823,21 +881,21 @@ onMounted(() => {
   }
   
   /* Ajustar anchos de columnas en móvil */
-  .responsive-table :deep(.file-name-column) {
+  .responsive-table .file-name-column {
     min-width: 180px;
   }
   
-  .responsive-table :deep(.date-column) {
+  .responsive-table .date-column {
     width: 120px;
     min-width: 120px;
   }
   
-  .responsive-table :deep(.size-column) {
+  .responsive-table .size-column {
     width: 80px;
     min-width: 80px;
   }
   
-  .responsive-table :deep(.actions-column) {
+  .responsive-table .actions-column {
     width: 60px;
     min-width: 60px;
   }
@@ -913,16 +971,16 @@ onMounted(() => {
   }
   
   /* Tabla aún más compacta */
-  .responsive-table :deep(.file-name-column) {
+  .responsive-table .file-name-column {
     min-width: 140px;
   }
   
-  .responsive-table :deep(.date-column) {
+  .responsive-table .date-column {
     width: 100px;
     min-width: 100px;
   }
   
-  .responsive-table :deep(.size-column) {
+  .responsive-table .size-column {
     width: 70px;
     min-width: 70px;
   }
@@ -979,3 +1037,4 @@ onMounted(() => {
   outline-offset: 2px;
 }
 </style>
+
