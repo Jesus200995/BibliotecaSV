@@ -1,15 +1,6 @@
 <template>
   <!-- Layout principal con sidebar fijo y contenido responsivo -->
-  <div id="app" class="import { ref, onMounted, onUnmounted } from 'vue'
-import FileList from './components/FileList.vue'
-import UploadFiles from './components/UploadFilesModern.vue'
-import { 
-  Document, 
-  Folder, 
-  Upload, 
-  User 
-} from '@element-plus/icons-vue'
-import 'animate.css'">
+  <div id="app" class="app-layout">
     <!-- Botón hamburguesa para móvil/tablet -->
     <button 
       class="hamburger-btn" 
@@ -99,7 +90,13 @@ import 'animate.css'">
       <!-- Contenido dinámico con animación -->
       <div class="content-wrapper animate__animated animate__fadeInUp">
         <FileList v-if="activeMenu === 'archivos'" />
-        <UploadFilesNew v-else-if="activeMenu === 'subir'" />
+        <!-- Componente futuro para subir archivos -->
+        <div v-else-if="activeMenu === 'subir'" class="placeholder-content">
+          <el-card shadow="hover">
+            <h3>Subir Archivos</h3>
+            <p>Panel para subir archivos en desarrollo...</p>
+          </el-card>
+        </div>
       </div>
     </main>
 
@@ -113,7 +110,6 @@ import 'animate.css'">
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import FileList from './components/FileList.vue'
-import UploadFilesNew from './components/UploadFilesNew.vue'
 import { 
   Document, 
   Folder, 
