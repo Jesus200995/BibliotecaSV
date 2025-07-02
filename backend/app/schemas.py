@@ -1,31 +1,27 @@
+from pydantic import BaseModel
 from typing import List, Optional
-from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
-import json
 
 class ArchivoCampoBase(BaseModel):
     nombre_campo: str
-    tipo_campo: Optional[str] = None
+    tipo_campo: str
     descripcion: Optional[str] = None
-    orden: Optional[int] = None
+    orden: int
 
 class ArchivoCampoCreate(ArchivoCampoBase):
-    pass
-
-class ArchivoCampoUpdate(ArchivoCampoBase):
-    pass
+    archivo_id: int
 
 class ArchivoCampo(ArchivoCampoBase):
     id: int
-
+    archivo_id: int
+    
     class Config:
         from_attributes = True
 
 class CatalogoArchivoBase(BaseModel):
     nombre_archivo: str
     descripcion: Optional[str] = None
-    tipo_archivo: Optional[str] = None
-    fecha_actualizacion: Optional[datetime] = None
+    tipo_archivo: str
     tamano_bytes: Optional[int] = None
     etiquetas: Optional[List[str]] = None
     ruta_archivo: str
@@ -41,29 +37,10 @@ class CatalogoArchivoBase(BaseModel):
 class CatalogoArchivoCreate(CatalogoArchivoBase):
     pass
 
-class CatalogoArchivoUpdate(CatalogoArchivoBase):
-    pass
-
 class CatalogoArchivo(CatalogoArchivoBase):
     id: int
-    campos: Optional[List[ArchivoCampo]] = []
-
-    @field_validator('etiquetas', mode='before')
-    @classmethod
-    def parse_etiquetas(cls, v):
-        if isinstance(v, str):
-            try:
-                return json.loads(v)
-            except json.JSONDecodeError:
-                return None
-        return v
-
+    fecha_actualizacion: Optional[datetime] = None
+    campos: List[ArchivoCampo] = []
+    
     class Config:
         from_attributes = True
-
-# Esquemas para respuestas
-class ArchivoList(BaseModel):
-    archivos: List[CatalogoArchivo]
-    total: int
-    pagina: int
-    por_pagina: int

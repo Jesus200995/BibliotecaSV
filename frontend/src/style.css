@@ -1,307 +1,72 @@
-/* Importar fuentes de Google para una apariencia más profesional */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
-/* Variables CSS personalizadas para el tema */
 :root {
-  /* Tipografía moderna */
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  line-height: 1.6;
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
   font-weight: 400;
 
-  /* Paleta de colores verde institucional moderna */
-  --primary-color: #3dbd6a;
-  --primary-light: #6bd18a;
-  --primary-dark: #2d8f5a;
-  --primary-darker: #245946;
-  --secondary-color: #52c41a;
-  --accent-color: #a7e6c1;
-  --error-color: #dc2626;
-  --warning-color: #d97706;
-  --success-color: #52c41a;
-  --info-color: #0ea5e9;
-  
-  /* Grises neutros */
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-400: #9ca3af;
-  --gray-500: #6b7280;
-  --gray-600: #4b5563;
-  --gray-700: #374151;
-  --gray-800: #1f2937;
-  --gray-900: #111827;
+  color-scheme: light dark;
+  color: #213547;
+  background-color: #f8fafc;
 
-  /* Configuración de texto */
-  color-scheme: light;
-  color: var(--gray-700);
-  background-color: #ffffff;
-
-  /* Configuración de renderizado de fuentes */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  
-  /* Sombras modernas con tinte verde sutil */
-  --shadow-sm: 0 1px 2px 0 rgba(61, 189, 106, 0.08);
-  --shadow-md: 0 4px 6px -1px rgba(61, 189, 106, 0.15), 0 2px 4px -1px rgba(61, 189, 106, 0.08);
-  --shadow-lg: 0 10px 15px -3px rgba(61, 189, 106, 0.15), 0 4px 6px -2px rgba(61, 189, 106, 0.08);
-  --shadow-xl: 0 20px 25px -5px rgba(61, 189, 106, 0.15), 0 10px 10px -5px rgba(61, 189, 106, 0.06);
-  
-  /* Bordes redondeados */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
 }
 
-/* Reset básico y configuración global */
 * {
   box-sizing: border-box;
 }
 
-html {
-  scroll-behavior: smooth;
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
 }
 
 body {
   margin: 0;
-  padding: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  overflow-x: hidden;
-}
-
-/* Configuración del contenedor principal */
-#app {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  width: 100%;
-}
-
-/* Tipografía mejorada */
-h1, h2, h3, h4, h5, h6 {
-  font-weight: 600;
-  line-height: 1.25;
-  margin: 0;
-  color: var(--gray-800);
+  background-color: #f8fafc;
 }
 
 h1 {
-  font-size: 2.5rem;
-  font-weight: 700;
+  font-size: 3.2em;
+  line-height: 1.1;
 }
 
-h2 {
-  font-size: 2rem;
-  font-weight: 600;
-}
-
-h3 {
-  font-size: 1.5rem;
-}
-
-p {
-  line-height: 1.6;
-  margin: 0 0 1rem 0;
-}
-
-/* Enlaces modernos */
-a {
-  font-weight: 500;
-  color: var(--primary-color);
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-a:hover {
-  color: var(--primary-light);
-  text-decoration: underline;
-}
-
-/* Botones base mejorados */
 button {
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   border: 1px solid transparent;
-  padding: 0.75rem 1.5rem;
-  font-size: 0.9rem;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: var(--primary-color);
-  color: white;
+  background-color: #1a1a1a;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: var(--shadow-sm);
+  transition: border-color 0.25s;
 }
-
 button:hover {
-  background-color: var(--primary-light);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
 }
 
-button:active {
-  transform: translateY(0);
-  box-shadow: var(--shadow-sm);
+.card {
+  padding: 2em;
 }
 
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Utilidades para scroll personalizado */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--gray-100);
-  border-radius: var(--radius-md);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--gray-300);
-  border-radius: var(--radius-md);
-  transition: background 0.3s ease;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--gray-400);
-}
-
-/* Clases de utilidad para animaciones */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-.slide-up-enter-active,
-.slide-up-leave-active {
-  transition: all 0.3s ease;
-}
-
-.slide-up-enter-from {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-.slide-up-leave-to {
-  opacity: 0;
-  transform: translateY(-20px);
-}
-
-/* Clases de utilidad responsivas */
-.container {
-  width: 100%;
-  max-width: 1200px;
+#app {
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 0 1rem;
-}
-
-@media (min-width: 640px) {
-  .container {
-    padding: 0 2rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .container {
-    padding: 0 3rem;
-  }
-}
-
-/* Mejoras específicas para Element Plus */
-.el-card {
-  border-radius: var(--radius-xl) !important;
-  border: 1px solid var(--gray-200) !important;
-  box-shadow: var(--shadow-lg) !important;
-}
-
-.el-button {
-  border-radius: var(--radius-md) !important;
-  font-weight: 500 !important;
-  transition: all 0.3s ease !important;
-}
-
-.el-button:hover {
-  transform: translateY(-1px) !important;
-}
-
-.el-table {
-  border-radius: var(--radius-lg) !important;
-}
-
-.el-dialog {
-  border-radius: var(--radius-xl) !important;
-}
-
-/* Animaciones suaves para carga */
-@keyframes shimmer {
-  0% {
-    background-position: -468px 0;
-  }
-  100% {
-    background-position: 468px 0;
-  }
-}
-
-.shimmer {
-  background: linear-gradient(90deg, #f0f0f0 25%, rgba(255, 255, 255, 0.5) 50%, #f0f0f0 75%);
-  background-size: 400% 100%;
-  animation: shimmer 1.2s ease-in-out infinite;
-}
-
-/* Responsive helpers */
-.mobile-hidden {
-  display: block;
-}
-
-.desktop-hidden {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .mobile-hidden {
-    display: none;
-  }
-  
-  .desktop-hidden {
-    display: block;
-  }
-  
-  h1 {
-    font-size: 2rem;
-  }
-  
-  h2 {
-    font-size: 1.75rem;
-  }
-  
-  button {
-    padding: 0.6rem 1.2rem;
-    font-size: 0.85rem;
-  }
-}
-
-/* Focus states para accesibilidad */
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
+  padding: 2rem;
+  text-align: center;
+  min-height: 100vh;
 }
 
 @media (prefers-color-scheme: light) {
@@ -314,5 +79,16 @@ textarea:focus-visible {
   }
   button {
     background-color: #f9f9f9;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #ffffff;
+    background-color: #0f172a;
+  }
+  
+  body {
+    background-color: #0f172a;
   }
 }

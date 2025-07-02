@@ -1,136 +1,63 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from . import models, schemas
 from typing import List, Optional
-from . import models, schemas, utils
 
-# CRUD básico para CatalogoArchivo
-def get_archivos(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.CatalogoArchivo).offset(skip).limit(limit).all()
-
+# CRUD para CatalogoArchivo
 def get_archivo(db: Session, archivo_id: int):
     return db.query(models.CatalogoArchivo).filter(models.CatalogoArchivo.id == archivo_id).first()
 
-def get_campos_por_archivo(db: Session, archivo_id: int):
-    return db.query(models.ArchivoCampo).filter(models.ArchivoCampo.archivo_id == archivo_id).order_by(models.ArchivoCampo.orden).all()
-
-# CRUD extendido con búsqueda
-def get_archivos_with_search(db: Session, skip: int = 0, limit: int = 100, search: Optional[str] = None):
-    query = db.query(models.CatalogoArchivo)
-    
-    if search:
-        query = query.filter(
-            models.CatalogoArchivo.nombre_archivo.ilike(f"%{search}%") |
-            models.CatalogoArchivo.descripcion.ilike(f"%{search}%") |
-            models.CatalogoArchivo.tema.ilike(f"%{search}%") |
-            models.CatalogoArchivo.entidad.ilike(f"%{search}%")
-        )
-    
-    return query.offset(skip).limit(limit).all()
-
-def get_archivos_count(db: Session, search: Optional[str] = None):
-    query = db.query(func.count(models.CatalogoArchivo.id))
-    
-    if search:
-        query = query.filter(
-            models.CatalogoArchivo.nombre_archivo.ilike(f"%{search}%") |
-            models.CatalogoArchivo.descripcion.ilike(f"%{search}%") |
-            models.CatalogoArchivo.tema.ilike(f"%{search}%") |
-            models.CatalogoArchivo.entidad.ilike(f"%{search}%")
-        )
-    
-    return query.scalar()
+def get_archivos(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.CatalogoArchivo).offset(skip).limit(limit).all()
 
 def create_archivo(db: Session, archivo: schemas.CatalogoArchivoCreate):
-    # Convertir etiquetas a JSON string si están presentes
-    etiquetas_json = utils.etiquetas_a_json(archivo.etiquetas)
-    
-    db_archivo = models.CatalogoArchivo(
-        nombre_archivo=archivo.nombre_archivo,
-        descripcion=archivo.descripcion,
-        tipo_archivo=archivo.tipo_archivo,
-        fecha_actualizacion=archivo.fecha_actualizacion,
-        tamano_bytes=archivo.tamano_bytes,
-        etiquetas=etiquetas_json,
-        ruta_archivo=archivo.ruta_archivo,
-        tema=archivo.tema,
-        entidad=archivo.entidad,
-        municipio=archivo.municipio,
-        territorio=archivo.territorio,
-        responsable=archivo.responsable,
-        fuente=archivo.fuente,
-        nivel_validacion=archivo.nivel_validacion,
-        observaciones=archivo.observaciones
-    )
+    db_archivo = models.CatalogoArchivo(**archivo.model_dump())
     db.add(db_archivo)
     db.commit()
     db.refresh(db_archivo)
     return db_archivo
 
-def update_archivo(db: Session, archivo_id: int, archivo: schemas.CatalogoArchivoUpdate):
-    db_archivo = get_archivo(db, archivo_id)
-    if not db_archivo:
-        return None
-    
-    update_data = archivo.dict(exclude_unset=True)
-    
-    # Manejar etiquetas si están en los datos de actualización
-    if 'etiquetas' in update_data:
-        update_data['etiquetas'] = utils.etiquetas_a_json(update_data['etiquetas'])
-    
-    for field, value in update_data.items():
-        setattr(db_archivo, field, value)
-    
-    db.commit()
-    db.refresh(db_archivo)
+def update_archivo(db: Session, archivo_id: int, archivo: schemas.CatalogoArchivoCreate):
+    db_archivo = db.query(models.CatalogoArchivo).filter(models.CatalogoArchivo.id == archivo_id).first()
+    if db_archivo:
+        for key, value in archivo.model_dump().items():
+            setattr(db_archivo, key, value)
+        db.commit()
+        db.refresh(db_archivo)
     return db_archivo
 
 def delete_archivo(db: Session, archivo_id: int):
-    db_archivo = get_archivo(db, archivo_id)
-    if not db_archivo:
-        return None
-    
-    db.delete(db_archivo)
-    db.commit()
+    db_archivo = db.query(models.CatalogoArchivo).filter(models.CatalogoArchivo.id == archivo_id).first()
+    if db_archivo:
+        db.delete(db_archivo)
+        db.commit()
     return db_archivo
 
 # CRUD para ArchivoCampo
-def get_campo_archivo(db: Session, campo_id: int):
+def get_campo(db: Session, campo_id: int):
     return db.query(models.ArchivoCampo).filter(models.ArchivoCampo.id == campo_id).first()
 
-def get_campos_archivo(db: Session, archivo_id: int):
+def get_campos_by_archivo(db: Session, archivo_id: int):
     return db.query(models.ArchivoCampo).filter(models.ArchivoCampo.archivo_id == archivo_id).all()
 
-def create_campo_archivo(db: Session, campo: schemas.ArchivoCampoCreate, archivo_id: int):
-    db_campo = models.ArchivoCampo(
-        archivo_id=archivo_id,
-        nombre_campo=campo.nombre_campo,
-        tipo_campo=campo.tipo_campo,
-        descripcion=campo.descripcion,
-        orden=campo.orden
-    )
+def create_campo(db: Session, campo: schemas.ArchivoCampoCreate):
+    db_campo = models.ArchivoCampo(**campo.model_dump())
     db.add(db_campo)
     db.commit()
     db.refresh(db_campo)
     return db_campo
 
-def update_campo_archivo(db: Session, campo_id: int, campo: schemas.ArchivoCampoCreate):
-    db_campo = get_campo_archivo(db, campo_id)
-    if not db_campo:
-        return None
-    
-    update_data = campo.dict(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(db_campo, field, value)
-    
-    db.commit()
-    db.refresh(db_campo)
+def update_campo(db: Session, campo_id: int, campo: schemas.ArchivoCampoCreate):
+    db_campo = db.query(models.ArchivoCampo).filter(models.ArchivoCampo.id == campo_id).first()
+    if db_campo:
+        for key, value in campo.model_dump().items():
+            setattr(db_campo, key, value)
+        db.commit()
+        db.refresh(db_campo)
     return db_campo
 
-def delete_campo_archivo(db: Session, campo_id: int):
-    db_campo = get_campo_archivo(db, campo_id)
-    if not db_campo:
-        return None
-    
-    db.delete(db_campo)
-    db.commit()
+def delete_campo(db: Session, campo_id: int):
+    db_campo = db.query(models.ArchivoCampo).filter(models.ArchivoCampo.id == campo_id).first()
+    if db_campo:
+        db.delete(db_campo)
+        db.commit()
     return db_campo
