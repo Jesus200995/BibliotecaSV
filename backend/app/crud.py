@@ -41,16 +41,14 @@ def get_archivos_count(db: Session, search: Optional[str] = None):
     return query.scalar()
 
 def create_archivo(db: Session, archivo: schemas.CatalogoArchivoCreate):
-    # Convertir etiquetas a JSON string si están presentes
-    etiquetas_json = utils.etiquetas_a_json(archivo.etiquetas)
-    
+    # Para PostgreSQL, las etiquetas se manejan directamente como array
     db_archivo = models.CatalogoArchivo(
         nombre_archivo=archivo.nombre_archivo,
         descripcion=archivo.descripcion,
         tipo_archivo=archivo.tipo_archivo,
         fecha_actualizacion=archivo.fecha_actualizacion,
         tamano_bytes=archivo.tamano_bytes,
-        etiquetas=etiquetas_json,
+        etiquetas=archivo.etiquetas,  # Directamente como array en PostgreSQL
         ruta_archivo=archivo.ruta_archivo,
         tema=archivo.tema,
         entidad=archivo.entidad,
@@ -73,10 +71,7 @@ def update_archivo(db: Session, archivo_id: int, archivo: schemas.CatalogoArchiv
     
     update_data = archivo.dict(exclude_unset=True)
     
-    # Manejar etiquetas si están en los datos de actualización
-    if 'etiquetas' in update_data:
-        update_data['etiquetas'] = utils.etiquetas_a_json(update_data['etiquetas'])
-    
+    # En PostgreSQL, las etiquetas se manejan directamente como array
     for field, value in update_data.items():
         setattr(db_archivo, field, value)
     
