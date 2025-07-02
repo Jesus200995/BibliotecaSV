@@ -1,0 +1,93 @@
+from fastapi import APIRouter, HTTPException, Query, Depends
+from typing import Optional, Dict, List
+from datetime import datetime
+from app.schemas import (
+    ArchivoResponse, ArchivoConCampos, FiltrosArchivo, 
+    EstadisticasResponse, ArchivoCreate, Archivo
+)
+from app.services import ArchivoService
+
+router = APIRouter(prefix="/api/archivos", tags=["archivos"])
+
+@router.get("/", response_model=ArchivoResponse)
+async def listar_archivos(
+    busqueda: Optional[str] = Query(None, description="Búsqueda por nombre, descripción o tema"),
+    tipo_archivo: Optional[str] = Query(None, description="Filtrar por tipo de archivo"),
+    tema: Optional[str] = Query(None, description="Filtrar por tema"),
+    entidad: Optional[str] = Query(None, description="Filtrar por entidad"),
+    municipio: Optional[str] = Query(None, description="Filtrar por municipio"),
+    territorio: Optional[str] = Query(None, description="Filtrar por territorio"),
+    responsable: Optional[str] = Query(None, description="Filtrar por responsable"),
+    nivel_validacion: Optional[str] = Query(None, description="Filtrar por nivel de validación"),
+    fecha_desde: Optional[datetime] = Query(None, description="Fecha desde (YYYY-MM-DD)"),
+    fecha_hasta: Optional[datetime] = Query(None, description="Fecha hasta (YYYY-MM-DD)"),
+    pagina: int = Query(1, ge=1, description="Número de página"),
+    por_pagina: int = Query(20, ge=1, le=100, description="Archivos por página")
+):
+    """
+    Listar archivos con filtros y paginación
+    """
+    try:
+        filtros = FiltrosArchivo(
+            busqueda=busqueda,
+            tipo_archivo=tipo_archivo,
+            tema=tema,
+            entidad=entidad,
+            municipio=municipio,
+            territorio=territorio,
+            responsable=responsable,
+            nivel_validacion=nivel_validacion,
+            fecha_desde=fecha_desde,
+            fecha_hasta=fecha_hasta,
+            pagina=pagina,
+            por_pagina=por_pagina
+        )
+        
+        return await ArchivoService.listar_archivos(filtros)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al listar archivos: {str(e)}")
+
+@router.get("/{archivo_id}", response_model=ArchivoConCampos)
+async def obtener_archivo(archivo_id: int):
+    """
+    Obtener detalles de un archivo específico con sus campos
+    """
+    try:
+        archivo = await ArchivoService.obtener_archivo_por_id(archivo_id)
+        if not archivo:
+            raise HTTPException(status_code=404, detail="Archivo no encontrado")
+        return archivo
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener archivo: {str(e)}")
+
+@router.post("/", response_model=Archivo)
+async def crear_archivo(archivo: ArchivoCreate):
+    """
+    Crear un nuevo archivo en el catálogo
+    """
+    try:
+        return await ArchivoService.crear_archivo(archivo)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al crear archivo: {str(e)}")
+
+@router.get("/estadisticas/resumen", response_model=EstadisticasResponse)
+async def obtener_estadisticas():
+    """
+    Obtener estadísticas generales del catálogo
+    """
+    try:
+        return await ArchivoService.obtener_estadisticas()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener estadísticas: {str(e)}")
+
+@router.get("/filtros/valores")
+async def obtener_valores_filtros() -> Dict[str, List[str]]:
+    """
+    Obtener valores únicos para los filtros
+    """
+    try:
+        return await ArchivoService.obtener_valores_filtros()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener valores de filtros: {str(e)}")

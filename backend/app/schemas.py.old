@@ -1,0 +1,92 @@
+from typing import List, Optional, Dict, Any
+from datetime import datetime
+from pydantic import BaseModel, Field
+
+class ArchivoBase(BaseModel):
+    nombre_archivo: str = Field(..., description="Nombre del archivo")
+    descripcion: Optional[str] = Field(None, description="Descripción del archivo")
+    tipo_archivo: Optional[str] = Field(None, description="Tipo de archivo (CSV, SHP, XLSX, etc.)")
+    tamano_bytes: Optional[int] = Field(None, description="Tamaño en bytes")
+    etiquetas: Optional[List[str]] = Field(default_factory=list, description="Lista de etiquetas")
+    ruta_archivo: str = Field(..., description="Ruta del archivo")
+    tema: Optional[str] = Field(None, description="Tema del archivo")
+    entidad: Optional[str] = Field(None, description="Entidad")
+    municipio: Optional[str] = Field(None, description="Municipio")
+    territorio: Optional[str] = Field(None, description="Territorio")
+    responsable: Optional[str] = Field(None, description="Responsable")
+    fuente: Optional[str] = Field(None, description="Fuente")
+    nivel_validacion: Optional[str] = Field(None, description="Nivel de validación")
+    observaciones: Optional[str] = Field(None, description="Observaciones")
+
+class ArchivoCreate(ArchivoBase):
+    pass
+
+class ArchivoUpdate(BaseModel):
+    nombre_archivo: Optional[str] = None
+    descripcion: Optional[str] = None
+    tipo_archivo: Optional[str] = None
+    tamano_bytes: Optional[int] = None
+    etiquetas: Optional[List[str]] = None
+    ruta_archivo: Optional[str] = None
+    tema: Optional[str] = None
+    entidad: Optional[str] = None
+    municipio: Optional[str] = None
+    territorio: Optional[str] = None
+    responsable: Optional[str] = None
+    fuente: Optional[str] = None
+    nivel_validacion: Optional[str] = None
+    observaciones: Optional[str] = None
+
+class Archivo(ArchivoBase):
+    id: int
+    fecha_actualizacion: datetime
+    
+    class Config:
+        from_attributes = True
+
+class CampoBase(BaseModel):
+    nombre_campo: str = Field(..., description="Nombre del campo")
+    tipo_campo: Optional[str] = Field(None, description="Tipo del campo")
+    descripcion: Optional[str] = Field(None, description="Descripción del campo")
+    orden: Optional[int] = Field(None, description="Orden del campo")
+
+class CampoCreate(CampoBase):
+    archivo_id: int
+
+class Campo(CampoBase):
+    id: int
+    archivo_id: int
+    
+    class Config:
+        from_attributes = True
+
+class ArchivoConCampos(Archivo):
+    campos: List[Campo] = []
+
+class ArchivoResponse(BaseModel):
+    archivos: List[Archivo]
+    total: int
+    pagina: int
+    por_pagina: int
+    total_paginas: int
+
+class FiltrosArchivo(BaseModel):
+    busqueda: Optional[str] = None
+    tipo_archivo: Optional[str] = None
+    tema: Optional[str] = None
+    entidad: Optional[str] = None
+    municipio: Optional[str] = None
+    territorio: Optional[str] = None
+    responsable: Optional[str] = None
+    nivel_validacion: Optional[str] = None
+    fecha_desde: Optional[datetime] = None
+    fecha_hasta: Optional[datetime] = None
+    pagina: int = 1
+    por_pagina: int = 20
+
+class EstadisticasResponse(BaseModel):
+    total_archivos: int
+    archivos_por_tipo: Dict[str, int]
+    archivos_por_tema: Dict[str, int]
+    archivos_por_entidad: Dict[str, int]
+    tamano_total_mb: float

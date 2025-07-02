@@ -1,0 +1,39 @@
+import asyncpg
+from typing import Optional
+from app.config import settings
+
+class DatabaseManager:
+    def __init__(self):
+        self.pool: Optional[asyncpg.Pool] = None
+    
+    async def create_pool(self):
+        """Crear pool de conexiones a PostgreSQL"""
+        try:
+            self.pool = await asyncpg.create_pool(
+                host=settings.database_host,
+                port=settings.database_port,
+                user=settings.database_user,
+                password=settings.database_password,
+                database=settings.database_name,
+                min_size=1,
+                max_size=10
+            )
+            print("✅ Conexión a PostgreSQL establecida")
+        except Exception as e:
+            print(f"❌ Error conectando a PostgreSQL: {e}")
+            raise
+    
+    async def close_pool(self):
+        """Cerrar pool de conexiones"""
+        if self.pool:
+            await self.pool.close()
+            print("🔌 Conexiones a PostgreSQL cerradas")
+    
+    async def get_connection(self):
+        """Obtener conexión del pool"""
+        if not self.pool:
+            await self.create_pool()
+        return self.pool.acquire()
+
+# Instancia global del manejador de base de datos
+db_manager = DatabaseManager()
