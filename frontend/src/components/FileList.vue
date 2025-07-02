@@ -1,193 +1,110 @@
 <template>
-  <!-- Contenedor responsivo del catálogo de archivos -->
+  <!-- Contenedor principal con tarjeta moderna -->
   <div class="file-list-container">
-    <!-- Header con estadísticas responsivas -->
+    <!-- Header de la sección con estadísticas -->
     <div class="section-header animate__animated animate__fadeInDown">
-      <div class="stats-grid">
+      <div class="header-info">
+        <h2 class="section-title">
+          <el-icon class="title-icon" :size="24">
+            <Folder />
+          </el-icon>
+          Catálogo de Archivos
+        </h2>
+        <p class="section-description">
+          Gestión centralizada de documentos y archivos institucionales
+        </p>
+      </div>
+      <div class="stats-container">
         <el-card class="stat-card" shadow="hover">
           <div class="stat-content">
-            <el-icon class="stat-icon" :size="28">
+            <el-icon class="stat-icon" :size="20">
               <Document />
             </el-icon>
-            <div class="stat-info">
+            <div>
               <div class="stat-number">{{ archivos.length }}</div>
-              <div class="stat-label">Total Archivos</div>
-            </div>
-          </div>
-        </el-card>
-        
-        <el-card class="stat-card" shadow="hover">
-          <div class="stat-content">
-            <el-icon class="stat-icon" :size="28">
-              <Folder />
-            </el-icon>
-            <div class="stat-info">
-              <div class="stat-number">{{ getUniqueTypes() }}</div>
-              <div class="stat-label">Tipos de Archivo</div>
-            </div>
-          </div>
-        </el-card>
-        
-        <el-card class="stat-card" shadow="hover">
-          <div class="stat-content">
-            <el-icon class="stat-icon" :size="28">
-              <Monitor />
-            </el-icon>
-            <div class="stat-info">
-              <div class="stat-number">{{ getTotalSize() }}</div>
-              <div class="stat-label">Tamaño Total</div>
+              <div class="stat-label">Archivos</div>
             </div>
           </div>
         </el-card>
       </div>
     </div>
 
-    <!-- Tabla moderna con scroll horizontal responsivo -->
+    <!-- Tabla moderna con animaciones y diseño responsivo -->
     <el-card class="table-card animate__animated animate__fadeInUp" shadow="hover">
       <template #header>
         <div class="card-header">
-          <div class="card-title-section">
-            <h3 class="card-title">
-              <el-icon :size="20">
-                <List />
-              </el-icon>
-              Lista de Documentos
-            </h3>
-            <p class="card-subtitle">{{ archivos.length }} archivos encontrados</p>
-          </div>
-          <div class="card-actions">
-            <el-button 
-              type="primary" 
-              :icon="Refresh" 
-              circle 
-              @click="fetchArchivos" 
-              :loading="loading" 
-              class="refresh-btn"
-              size="default"
-            />
-          </div>
+          <span class="card-title">Lista de Documentos</span>
+          <el-button type="primary" :icon="Refresh" circle @click="fetchArchivos" 
+                     :loading="loading" class="refresh-btn" />
         </div>
       </template>
 
-      <!-- Contenedor de tabla con scroll horizontal SOLO en la tabla -->
-      <div class="table-container">
-        <el-table 
-          :data="archivos" 
-          v-loading="loading" 
-          class="responsive-table"
-          :default-sort="{prop: 'fecha_actualizacion', order: 'descending'}"
-          @row-click="handleRowClick"
-          stripe
-          empty-text="No hay archivos disponibles"
-          :row-class-name="getRowClassName"
-        >
-          <!-- Columna ID - Oculta en móvil pequeño -->
-          <el-table-column 
-            prop="id" 
-            label="ID" 
-            width="80" 
-            align="center"
-            class-name="id-column"
-          >
-            <template #default="scope">
-              <el-tag type="info" size="small" class="id-tag">
-                #{{ scope.row.id }}
-              </el-tag>
-            </template>
-          </el-table-column>
+      <!-- Tabla responsiva con hover effects -->
+      <el-table 
+        :data="archivos" 
+        v-loading="loading" 
+        style="width: 100%"
+        class="modern-table"
+        :default-sort="{prop: 'fecha_actualizacion', order: 'descending'}"
+        @row-click="handleRowClick"
+        stripe
+        empty-text="No hay archivos disponibles"
+      >
+        <el-table-column prop="id" label="ID" width="70" align="center">
+          <template #default="scope">
+            <el-tag type="info" size="small" class="id-tag">
+              #{{ scope.row.id }}
+            </el-tag>
+          </template>
+        </el-table-column>
 
-          <!-- Columna Nombre - Siempre visible, ancho mínimo -->
-          <el-table-column 
-            prop="nombre_archivo" 
-            label="Archivo" 
-            min-width="200"
-            class-name="file-name-column"
-          >
-            <template #default="scope">
-              <div class="file-name-cell">
-                <el-icon class="file-icon" :size="18">
-                  <Document />
-                </el-icon>
-                <div class="file-info">
-                  <span class="file-name">{{ scope.row.nombre_archivo }}</span>
-                  <!-- Mostrar tipo en móvil como subtítulo -->
-                  <span class="file-type-mobile">{{ scope.row.tipo_archivo }}</span>
-                </div>
-              </div>
-            </template>
-          </el-table-column>
+        <el-table-column prop="nombre_archivo" label="Nombre del Archivo" min-width="200">
+          <template #default="scope">
+            <div class="file-name-cell">
+              <el-icon class="file-icon" :size="18">
+                <Document />
+              </el-icon>
+              <span class="file-name">{{ scope.row.nombre_archivo }}</span>
+            </div>
+          </template>
+        </el-table-column>
 
-          <!-- Columna Descripción - Oculta en móvil -->
-          <el-table-column 
-            prop="descripcion" 
-            label="Descripción" 
-            min-width="250" 
-            show-overflow-tooltip
-            class-name="description-column"
-          >
-            <template #default="scope">
-              <span class="description-text">
-                {{ scope.row.descripcion || 'Sin descripción' }}
-              </span>
-            </template>
-          </el-table-column>
+        <el-table-column prop="descripcion" label="Descripción" min-width="250" show-overflow-tooltip>
+          <template #default="scope">
+            <span class="description-text">
+              {{ scope.row.descripcion || 'Sin descripción' }}
+            </span>
+          </template>
+        </el-table-column>
 
-          <!-- Columna Tipo - Oculta en móvil (se muestra en file-name) -->
-          <el-table-column 
-            prop="tipo_archivo" 
-            label="Tipo" 
-            width="100" 
-            align="center"
-            class-name="type-column"
-          >
-            <template #default="scope">
-              <el-tag :type="getFileTypeColor(scope.row.tipo_archivo)" size="small">
-                {{ scope.row.tipo_archivo }}
-              </el-tag>
-            </template>
-          </el-table-column>
+        <el-table-column prop="tipo_archivo" label="Tipo" width="100" align="center">
+          <template #default="scope">
+            <el-tag :type="getFileTypeColor(scope.row.tipo_archivo)" size="small">
+              {{ scope.row.tipo_archivo }}
+            </el-tag>
+          </template>
+        </el-table-column>
 
-          <!-- Columna Fecha - Ancho reducido en móvil -->
-          <el-table-column 
-            prop="fecha_actualizacion" 
-            label="Actualización" 
-            width="160" 
-            sortable
-            class-name="date-column"
-          >
-            <template #default="scope">
-              <div class="date-cell">
-                <el-icon class="date-icon" :size="14">
-                  <Calendar />
-                </el-icon>
-                <span class="date-text">{{ formatDate(scope.row.fecha_actualizacion) }}</span>
-              </div>
-            </template>
-          </el-table-column>
+        <el-table-column prop="fecha_actualizacion" label="Última Actualización" width="180" sortable>
+          <template #default="scope">
+            <div class="date-cell">
+              <el-icon class="date-icon" :size="14">
+                <Calendar />
+              </el-icon>
+              <span>{{ formatDate(scope.row.fecha_actualizacion) }}</span>
+            </div>
+          </template>
+        </el-table-column>
 
-          <!-- Columna Tamaño - Compacta en móvil -->
-          <el-table-column 
-            prop="tamano_bytes" 
-            label="Tamaño" 
-            width="100" 
-            sortable 
-            align="right"
-            class-name="size-column"
-          >
-            <template #default="scope">
-              <span class="size-text">{{ formatFileSize(scope.row.tamano_bytes) }}</span>
-            </template>
-          </el-table-column>
+        <el-table-column prop="tamano_bytes" label="Tamaño" width="120" sortable align="right">
+          <template #default="scope">
+            <span class="size-text">{{ formatFileSize(scope.row.tamano_bytes) }}</span>
+          </template>
+        </el-table-column>
 
-          <!-- Columna Acciones - Siempre fija a la derecha -->
-          <el-table-column 
-            label="Acciones" 
-            width="80" 
-            align="center" 
-            fixed="right"
-            class-name="actions-column"
-          >
-            <template #default="scope">
+        <el-table-column label="Acciones" width="120" align="center" fixed="right">
+          <template #default="scope">
+            <div class="action-buttons">
               <el-tooltip content="Ver detalles" placement="top">
                 <el-button 
                   type="primary" 
@@ -195,20 +112,20 @@
                   size="small" 
                   circle 
                   @click.stop="verDetalle(scope.row)"
-                  class="action-btn"
+                  class="action-btn view-btn"
                 />
               </el-tooltip>
-            </template>
-          </el-table-column>
-        </el-table>
-      </div>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
     </el-card>
 
     <!-- Modal moderno para detalles del archivo -->
     <el-dialog 
       v-model="showDetalle" 
       title="Detalles del Archivo"
-      width="90%"
+      width="80%"
       :close-on-click-modal="false"
       class="detail-dialog"
       align-center
@@ -223,7 +140,7 @@
       </template>
 
       <div v-if="detalle" class="detail-content">
-        <!-- Información básica en tarjetas responsivas -->
+        <!-- Información básica en tarjetas -->
         <div class="detail-grid">
           <el-card class="detail-card" shadow="hover">
             <template #header>
@@ -276,6 +193,17 @@
           </template>
           <p class="description-full">{{ detalle.descripcion }}</p>
         </el-card>
+
+        <!-- Datos adicionales en formato JSON (si hay más información) -->
+        <el-card class="detail-card" shadow="hover" v-if="hasAdditionalData">
+          <template #header>
+            <div class="detail-card-header">
+              <el-icon :size="20"><DataBoard /></el-icon>
+              <span>Datos Adicionales</span>
+            </div>
+          </template>
+          <pre class="json-content">{{ JSON.stringify(detalle, null, 2) }}</pre>
+        </el-card>
       </div>
 
       <template #footer>
@@ -291,7 +219,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import 'element-plus/dist/index.css'
 import 'animate.css'
@@ -300,8 +228,8 @@ import {
   ElIcon, ElTooltip, ElLoading, ElNotification 
 } from 'element-plus'
 import {
-  Document, Folder, View, Calendar, InfoFilled, Monitor, List,
-  Refresh, Close, Reading
+  Document, Folder, View, Calendar, InfoFilled, 
+  Refresh, Close, Reading, DataBoard
 } from '@element-plus/icons-vue'
 
 // Estado de la aplicación
@@ -315,17 +243,12 @@ const api = axios.create({
   baseURL: 'http://127.0.0.1:8000/api'
 })
 
-// Función para obtener tipos únicos de archivos
-const getUniqueTypes = () => {
-  const types = new Set(archivos.value.map(archivo => archivo.tipo_archivo))
-  return types.size
-}
-
-// Función para obtener el tamaño total de archivos
-const getTotalSize = () => {
-  const total = archivos.value.reduce((sum, archivo) => sum + (archivo.tamano_bytes || 0), 0)
-  return formatFileSize(total)
-}
+// Computed para verificar si hay datos adicionales
+const hasAdditionalData = computed(() => {
+  if (!detalle.value) return false
+  const basicFields = ['id', 'nombre_archivo', 'tipo_archivo', 'tamano_bytes', 'fecha_actualizacion', 'descripcion']
+  return Object.keys(detalle.value).some(key => !basicFields.includes(key))
+})
 
 // Función para obtener la lista de archivos
 const fetchArchivos = async () => {
@@ -364,12 +287,7 @@ const verDetalle = async (archivo) => {
 
 // Función para manejar el clic en una fila
 const handleRowClick = (row) => {
-  // Opcional: resaltar fila seleccionada
-}
-
-// Función para clases de fila responsivas
-const getRowClassName = ({ rowIndex }) => {
-  return 'table-row'
+  // Opcional: hacer algo cuando se hace clic en una fila
 }
 
 // Función para formatear el tamaño de archivo
@@ -388,7 +306,9 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString('es-ES', {
     year: 'numeric',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
   })
 }
 
@@ -409,277 +329,272 @@ const getFileTypeColor = (tipo) => {
   return colors[tipo?.toLowerCase()] || 'info'
 }
 
-// Cargar archivos al montar el componente
-onMounted(() => {
-  fetchArchivos()
-})
+// Cargar datos al montar el componente
+onMounted(fetchArchivos)
 </script>
 
 <style scoped>
-/* ====================================
-   CONTENEDOR PRINCIPAL RESPONSIVO
-   ==================================== */
+/* Estilos principales del componente */
 .file-list-container {
   width: 100%;
   max-width: 100%;
-  padding: 0;
 }
 
-/* ====================================
-   HEADER CON ESTADÍSTICAS EN GRID
-   ==================================== */
+/* Header de la sección */
 .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 2rem;
-  animation-duration: 0.6s;
+  gap: 2rem;
 }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 0;
+.header-info {
+  flex: 1;
 }
 
-/* Tarjetas de estadísticas */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 0.5rem 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.title-icon {
+  /* Icono dorado que contrasta bien con el fondo verde */
+  color: #fbbf24;
+}
+
+.section-description {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1rem;
+  margin: 0;
+  font-weight: 400;
+}
+
+.stats-container {
+  display: flex;
+  gap: 1rem;
+}
+
 .stat-card {
+  min-width: 140px;
   border-radius: 12px;
-  border: none;
-  box-shadow: 0 4px 20px rgba(36, 89, 70, 0.15);
-  transition: all 0.3s ease;
-  background: #fff;
-}
-
-.stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 30px rgba(36, 89, 70, 0.2);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
 }
 
 .stat-content {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.5rem;
+  gap: 0.75rem;
 }
 
 .stat-icon {
-  color: #245946;
-  background: linear-gradient(135deg, #6ee7b7, #3dbd6a);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  padding: 0.5rem;
-  background-color: rgba(110, 231, 183, 0.1);
-  border-radius: 10px;
-  flex-shrink: 0;
-}
-
-.stat-info {
-  flex: 1;
+  /* Icono verde institucional para estadísticas */
+  color: #3dbd6a;
 }
 
 .stat-number {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
+  /* Número en verde oscuro institucional */
   color: #245946;
-  margin: 0;
-  line-height: 1;
 }
 
 .stat-label {
   font-size: 0.875rem;
   color: #64748b;
-  margin: 0.25rem 0 0 0;
   font-weight: 500;
 }
 
-/* ====================================
-   TARJETA DE TABLA RESPONSIVA
-   ==================================== */
+/* Tarjeta de la tabla */
 .table-card {
   border-radius: 16px;
   border: none;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  background: #fff;
-  animation-duration: 0.8s;
-  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  animation-delay: 0.2s;
 }
 
-/* Header de la tarjeta */
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0;
-  gap: 1rem;
-}
-
-.card-title-section {
-  flex: 1;
 }
 
 .card-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
   font-size: 1.25rem;
   font-weight: 600;
+  /* Título en verde institucional oscuro */
   color: #245946;
-  margin: 0 0 0.25rem 0;
-}
-
-.card-subtitle {
-  font-size: 0.875rem;
-  color: #64748b;
-  margin: 0;
-}
-
-.card-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
 }
 
 .refresh-btn {
-  background: linear-gradient(135deg, #245946, #2d8f5a);
+  /* Botón de actualizar con degradado verde institucional */
+  background: linear-gradient(135deg, #3dbd6a, #2d8f5a);
   border: none;
-  box-shadow: 0 4px 12px rgba(36, 89, 70, 0.3);
+  box-shadow: 0 4px 12px rgba(61, 189, 106, 0.3);
   transition: all 0.3s ease;
 }
 
 .refresh-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(36, 89, 70, 0.4);
+  box-shadow: 0 6px 16px rgba(61, 189, 106, 0.4);
 }
 
-/* ====================================
-   CONTENEDOR DE TABLA CON SCROLL HORIZONTAL
-   ==================================== */
-.table-container {
-  /* Solo la tabla tiene scroll horizontal, nunca el body/html */
-  overflow-x: auto;
-  border-radius: 8px;
-}
-
-/* Tabla responsiva personalizada */
-.responsive-table {
-  width: 100%;
-  min-width: 800px; /* Ancho mínimo para mantener legibilidad */
-}
-
-/* ====================================
-   CELDAS Y CONTENIDO DE TABLA
-   ==================================== */
-/* Celda del nombre de archivo */
-.file-name-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.file-icon {
-  color: #245946;
-  flex-shrink: 0;
-}
-
-.file-info {
-  flex: 1;
-  min-width: 0; /* Permite que el texto se trunque */
-}
-
-.file-name {
-  font-weight: 600;
-  color: #1e293b;
-  display: block;
-  white-space: nowrap;
+/* Estilos de la tabla */
+.modern-table {
+  border-radius: 12px;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.file-type-mobile {
-  display: none; /* Se muestra solo en móvil */
-  font-size: 0.75rem;
-  color: #64748b;
-  margin-top: 0.25rem;
+:deep(.el-table) {
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-/* Celda de fecha */
-.date-cell {
+:deep(.el-table__header) {
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+}
+
+:deep(.el-table__header th) {
+  background: transparent;
+  color: #374151;
+  font-weight: 600;
+  border-bottom: 2px solid #e5e7eb;
+  padding: 16px 12px;
+}
+
+:deep(.el-table__row) {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+:deep(.el-table__row:hover) {
+  background-color: #f8fafc !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+:deep(.el-table td) {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 16px 12px;
+}
+
+/* Celdas específicas */
+.file-name-cell {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.date-icon {
-  color: #64748b;
-  flex-shrink: 0;
+.file-icon {
+  /* Icono de archivo en verde institucional */
+  color: #3dbd6a;
 }
 
-.date-text {
-  font-size: 0.875rem;
-  color: #475569;
-}
-
-/* Celda de tamaño */
-.size-text {
+.file-name {
   font-weight: 500;
-  color: #475569;
-  font-size: 0.875rem;
+  /* Nombre de archivo en verde oscuro */
+  color: #245946;
 }
 
-/* Celda de descripción */
 .description-text {
   color: #64748b;
-  font-size: 0.875rem;
   line-height: 1.4;
 }
 
-/* Tags de ID */
-.id-tag {
-  font-weight: 600;
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #e2e8f0;
+.date-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
 }
 
-/* Botón de acción */
+.date-icon {
+  color: #64748b;
+}
+
+.size-text {
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 0.875rem;
+  /* Tamaño en verde institucional más claro */
+  color: #52c41a;
+  font-weight: 500;
+}
+
+.id-tag {
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-weight: 600;
+}
+
+/* Botones de acción */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
 .action-btn {
-  background: linear-gradient(135deg, #245946, #2d8f5a);
-  border: none;
-  box-shadow: 0 2px 8px rgba(36, 89, 70, 0.3);
   transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.view-btn {
+  /* Botón de ver con degradado verde-azul moderno */
+  background: linear-gradient(135deg, #3dbd6a, #06b6d4);
+  border: none;
 }
 
 .action-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(36, 89, 70, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* ====================================
-   MODAL DE DETALLES RESPONSIVO
-   ==================================== */
+/* Modal de detalles */
 .detail-dialog {
   border-radius: 16px;
+}
+
+:deep(.el-dialog) {
+  border-radius: 16px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+}
+
+:deep(.el-dialog__header) {
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+  border-radius: 16px 16px 0 0;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .dialog-header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: #245946;
 }
 
 .dialog-icon {
-  color: #6ee7b7;
+  /* Icono del modal en verde institucional */
+  color: #3dbd6a;
 }
 
 .dialog-title {
   font-size: 1.25rem;
   font-weight: 600;
+  /* Título del modal en verde oscuro */
+  color: #245946;
 }
 
-/* Grid de detalles */
+/* Contenido del modal */
 .detail-content {
-  padding: 0;
+  padding: 1rem 0;
 }
 
 .detail-grid {
@@ -691,16 +606,22 @@ onMounted(() => {
 
 .detail-card {
   border-radius: 12px;
-  border: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.detail-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 .detail-card-header {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #245946;
   font-weight: 600;
+  /* Header de tarjetas de detalle en verde institucional */
+  color: #245946;
 }
 
 .detail-item {
@@ -718,264 +639,126 @@ onMounted(() => {
 .detail-label {
   font-weight: 500;
   color: #64748b;
-  margin-right: 1rem;
 }
 
 .detail-value {
   font-weight: 600;
-  color: #1e293b;
-  text-align: right;
+  color: #1e40af;
+}
+
+.description-card {
+  grid-column: 1 / -1;
 }
 
 .description-full {
   margin: 0;
+  color: #374151;
   line-height: 1.6;
-  color: #475569;
+  font-size: 1rem;
 }
 
+.json-content {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: #374151;
+  overflow-x: auto;
+  margin: 0;
+}
+
+/* Footer del modal */
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
-  padding-top: 1rem;
+  padding: 1rem 0 0 0;
+  border-top: 1px solid #e5e7eb;
 }
 
 .close-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  background: #6b7280;
+  border: none;
+  color: white;
+  transition: all 0.3s ease;
 }
 
-/* ====================================
-   RESPONSIVO - TABLET (≤900px)
-   ==================================== */
-@media (max-width: 900px) {
-  .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-  }
-  
-  .stat-number {
-    font-size: 1.5rem;
-  }
-  
-  .stat-label {
-    font-size: 0.8rem;
-  }
-  
-  .table-container {
-    /* En tablet, mantener scroll horizontal */
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  .card-header {
+.close-btn:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .section-header {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 1rem;
   }
   
-  .card-actions {
-    align-self: flex-end;
+  .stats-container {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .section-title {
+    font-size: 1.75rem;
+  }
+  
+  .section-description {
+    font-size: 1rem;
   }
   
   .detail-grid {
     grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-}
-
-/* ====================================
-   RESPONSIVO - MÓVIL (≤600px)
-   ==================================== */
-@media (max-width: 600px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
   }
   
-  .stat-content {
-    padding: 1rem;
+  :deep(.el-dialog) {
+    width: 95% !important;
+    margin: 0 auto;
   }
   
-  .stat-number {
-    font-size: 1.75rem;
-  }
-  
-  .card-title {
-    font-size: 1.1rem;
-  }
-  
-  .card-subtitle {
-    font-size: 0.8rem;
-  }
-  
-  /* Ocultar columnas menos importantes en móvil */
-  .responsive-table :deep(.id-column),
-  .responsive-table :deep(.description-column),
-  .responsive-table :deep(.type-column) {
+  :deep(.el-table__fixed-right) {
     display: none;
   }
   
-  /* Mostrar tipo de archivo bajo el nombre en móvil */
-  .file-type-mobile {
-    display: block;
-  }
-  
-  /* Ajustar anchos de columnas en móvil */
-  .responsive-table :deep(.file-name-column) {
-    min-width: 180px;
-  }
-  
-  .responsive-table :deep(.date-column) {
-    width: 120px;
-    min-width: 120px;
-  }
-  
-  .responsive-table :deep(.size-column) {
-    width: 80px;
-    min-width: 80px;
-  }
-  
-  .responsive-table :deep(.actions-column) {
-    width: 60px;
-    min-width: 60px;
-  }
-  
-  /* Compactar fecha en móvil */
-  .date-text {
-    font-size: 0.75rem;
-  }
-  
-  /* Compactar tamaño en móvil */
-  .size-text {
-    font-size: 0.75rem;
-  }
-  
-  /* Modal de detalles más compacto */
-  .detail-item {
+  .action-buttons {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-    padding: 1rem 0;
-  }
-  
-  .detail-value {
-    text-align: left;
+    gap: 0.25rem;
   }
 }
 
-/* ====================================
-   RESPONSIVO - MÓVIL PEQUEÑO (≤480px)
-   ==================================== */
 @media (max-width: 480px) {
-  .section-header {
-    margin-bottom: 1.5rem;
-  }
-  
-  .stats-grid {
-    gap: 0.75rem;
-  }
-  
-  .stat-content {
-    padding: 0.75rem;
-  }
-  
-  .stat-number {
+  .section-title {
     font-size: 1.5rem;
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
   }
   
-  .stat-label {
-    font-size: 0.75rem;
-  }
-  
-  .table-container {
-    /* En móvil pequeño, permitir scroll muy suave */
-    scrollbar-width: thin;
-  }
-  
-  .table-container::-webkit-scrollbar {
-    height: 4px;
-  }
-  
-  .table-container::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 2px;
-  }
-  
-  .table-container::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 2px;
-  }
-  
-  .table-container::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-  }
-  
-  /* Tabla aún más compacta */
-  .responsive-table :deep(.file-name-column) {
-    min-width: 140px;
-  }
-  
-  .responsive-table :deep(.date-column) {
-    width: 100px;
-    min-width: 100px;
-  }
-  
-  .responsive-table :deep(.size-column) {
-    width: 70px;
-    min-width: 70px;
-  }
-  
-  .file-name {
+  :deep(.el-table) {
     font-size: 0.875rem;
   }
   
-  .file-type-mobile {
-    font-size: 0.7rem;
-  }
-  
-  .date-text {
-    font-size: 0.7rem;
-  }
-  
-  .size-text {
-    font-size: 0.7rem;
+  :deep(.el-table td), :deep(.el-table th) {
+    padding: 12px 8px;
   }
 }
 
-/* ====================================
-   ANIMACIONES Y TRANSICIONES
-   ==================================== */
-.table-row {
-  transition: all 0.2s ease;
-}
-
-.table-row:hover {
-  background-color: rgba(110, 231, 183, 0.05);
-}
-
-/* ====================================
-   UTILIDADES PARA ACCESIBILIDAD
-   ==================================== */
-@media (prefers-reduced-motion: reduce) {
-  .stat-card,
-  .refresh-btn,
-  .action-btn {
-    transition: none;
+/* Animaciones personalizadas */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
   }
-  
-  .stat-card:hover,
-  .refresh-btn:hover,
-  .action-btn:hover {
-    transform: none;
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
-/* Focus visible para navegación por teclado */
-.action-btn:focus-visible,
-.refresh-btn:focus-visible {
-  outline: 2px solid #6ee7b7;
-  outline-offset: 2px;
+.table-card {
+  animation: fadeInScale 0.6s ease-out;
 }
 </style>
