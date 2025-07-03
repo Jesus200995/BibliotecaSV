@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Subida de Archivos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        form {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+    </style>
+</head>
+<body>
+    <h1>Prueba de Subida de Archivos</h1>
+    <p>Esta página te permitirá probar la subida de archivos al backend.</p>
+
+    <form id="uploadForm">
+        <div class="form-group">
+            <label for="file">Archivo:</label>
+            <input type="file" id="file" name="file" required>
+        </div>
+        <div class="form-group">
+            <label for="descripcion">Descripción:</label>
+            <textarea id="descripcion" name="descripcion" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="etiquetas">Etiquetas:</label>
+            <input type="text" id="etiquetas" name="etiquetas" placeholder="Etiquetas separadas por comas">
+        </div>
+        <div class="form-group">
+            <label for="responsable">Responsable:</label>
+            <input type="text" id="responsable" name="responsable">
+        </div>
+        <div class="form-group">
+            <label for="fuente">Fuente:</label>
+            <input type="text" id="fuente" name="fuente">
+        </div>
+        <div class="form-group">
+            <label for="alcance">Alcance Geográfico:</label>
+            <input type="text" id="alcance" name="alcance">
+        </div>
+        <div class="form-group">
+            <label for="validacion">Validación:</label>
+            <select id="validacion" name="validacion">
+                <option value="">Seleccionar</option>
+                <option value="Borrador">Borrador</option>
+                <option value="Verificado">Verificado</option>
+                <option value="Preliminar">Preliminar</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="observaciones">Observaciones:</label>
+            <input type="text" id="observaciones" name="observaciones">
+        </div>
+        <button type="submit">Subir Archivo</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Subiendo archivo...';
+            resultDiv.className = '';
+            resultDiv.style.display = 'block';
+            
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch('http://localhost:4000/archivos/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<p>¡Archivo subido correctamente!</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    resultDiv.className = 'success';
+                    this.reset();
+                } else {
+                    resultDiv.innerHTML = `<p>Error al subir el archivo:</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    resultDiv.className = 'error';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p>Error de conexión:</p><pre>${error.message}</pre>`;
+                resultDiv.className = 'error';
+            }
+        });
+    </script>
+</body>
+</html>

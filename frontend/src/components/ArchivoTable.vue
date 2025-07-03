@@ -347,7 +347,7 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div class="flex items-center space-x-2">
-                  <a :href="`http://localhost:4000/descargas/${archivo.archivo_url}`" 
+                  <a :href="`${BACKEND_URL}/descargas/${archivo.archivo_url}`" 
                      target="_blank" 
                      class="text-blue-600 hover:text-blue-900 p-1">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
