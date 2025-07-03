@@ -137,12 +137,78 @@
             
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">Alcance geográfico</label>
-              <input 
-                v-model="alcance" 
-                type="text" 
-                class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
-                placeholder="Ej: Puebla, Xochimilco..." 
-              />
+              <div class="relative alcance-geografico-container">
+                <!-- Contenedor de chips y input -->
+                <div class="flex flex-wrap gap-2 p-2 rounded-lg border border-gray-300 bg-white min-h-[58px] focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
+                  <!-- Mostrar ubicaciones seleccionadas como chips -->
+                  <div 
+                    v-for="(lugar, index) in alcanceArray" 
+                    :key="index"
+                    class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1.5 animate-pop-in"
+                  >
+                    {{ lugar.name }}
+                    <button 
+                      @click="eliminarLugar(index)" 
+                      class="text-blue-500 hover:text-blue-700 focus:outline-none transition-colors rounded-full hover:bg-blue-200 p-0.5"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <!-- Input para buscar ubicaciones -->
+                  <input 
+                    v-model="alcanceInput" 
+                    @input="buscarUbicaciones"
+                    @keydown="gestionarTeclasAlcance"
+                    @focus="activarBusquedaUbicaciones"
+                    @blur="setTimeout(() => mostrarSugerencias = false, 200)"
+                    type="text" 
+                    class="flex-grow min-w-[120px] py-1 px-2 focus:outline-none text-gray-700" 
+                    placeholder="Busca una ubicación en México..." 
+                  />
+                </div>
+                
+                <!-- Lista de sugerencias -->
+                <div 
+                  v-if="mostrarSugerencias && !cargandoUbicaciones" 
+                  class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                >
+                  <!-- Mostrar sugerencias si hay resultados -->
+                  <div 
+                    v-if="sugerenciasUbicacion.length > 0"
+                    v-for="(sugerencia, index) in sugerenciasUbicacion" 
+                    :key="index"
+                    @click="seleccionarUbicacion(sugerencia)"
+                    class="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm text-gray-700 border-b border-gray-100 last:border-b-0 flex items-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>{{ sugerencia.display_name }}</span>
+                  </div>
+                  
+                  <!-- Mensaje cuando no hay resultados -->
+                  <div 
+                    v-if="sugerenciasUbicacion.length === 0 && alcanceInput.length >= 2"
+                    class="px-4 py-3 text-sm text-gray-600 text-center"
+                  >
+                    No se encontraron ubicaciones para "{{ alcanceInput }}". Intenta con otro término.
+                  </div>
+                </div>
+                
+                <!-- Mensaje de cargando -->
+                <div 
+                  v-if="cargandoUbicaciones && mostrarSugerencias" 
+                  class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-3 text-center text-sm text-gray-600"
+                >
+                  <div class="animate-spin inline-block mr-2 h-4 w-4 border-t-2 border-blue-500 rounded-full"></div>
+                  Buscando ubicaciones...
+                </div>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">Escribe al menos 2 letras para buscar ubicaciones en México (ciudades, municipios, estados)</p>
             </div>
           </div>
           
@@ -527,7 +593,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import axios from 'axios'
 
 // Estilos de animación personalizados
@@ -621,7 +687,35 @@ const fuente = ref("")
 const confirmacionVisible = ref(false)
 const archivoSubido = ref(null)
 const cargando = ref(false)
-const alcance = ref("")
+// Gestión del alcance geográfico con chips
+const alcanceArray = ref([]) // Array para almacenar los lugares seleccionados como objetos {name, display_name, lat, lon}
+const alcanceInput = ref("") // Input para buscar ubicaciones
+const sugerenciasUbicacion = ref([]) // Sugerencias de ubicaciones de la API
+const mostrarSugerencias = ref(false) // Controla la visibilidad del dropdown de sugerencias
+const cargandoUbicaciones = ref(false) // Indicador de carga
+const timerBusqueda = ref(null) // Para debounce de la búsqueda
+
+// Computed para mantener compatibilidad con el código existente
+const alcance = computed({
+  get: () => {
+    // Devuelve una cadena con los nombres de lugares separados por comas
+    return alcanceArray.value.map(lugar => lugar.name).join(", ")
+  },
+  set: (val) => {
+    if (!val) {
+      alcanceArray.value = []
+    } else if (typeof val === 'string') {
+      // Si recibimos una cadena del backend (por ejemplo al editar), 
+      // la convertimos en objetos simples de ubicación
+      alcanceArray.value = val.split(',').map(nombre => ({
+        name: nombre.trim(),
+        display_name: nombre.trim(), // Usamos el mismo nombre como display_name
+        lat: "", // No tenemos coordenadas en este caso
+        lon: ""
+      })).filter(item => item.name !== "")
+    }
+  }
+})
 const validacion = ref("")
 const observaciones = ref("")
 const modalVisible = ref(false)
@@ -771,7 +865,8 @@ async function subirArchivo() {
     formData.append("etiquetas", etiquetas.value)
     formData.append("responsable", responsable.value)
     formData.append("fuente", fuente.value)
-    formData.append("alcance", alcance.value)
+    // Enviamos solo los nombres de los lugares como una cadena separada por comas
+    formData.append("alcance", alcanceArray.value.map(lugar => lugar.name).join(", "))
     formData.append("validacion", validacion.value)
     formData.append("observaciones", observaciones.value)
     
@@ -798,7 +893,8 @@ async function subirArchivo() {
     etiquetas.value = ""
     responsable.value = ""
     fuente.value = ""
-    alcance.value = ""
+    alcanceArray.value = [] // Limpiar el array de ubicaciones
+    alcanceInput.value = "" // Limpiar el input
     validacion.value = ""
     observaciones.value = ""
     
@@ -858,6 +954,223 @@ function formatSize(bytes) {
   
   return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i]
 }
+
+// Función para buscar ubicaciones mediante la API Nominatim
+function buscarUbicaciones() {
+  // Limpiar el timer existente
+  clearTimeout(timerBusqueda.value)
+  
+  // No buscar si hay menos de 2 caracteres
+  if (alcanceInput.value.length < 2) {
+    sugerenciasUbicacion.value = []
+    cargandoUbicaciones.value = false
+    mostrarSugerencias.value = false
+    return
+  }
+  
+  // Configurar debounce (esperar 300ms después de que el usuario deja de escribir)
+  cargandoUbicaciones.value = true
+  mostrarSugerencias.value = true // Mostrar indicador de carga mientras se busca
+  
+  timerBusqueda.value = setTimeout(async () => {
+    try {
+      console.log("Buscando:", alcanceInput.value)
+      
+      // Construir URL con parámetros correctos para México
+      const url = `https://nominatim.openstreetmap.org/search?countrycodes=MX&q=${encodeURIComponent(alcanceInput.value)}&format=json&addressdetails=1&limit=5`
+      
+      console.log("URL de búsqueda:", url)
+      
+      // Usar Axios en lugar de fetch para mejor manejo de CORS
+      const response = await axios.get(url, {
+        headers: {
+          // Headers requeridos por Nominatim
+          'User-Agent': 'BibliotecaSV_App/1.0',
+          'Accept-Language': 'es'
+        }
+      })
+      
+      console.log("Respuesta obtenida:", response.data)
+      
+      if (response.data && Array.isArray(response.data)) {
+        sugerenciasUbicacion.value = response.data
+        mostrarSugerencias.value = response.data.length > 0
+        
+        if (response.data.length === 0) {
+          console.log("No se encontraron resultados para:", alcanceInput.value)
+        }
+      } else {
+        console.error('Formato de respuesta inesperado:', response.data)
+        sugerenciasUbicacion.value = []
+        mostrarSugerencias.value = false
+      }
+    } catch (error) {
+      console.error('Error al buscar ubicaciones:', error)
+      alert("Error al buscar ubicaciones. Revisa la consola para más detalles.")
+      sugerenciasUbicacion.value = []
+      mostrarSugerencias.value = false
+    } finally {
+      cargandoUbicaciones.value = false
+    }
+  }, 300)
+}
+
+// Función para activar la búsqueda cuando el input recibe foco
+function activarBusquedaUbicaciones() {
+  mostrarSugerencias.value = true;
+  
+  // Si hay al menos 2 caracteres, buscar inmediatamente
+  if (alcanceInput.value.length >= 2) {
+    buscarUbicaciones();
+  }
+}
+
+// Seleccionar una ubicación de las sugerencias
+function seleccionarUbicacion(lugar) {
+  console.log("Seleccionando ubicación:", lugar)
+  
+  // Extraer el nombre más significativo
+  let nombrePrincipal;
+  if (lugar.name) {
+    nombrePrincipal = lugar.name;
+  } else if (lugar.address) {
+    // Intentar usar partes de la dirección en orden de relevancia
+    nombrePrincipal = lugar.address.city || 
+                     lugar.address.town || 
+                     lugar.address.village || 
+                     lugar.address.municipality ||
+                     lugar.address.state ||
+                     extraerNombrePrincipal(lugar.display_name);
+  } else {
+    nombrePrincipal = extraerNombrePrincipal(lugar.display_name);
+  }
+  
+  // Crear un objeto con la información relevante
+  const nuevaUbicacion = {
+    name: nombrePrincipal,
+    display_name: lugar.display_name,
+    lat: lugar.lat,
+    lon: lugar.lon,
+    type: lugar.type // Tipo de ubicación (ciudad, pueblo, etc.)
+  }
+  
+  console.log("Nueva ubicación a agregar:", nuevaUbicacion);
+  
+  // Verificar que no esté duplicado (por nombre)
+  if (!alcanceArray.value.some(item => item.name === nuevaUbicacion.name)) {
+    alcanceArray.value.push(nuevaUbicacion)
+    console.log("Ubicación agregada. Ahora hay", alcanceArray.value.length, "ubicaciones");
+  } else {
+    console.log("La ubicación ya existe en la lista");
+  }
+  
+  // Limpiar input y sugerencias
+  alcanceInput.value = ""
+  sugerenciasUbicacion.value = []
+  mostrarSugerencias.value = false
+}
+
+// Función para extraer un nombre utilizable de display_name si name no está disponible
+function extraerNombrePrincipal(displayName) {
+  if (!displayName) {
+    console.warn("displayName es undefined o null");
+    return "Ubicación desconocida";
+  }
+  
+  // Dividir la cadena por comas y tomar las partes más relevantes
+  const partes = displayName.split(',').map(p => p.trim());
+  
+  if (partes.length === 0) {
+    return "Ubicación desconocida";
+  }
+  
+  // Si hay más de 3 partes, intentar extraer un formato "Ciudad, Estado"
+  if (partes.length >= 3) {
+    // Intentar detectar si es una ciudad, pueblo o entidad similar
+    const primeraParte = partes[0];
+    
+    // Buscar el estado de México que suele estar en las últimas posiciones
+    let estadoIdx = partes.findIndex(p => 
+      p.toLowerCase() === 'méxico' || 
+      p.toLowerCase() === 'mexico' ||
+      p.toLowerCase().includes('estado de')
+    );
+    
+    if (estadoIdx !== -1 && estadoIdx > 0) {
+      // Devolver "Ciudad, Estado"
+      return `${primeraParte}, ${partes[estadoIdx]}`;
+    }
+    
+    // Si no encontramos el estado, devolver las dos primeras partes
+    return `${primeraParte}, ${partes[1]}`;
+  }
+  
+  // Si solo hay 1 o 2 partes, devolver la primera
+  return partes[0];
+}
+
+// Eliminar una ubicación seleccionada
+function eliminarLugar(index) {
+  alcanceArray.value.splice(index, 1)
+}
+
+// Gestionar teclas especiales para el input de alcance
+function gestionarTeclasAlcance(event) {
+  // Si presiona Escape, ocultar sugerencias
+  if (event.key === 'Escape') {
+    mostrarSugerencias.value = false
+  }
+  
+  // Si presiona Enter con sugerencias mostradas
+  if (event.key === 'Enter' && sugerenciasUbicacion.value.length > 0) {
+    event.preventDefault()
+    seleccionarUbicacion(sugerenciasUbicacion.value[0]) // Seleccionar la primera sugerencia
+  }
+  
+  // Si presiona Backspace con el input vacío, eliminar el último lugar
+  if (event.key === 'Backspace' && alcanceInput.value === '' && alcanceArray.value.length > 0) {
+    alcanceArray.value.pop()
+  }
+}
+
+// Método para cerrar la lista de sugerencias al hacer clic fuera
+function cerrarSugerencias() {
+  // Usar setTimeout para permitir que el clic en una sugerencia se procese primero
+  setTimeout(() => {
+    mostrarSugerencias.value = false
+  }, 150)
+}
+
+// Añadir el event listener para cerrar sugerencias al hacer clic fuera
+// Función para cerrar sugerencias al hacer clic fuera
+const cerrarSugerenciasAlClickear = (e) => {
+  // Verificar si el clic fue fuera del componente de alcance geográfico
+  const alcanceElement = document.querySelector('.alcance-geografico-container')
+  if (alcanceElement && !alcanceElement.contains(e.target)) {
+    mostrarSugerencias.value = false
+  }
+}
+
+onMounted(() => {
+  // Añadir event listener para cerrar sugerencias al hacer clic fuera
+  document.addEventListener('click', cerrarSugerenciasAlClickear)
+  
+  // Datos iniciales de prueba para demostración
+  if (import.meta.env.DEV) {
+    // En modo desarrollo, podemos añadir datos de ejemplo
+    console.log("Modo desarrollo: Puedes agregar ubicaciones de ejemplo aquí si es necesario")
+  }
+})
+
+onUnmounted(() => {
+  // Limpiar event listeners al desmontar el componente
+  document.removeEventListener('click', cerrarSugerenciasAlClickear)
+  
+  // Limpiar el timer de búsqueda si existe
+  if (timerBusqueda.value) {
+    clearTimeout(timerBusqueda.value)
+  }
+})
 </script>
 
 <style scoped>
