@@ -77,6 +77,13 @@
         </div>
       </main>
 
+      <!-- Modal de ficha técnica -->
+      <ArchivoFicha 
+        v-if="archivoSeleccionado" 
+        :archivo="archivoSeleccionado" 
+        @cerrar="cerrarFicha"
+      />
+
       <!-- Footer -->
       <footer class="bg-white text-gray-500 text-sm py-3 shadow-inner">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -88,9 +95,26 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
+import axios from 'axios'
 import ArchivoTable from './components/ArchivoTable.vue'
+import ArchivoFicha from './components/ArchivoFicha.vue'
 
-function verFicha(id) {
-  alert('Ver ficha para archivo: ' + id)
+const archivoSeleccionado = ref(null)
+const BACKEND_URL = 'http://localhost:4000'
+
+async function verFicha(id) {
+  try {
+    // Obtener los datos del archivo desde el backend
+    const response = await axios.get(`${BACKEND_URL}/archivos/${id}`)
+    archivoSeleccionado.value = response.data
+  } catch (error) {
+    console.error('Error al obtener datos del archivo:', error)
+    alert('No se pudo cargar la información del archivo')
+  }
+}
+
+function cerrarFicha() {
+  archivoSeleccionado.value = null
 }
 </script>
