@@ -1,4 +1,8 @@
-require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
+
+// Contenido del nuevo archivo index.js
+const newContent = `require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
@@ -18,11 +22,11 @@ try {
 
 // Imprimir información de conexión
 console.log('Configuración de conexión a BD:');
-console.log(`Host: ${process.env.DB_HOST}`);
-console.log(`Puerto: ${process.env.DB_PORT}`);
-console.log(`Base de datos: ${process.env.DB_NAME}`);
-console.log(`Usuario: ${process.env.DB_USER}`);
-console.log(`Contraseña: ${process.env.DB_PASSWORD ? '******' : 'no configurada'}`);
+console.log(\`Host: \${process.env.DB_HOST}\`);
+console.log(\`Puerto: \${process.env.DB_PORT}\`);
+console.log(\`Base de datos: \${process.env.DB_NAME}\`);
+console.log(\`Usuario: \${process.env.DB_USER}\`);
+console.log(\`Contraseña: \${process.env.DB_PASSWORD ? '******' : 'no configurada'}\`);
 
 // Configuración de la conexión a PostgreSQL
 const pool = new Pool({
@@ -95,19 +99,19 @@ app.get('/archivos', async (req, res) => {
 app.get('/archivos/descargar/:id', async (req, res) => {
   try {
     const id = req.params.id;
-    console.log(`Solicitando descarga del archivo con ID: ${id}`);
+    console.log(\`Solicitando descarga del archivo con ID: \${id}\`);
     
     // Consultar el archivo en la base de datos
-    const query = `
+    const query = \`
       SELECT nombre, tipo, archivo_contenido, tamano
       FROM catalogo_archivos
       WHERE id = $1
-    `;
+    \`;
     
     const result = await pool.query(query, [id]);
     
     if (result.rows.length === 0) {
-      console.log(`Archivo con ID ${id} no encontrado`);
+      console.log(\`Archivo con ID \${id} no encontrado\`);
       return res.status(404).json({ error: 'Archivo no encontrado' });
     }
     
@@ -115,7 +119,7 @@ app.get('/archivos/descargar/:id', async (req, res) => {
     
     // Si no hay contenido en la base de datos, intentamos leer del sistema de archivos
     if (!archivo.archivo_contenido) {
-      console.log(`El archivo con ID ${id} no tiene contenido en la base de datos. Actualizando desde el disco...`);
+      console.log(\`El archivo con ID \${id} no tiene contenido en la base de datos. Actualizando desde el disco...\`);
       
       // Verificar si hay un archivo en disco para migrar
       const oldFilePath = path.join(__dirname, 'uploads', archivo.archivo_url);
@@ -129,17 +133,17 @@ app.get('/archivos/descargar/:id', async (req, res) => {
           [fileContent, id]
         );
         
-        console.log(`Archivo migrado desde el disco a la base de datos: ${oldFilePath}`);
+        console.log(\`Archivo migrado desde el disco a la base de datos: \${oldFilePath}\`);
         
         // Enviar el archivo recién leído
         const contentType = determinarContentType(archivo.tipo);
         res.setHeader('Content-Type', contentType);
-        res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(archivo.nombre)}"`);
+        res.setHeader('Content-Disposition', \`attachment; filename="\${encodeURIComponent(archivo.nombre)}"\`);
         res.setHeader('Content-Length', archivo.tamano);
-        console.log(`Enviando archivo migrado ${archivo.nombre} (${archivo.tamano} bytes)`);
+        console.log(\`Enviando archivo migrado \${archivo.nombre} (\${archivo.tamano} bytes)\`);
         return res.send(fileContent);
       } else {
-        console.log(`No se encontró el archivo en disco: ${oldFilePath}`);
+        console.log(\`No se encontró el archivo en disco: \${oldFilePath}\`);
         return res.status(404).json({ error: 'El contenido del archivo no está disponible' });
       }
     }
@@ -149,11 +153,11 @@ app.get('/archivos/descargar/:id', async (req, res) => {
     
     // Configurar headers para descarga
     res.setHeader('Content-Type', contentType);
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(archivo.nombre)}"`);
+    res.setHeader('Content-Disposition', \`attachment; filename="\${encodeURIComponent(archivo.nombre)}"\`);
     res.setHeader('Content-Length', archivo.tamano);
     
     // Enviar el archivo como respuesta
-    console.log(`Enviando archivo ${archivo.nombre} (${archivo.tamano} bytes)`);
+    console.log(\`Enviando archivo \${archivo.nombre} (\${archivo.tamano} bytes)\`);
     return res.send(archivo.archivo_contenido);
     
   } catch (error) {
@@ -204,7 +208,7 @@ app.get('/archivos/:id', async (req, res) => {
     
     res.json(result.rows[0]);
   } catch (error) {
-    console.error(`Error al obtener archivo con ID ${req.params.id}:`, error);
+    console.error(\`Error al obtener archivo con ID \${req.params.id}:\`, error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -219,7 +223,7 @@ app.get('/archivos/:id/campos', async (req, res) => {
     );
     res.json(result.rows);
   } catch (error) {
-    console.error(`Error al obtener campos del archivo ${req.params.id}:`, error);
+    console.error(\`Error al obtener campos del archivo \${req.params.id}:\`, error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -245,7 +249,7 @@ app.post('/archivos/upload', upload.single('file'), async (req, res) => {
     const fecha_actualizacion = new Date();
     const tamano = archivo.size;
     // Ya no usamos archivo_url para guardar la ruta, ahora guardamos un identificador único
-    const archivo_url = Date.now() + '-' + nombre.replace(/[^a-zA-Z0-9\-_.]/g, '_');
+    const archivo_url = Date.now() + '-' + nombre.replace(/[^a-zA-Z0-9\\-_.]/g, '_');
 
     console.log('Datos del archivo:', { nombre, tipo, fecha_actualizacion, tamano, archivo_url });
 
@@ -264,12 +268,12 @@ app.post('/archivos/upload', upload.single('file'), async (req, res) => {
     });
 
     // Insertar en PostgreSQL incluyendo el contenido del archivo (que está en memoria)
-    const query = `
+    const query = \`
       INSERT INTO catalogo_archivos
       (nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, archivo_url, fuente, responsable, alcance_geografico, validacion, observaciones, archivo_contenido)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING id, nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, archivo_url, fuente, responsable, alcance_geografico, validacion, observaciones
-    `;
+    \`;
     const values = [
       nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, archivo_url,
       fuente, responsable, alcance_geografico, validacion, observaciones, archivo.buffer
@@ -287,7 +291,7 @@ app.post('/archivos/upload', upload.single('file'), async (req, res) => {
 
 // Página de prueba para subir archivos
 app.get('/test-upload', (req, res) => {
-  res.send(`
+  res.send(\`
     <h1>Formulario de prueba para subir archivos</h1>
     <form action="/archivos/upload" method="post" enctype="multipart/form-data">
       <div>
@@ -304,10 +308,15 @@ app.get('/test-upload', (req, res) => {
       </div>
       <button type="submit">Subir archivo</button>
     </form>
-  `);
+  \`);
 });
 
 // Iniciar el servidor
 app.listen(PORT, () => {
-  console.log(`Servidor backend corriendo en http://localhost:${PORT}`);
-});
+  console.log(\`Servidor backend corriendo en http://localhost:\${PORT}\`);
+});`;
+
+// Escribir el nuevo contenido al archivo
+fs.writeFileSync(path.join(__dirname, 'index_fixed.js'), newContent);
+
+console.log('Archivo index_fixed.js generado correctamente.');
