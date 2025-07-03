@@ -7,30 +7,164 @@
         <p class="mt-1 text-sm text-gray-500">Gestiona y visualiza todos los archivos del repositorio</p>
       </div>
       
-      <!-- Formulario de subida de archivos -->
-      <form @submit.prevent="subirArchivo" class="flex flex-wrap sm:flex-nowrap items-center gap-3">
-        <div class="relative w-full sm:w-auto">
-          <input 
-            type="file" 
-            id="file-upload"
-            @change="seleccionarArchivo" 
-            class="hidden" 
-          />
-          <label 
-            for="file-upload" 
-            class="w-full sm:w-auto flex items-center gap-2 cursor-pointer bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-md transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+      <!-- Botón para abrir el modal de subida de archivos -->
+      <button 
+        @click="modalVisible = true" 
+        class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-full shadow-lg transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+        </svg>
+        Subir archivo
+      </button>
+    </div>
+    
+    <!-- Modal para subir archivos -->
+    <div v-if="modalVisible" class="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
+      <!-- Fondo oscuro -->
+      <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="modalVisible = false"></div>
+      
+      <!-- Contenido del modal -->
+      <div class="relative bg-white rounded-lg max-w-3xl w-full mx-4 shadow-xl transform transition-all">
+        <!-- Cabecera del modal -->
+        <div class="bg-blue-600 text-white rounded-t-lg px-6 py-4 flex items-center justify-between">
+          <h3 class="text-lg font-medium flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
             </svg>
-            <span class="truncate max-w-[150px]">{{ archivoNombre || 'Seleccionar archivo' }}</span>
-          </label>
+            Subir nuevo archivo
+          </h3>
+          <button @click="modalVisible = false" class="text-white hover:text-gray-200">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
-        <button 
-          type="submit" 
-          class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors">
-          Subir archivo
-        </button>
-      </form>
+        
+        <!-- Formulario -->
+        <form @submit.prevent="subirArchivo" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Columna 1 -->
+          <div class="space-y-4 md:col-span-2">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Archivo</label>
+              <div class="flex items-center">
+                <label for="file-upload" class="cursor-pointer bg-blue-50 hover:bg-blue-100 text-blue-600 px-4 py-2 rounded-md border border-blue-200">
+                  <span class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    Seleccionar archivo
+                  </span>
+                </label>
+                <input 
+                  type="file" 
+                  id="file-upload"
+                  @change="seleccionarArchivo" 
+                  class="hidden" 
+                  required 
+                />
+                <span class="ml-3 text-sm text-gray-500">{{ archivoNombre || 'Ningún archivo seleccionado' }}</span>
+              </div>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+              <textarea 
+                v-model="descripcion" 
+                rows="2" 
+                class="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                placeholder="Descripción del archivo">
+              </textarea>
+            </div>
+          </div>
+          
+          <!-- Columna izquierda -->
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Etiquetas</label>
+              <input 
+                v-model="etiquetas" 
+                type="text" 
+                class="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                placeholder="Etiquetas (separadas por coma)" 
+              />
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Responsable</label>
+              <input 
+                v-model="responsable" 
+                type="text" 
+                class="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                placeholder="Responsable" 
+              />
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Alcance geográfico</label>
+              <input 
+                v-model="alcance" 
+                type="text" 
+                class="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                placeholder="Ej: Puebla, Xochimilco..." 
+              />
+            </div>
+          </div>
+          
+          <!-- Columna derecha -->
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Fuente</label>
+              <input 
+                v-model="fuente" 
+                type="text" 
+                class="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                placeholder="Fuente" 
+              />
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Validación</label>
+              <select 
+                v-model="validacion" 
+                class="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Selecciona</option>
+                <option value="Borrador">Borrador</option>
+                <option value="Verificado">Verificado</option>
+                <option value="Preliminar">Preliminar</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
+              <input 
+                v-model="observaciones" 
+                type="text" 
+                class="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                placeholder="Observaciones" 
+              />
+            </div>
+          </div>
+          
+          <!-- Botones de acción -->
+          <div class="mt-6 flex justify-end space-x-3 md:col-span-2 border-t pt-4">
+            <button 
+              type="button" 
+              @click="modalVisible = false" 
+              class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit" 
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              Subir archivo
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <!-- Panel de estadísticas -->
@@ -199,6 +333,14 @@ const BACKEND_URL = 'http://localhost:4000'
 const archivos = ref([])
 const archivoSubir = ref(null)
 const archivoNombre = ref('')
+const descripcion = ref("")
+const etiquetas = ref("")
+const responsable = ref("")
+const fuente = ref("")
+const alcance = ref("")
+const validacion = ref("")
+const observaciones = ref("")
+const modalVisible = ref(false)
 
 // Propiedades computadas para estadísticas
 const totalSize = computed(() => {
@@ -249,14 +391,36 @@ async function subirArchivo() {
   try {
     const formData = new FormData()
     formData.append("file", archivoSubir.value)
+    formData.append("descripcion", descripcion.value)
+    formData.append("etiquetas", etiquetas.value)
+    formData.append("responsable", responsable.value)
+    formData.append("fuente", fuente.value)
+    formData.append("alcance", alcance.value)
+    formData.append("validacion", validacion.value)
+    formData.append("observaciones", observaciones.value)
     
     await axios.post(`${BACKEND_URL}/archivos/upload`, formData, {
       headers: { "Content-Type": "multipart/form-data" }
     })
     
+    // Cerrar modal y mostrar mensaje de éxito
+    modalVisible.value = false
+    
+    // Mensaje de éxito más elegante utilizando un toast o notificación temporal
+    // Por ahora usamos alert, pero esto podría mejorarse con una librería de notificaciones
     alert("Archivo subido correctamente")
+    
+    // Limpiar los campos del formulario
     archivoSubir.value = null
     archivoNombre.value = ''
+    descripcion.value = ""
+    etiquetas.value = ""
+    responsable.value = ""
+    fuente.value = ""
+    alcance.value = ""
+    validacion.value = ""
+    observaciones.value = ""
+    
     await cargarArchivos()
   } catch (err) {
     console.error('Error al subir el archivo:', err)

@@ -78,14 +78,14 @@ app.post('/archivos/upload', upload.single('file'), async (req, res) => {
     const tamano = archivo.size;
     const archivo_url = archivo.filename;
 
-    // Puedes dejar los demás campos como null o vacío para pruebas
-    const descripcion = '';
-    const etiquetas = '';
-    const fuente = '';
-    const responsable = '';
-    const alcance_geografico = '';
-    const validacion = '';
-    const observaciones = '';
+    // Recibe los nuevos campos desde req.body
+    const descripcion = req.body.descripcion || '';
+    const etiquetas = req.body.etiquetas || '';
+    const responsable = req.body.responsable || '';
+    const fuente = req.body.fuente || '';
+    const alcance_geografico = req.body.alcance || '';
+    const validacion = req.body.validacion || '';
+    const observaciones = req.body.observaciones || '';
 
     // Insertar en PostgreSQL
     const query = `
