@@ -117,12 +117,13 @@
                 <input 
                   v-model="etiquetaInput" 
                   @keydown="gestionarEtiquetas"
+                  @blur="agregarEtiquetaEnBlur"
                   type="text" 
                   class="flex-grow min-w-[120px] py-1 px-2 focus:outline-none text-gray-700" 
-                  placeholder="Escribe y presiona espacio..."
+                  placeholder="Escribe para agregar etiquetas..."
                 />
               </div>
-              <p class="text-xs text-gray-500 mt-1">Escribe y presiona espacio o coma para crear una etiqueta</p>
+              <p class="text-xs text-gray-500 mt-1">Escribe y presiona espacio, coma o haz clic fuera del campo para crear una etiqueta</p>
             </div>
             
             <div>
@@ -654,17 +655,28 @@ function gestionarEtiquetas(event) {
   // Si se presiona Espacio, Enter o Coma
   if ((event.key === ' ' || event.key === 'Enter' || event.key === ',') && valor !== '') {
     event.preventDefault()
-    // Si la etiqueta no está ya en el array, la añadimos
-    if (!etiquetasArray.value.includes(valor)) {
-      etiquetasArray.value.push(valor)
-    }
-    etiquetaInput.value = ''
+    agregarEtiqueta(valor)
+  }
+  
+  // Tab también agrega la etiqueta y mueve al siguiente campo
+  if (event.key === 'Tab' && valor !== '') {
+    agregarEtiqueta(valor)
+    // No prevenimos el evento por defecto para que el foco pase al siguiente campo
   }
   
   // Si se presiona Backspace con el input vacío, elimina la última etiqueta
   if (event.key === 'Backspace' && etiquetaInput.value === '' && etiquetasArray.value.length > 0) {
     etiquetasArray.value.pop()
   }
+}
+
+// Función auxiliar para agregar una etiqueta
+function agregarEtiqueta(valor) {
+  // Si la etiqueta no está ya en el array, la añadimos
+  if (valor && !etiquetasArray.value.includes(valor)) {
+    etiquetasArray.value.push(valor)
+  }
+  etiquetaInput.value = ''
 }
 
 // Función para eliminar una etiqueta específica
@@ -1230,6 +1242,16 @@ onUnmounted(() => {
     clearTimeout(timerBusqueda.value)
   }
 })
+
+// Función para agregar etiqueta cuando se hace clic fuera del input
+function agregarEtiquetaEnBlur() {
+  const valor = etiquetaInput.value.trim();
+  
+  // Si hay texto en el input, añadirlo como etiqueta
+  if (valor !== '') {
+    agregarEtiqueta(valor);
+  }
+}
 </script>
 
 <style scoped>
