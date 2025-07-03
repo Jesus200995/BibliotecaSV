@@ -80,11 +80,44 @@ app.get('/db-status', async (req, res) => {
   }
 });
 
-// Endpoint para listar archivos
+// Endpoint para listar archivos (optimizado, con paginación)
 app.get('/archivos', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM catalogo_archivos ORDER BY fecha_actualizacion DESC');
-    res.json(result.rows);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = (page - 1) * limit;
+    
+    // Excluir el campo archivo_contenido para mejorar el rendimiento
+    const query = `
+      SELECT id, nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, 
+             archivo_url, fuente, responsable, alcance_geografico, validacion, observaciones
+      FROM catalogo_archivos 
+      ORDER BY fecha_actualizacion DESC
+      LIMIT $1 OFFSET $2
+    `;
+    
+    // Consulta para el conteo total
+    const countQuery = `SELECT COUNT(*) FROM catalogo_archivos`;
+    
+    // Ejecutar ambas consultas en paralelo
+    const [result, countResult] = await Promise.all([
+      pool.query(query, [limit, offset]),
+      pool.query(countQuery)
+    ]);
+    
+    // Construir respuesta con metadatos de paginación
+    const totalItems = parseInt(countResult.rows[0].count);
+    const totalPages = Math.ceil(totalItems / limit);
+    
+    res.json({
+      items: result.rows,
+      metadata: {
+        page,
+        limit,
+        totalItems,
+        totalPages
+      }
+    });
   } catch (error) {
     console.error('Error al listar archivos:', error);
     res.status(500).json({ error: error.message });
