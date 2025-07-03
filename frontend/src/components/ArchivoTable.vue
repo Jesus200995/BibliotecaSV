@@ -173,7 +173,9 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium text-gray-500">Total archivos</p>
-            <p class="text-2xl font-bold text-gray-800">{{ archivos.length || 0 }}</p>
+            <p class="text-2xl font-bold text-gray-800">
+              {{ hayFiltrosActivos ? `${archivosFiltrados.length} / ${archivos.length}` : archivos.length || 0 }}
+            </p>
           </div>
           <div class="rounded-full p-3 bg-blue-50">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -226,10 +228,65 @@
       </div>
     </div>
 
+    <!-- Barra de búsqueda y filtros -->
+    <div class="flex flex-wrap items-center gap-4 mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+      <div class="w-full md:w-auto">
+        <label class="block text-xs font-medium text-gray-500 mb-1">Buscar por nombre</label>
+        <input 
+          v-model="busqueda" 
+          type="text" 
+          class="w-full md:w-64 rounded-md border border-gray-300 px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+          placeholder="Nombre del archivo" 
+        />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Tipo</label>
+        <select 
+          v-model="filtroTipo" 
+          class="rounded-md border border-gray-300 px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="">Todos</option>
+          <option v-for="tipo in uniqueTypes" :key="tipo" :value="tipo">{{ tipo }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Año</label>
+        <select 
+          v-model="filtroAnio" 
+          class="rounded-md border border-gray-300 px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="">Todos</option>
+          <option v-for="anio in aniosDisponibles" :key="anio" :value="anio">{{ anio }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Responsable</label>
+        <input 
+          v-model="filtroResponsable" 
+          type="text" 
+          class="rounded-md border border-gray-300 px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+          placeholder="Responsable" 
+        />
+      </div>
+      <div class="self-end">
+        <button 
+          @click="limpiarFiltros"
+          class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          Limpiar filtros
+        </button>
+      </div>
+    </div>
+
     <!-- Tabla de archivos -->
     <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
       <div class="p-6 border-b border-gray-200">
-        <h3 class="text-lg font-semibold text-gray-800">Listado de archivos</h3>
+        <h3 class="text-lg font-semibold text-gray-800">
+          {{ hayFiltrosActivos ? 'Resultados de búsqueda' : 'Listado de archivos' }}
+        </h3>
+        <p v-if="hayFiltrosActivos" class="text-sm text-gray-500 mt-1">
+          Mostrando {{ archivosFiltrados.length }} de {{ archivos.length }} archivos
+        </p>
       </div>
 
       <!-- Tabla responsiva -->
@@ -245,7 +302,7 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="archivo in archivos" :key="archivo.id" class="hover:bg-gray-50">
+            <tr v-for="archivo in archivosFiltrados" :key="archivo.id" class="hover:bg-gray-50">
               <td class="px-6 py-4 text-sm font-medium text-gray-900">
                 <div class="flex items-center">
                   <div class="flex-shrink-0 mr-2">
@@ -307,14 +364,15 @@
                 </div>
               </td>
             </tr>
-            <tr v-if="archivos.length === 0">
+            <tr v-if="archivosFiltrados.length === 0">
               <td colspan="5" class="px-6 py-10 text-center text-gray-500">
                 <div class="flex flex-col items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                   </svg>
                   <p>No hay archivos disponibles</p>
-                  <p class="text-sm mt-1">Sube un archivo para comenzar</p>
+                  <p class="text-sm mt-1" v-if="hayFiltrosActivos">No se encontraron resultados con los filtros actuales</p>
+                  <p class="text-sm mt-1" v-else>Sube un archivo para comenzar</p>
                 </div>
               </td>
             </tr>
@@ -342,9 +400,59 @@ const validacion = ref("")
 const observaciones = ref("")
 const modalVisible = ref(false)
 
+// Variables para búsqueda y filtros
+const busqueda = ref("")
+const filtroTipo = ref("")
+const filtroAnio = ref("")
+const filtroResponsable = ref("")
+
+// Función para limpiar todos los filtros
+function limpiarFiltros() {
+  busqueda.value = ""
+  filtroTipo.value = ""
+  filtroAnio.value = ""
+  filtroResponsable.value = ""
+}
+
+// Años disponibles para filtrar
+const aniosDisponibles = computed(() => {
+  const years = archivos.value
+    .map(a => (a.fecha_actualizacion || '').substring(0, 4))
+    .filter(year => year && /^\d{4}$/.test(year))
+  
+  return [...new Set(years)].sort().reverse()
+})
+
+// Verificar si hay filtros activos
+const hayFiltrosActivos = computed(() => {
+  return busqueda.value !== "" || filtroTipo.value !== "" || filtroAnio.value !== "" || filtroResponsable.value !== ""
+})
+
+// Archivos filtrados según los criterios de búsqueda
+const archivosFiltrados = computed(() => {
+  return archivos.value.filter(a => {
+    // Filtro por nombre
+    const coincideNombre = a.nombre.toLowerCase().includes(busqueda.value.toLowerCase())
+    
+    // Filtro por tipo
+    const coincideTipo = !filtroTipo.value || a.tipo === filtroTipo.value
+    
+    // Filtro por año
+    const coincideAnio = !filtroAnio.value || (a.fecha_actualizacion || '').substring(0, 4) === filtroAnio.value
+    
+    // Filtro por responsable
+    const coincideResp = !filtroResponsable.value || 
+                        (a.responsable || '').toLowerCase().includes(filtroResponsable.value.toLowerCase())
+    
+    return coincideNombre && coincideTipo && coincideAnio && coincideResp
+  })
+})
+
 // Propiedades computadas para estadísticas
 const totalSize = computed(() => {
-  return archivos.value.reduce((total, archivo) => {
+  // Si hay filtros activos, mostrar el tamaño total de los archivos filtrados
+  const archivosToSum = hayFiltrosActivos.value ? archivosFiltrados.value : archivos.value
+  return archivosToSum.reduce((total, archivo) => {
     return total + (archivo.tamano || 0)
   }, 0)
 })
