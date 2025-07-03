@@ -21,40 +21,48 @@
     
     <!-- Modal para subir archivos -->
     <div v-if="modalVisible" class="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
-      <!-- Fondo oscuro -->
-      <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="modalVisible = false"></div>
+      <!-- Fondo oscuro con animación -->
+      <div 
+        class="fixed inset-0 bg-black transition-opacity duration-300"
+        :class="{ 'bg-opacity-70': modalVisible, 'bg-opacity-0': !modalVisible }" 
+        @click="modalVisible = false"
+      ></div>
       
-      <!-- Contenido del modal -->
-      <div class="relative bg-white rounded-lg w-full max-w-5xl mx-4 shadow-xl transform transition-all">
-        <!-- Cabecera del modal -->
-        <div class="bg-blue-600 text-white rounded-t-lg px-6 py-4 flex items-center justify-between">
-          <h3 class="text-lg font-medium flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <!-- Contenido del modal con animación -->
+      <div 
+        class="relative bg-white rounded-2xl w-full max-w-5xl mx-4 shadow-2xl transform transition-all duration-300 overflow-hidden"
+        :class="{ 'scale-100 opacity-100': modalVisible, 'scale-95 opacity-0': !modalVisible }"
+      >
+        <!-- Cabecera del modal mejorada -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-2xl px-8 py-5 flex items-center justify-between">
+          <h3 class="text-xl font-semibold flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
             </svg>
             Subir nuevo archivo
           </h3>
-          <button @click="modalVisible = false" class="text-white hover:text-gray-200">
-            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <button 
+            @click="modalVisible = false" 
+            class="text-white hover:text-gray-200 transition-colors p-1 rounded-full hover:bg-white/20"
+          >
+            <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
         
-        <!-- Formulario -->
-        <form @submit.prevent="subirArchivo" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Formulario con estilos mejorados -->
+        <form @submit.prevent="subirArchivo" class="p-8 grid grid-cols-1 md:grid-cols-2 gap-6 bg-gradient-to-b from-white to-gray-50">
           <!-- Columna 1 -->
-          <div class="space-y-4 md:col-span-2">
+          <div class="space-y-5 md:col-span-2">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Archivo</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Archivo</label>
               <div class="flex items-center">
-                <label for="file-upload" class="cursor-pointer bg-blue-50 hover:bg-blue-100 text-blue-600 px-4 py-2 rounded-md border border-blue-200">
-                  <span class="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                    </svg>
-                    Seleccionar archivo
-                  </span>
+                <label for="file-upload" class="cursor-pointer bg-blue-50 hover:bg-blue-100 text-blue-600 px-5 py-3 rounded-lg border border-blue-200 transition-all hover:shadow-md transform hover:scale-[1.02] flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                  </svg>
+                  Seleccionar archivo
                 </label>
                 <input 
                   type="file" 
@@ -63,74 +71,98 @@
                   class="hidden" 
                   required 
                 />
-                <span class="ml-3 text-sm text-gray-500">{{ archivoNombre || 'Ningún archivo seleccionado' }}</span>
+                <div class="ml-4 py-2 px-3 bg-gray-50 text-sm text-gray-600 rounded-lg border border-gray-200 max-w-xs truncate">
+                  {{ archivoNombre || 'Ningún archivo seleccionado' }}
+                </div>
               </div>
-              <p class="text-xs text-gray-500 mt-1">
+              <p class="text-xs text-gray-500 mt-2 italic">
                 Se aceptan documentos (.doc, .docx, .xls, .xlsx, .ppt, .pptx), imágenes (.jpg, .png, .gif), PDFs y otros formatos de archivo. Tamaño máximo: 50MB.
               </p>
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Descripción</label>
               <textarea 
                 v-model="descripcion" 
                 rows="2" 
-                class="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
                 placeholder="Descripción del archivo">
               </textarea>
             </div>
           </div>
           
           <!-- Columna izquierda -->
-          <div class="space-y-4">
+          <div class="space-y-5">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Etiquetas</label>
-              <input 
-                v-model="etiquetas" 
-                type="text" 
-                class="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                placeholder="Etiquetas (separadas por coma)" 
-              />
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Etiquetas</label>
+              <div class="flex flex-wrap gap-2 p-2 rounded-lg border border-gray-300 bg-white min-h-[58px] focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
+                <!-- Mostrar etiquetas como chips -->
+                <div 
+                  v-for="(tag, index) in etiquetasArray" 
+                  :key="index"
+                  class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1.5 animate-pop-in"
+                >
+                  {{ tag }}
+                  <button 
+                    @click="eliminarEtiqueta(index)" 
+                    class="text-blue-500 hover:text-blue-700 focus:outline-none transition-colors rounded-full hover:bg-blue-200 p-0.5"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <!-- Input para añadir nuevas etiquetas -->
+                <input 
+                  v-model="etiquetaInput" 
+                  @keydown="gestionarEtiquetas"
+                  type="text" 
+                  class="flex-grow min-w-[120px] py-1 px-2 focus:outline-none text-gray-700" 
+                  placeholder="Escribe y presiona espacio..."
+                />
+              </div>
+              <p class="text-xs text-gray-500 mt-1">Escribe y presiona espacio o coma para crear una etiqueta</p>
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Responsable</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Responsable</label>
               <input 
                 v-model="responsable" 
                 type="text" 
-                class="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
                 placeholder="Responsable" 
               />
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Alcance geográfico</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Alcance geográfico</label>
               <input 
                 v-model="alcance" 
                 type="text" 
-                class="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
                 placeholder="Ej: Puebla, Xochimilco..." 
               />
             </div>
           </div>
           
           <!-- Columna derecha -->
-          <div class="space-y-4">
+          <div class="space-y-5">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Fuente</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Fuente</label>
               <input 
                 v-model="fuente" 
                 type="text" 
-                class="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
                 placeholder="Fuente" 
               />
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Validación</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Validación</label>
               <select 
                 v-model="validacion" 
-                class="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none bg-white"
               >
                 <option value="">Selecciona</option>
                 <option value="Borrador">Borrador</option>
@@ -140,28 +172,28 @@
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Observaciones</label>
               <input 
                 v-model="observaciones" 
                 type="text" 
-                class="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
                 placeholder="Observaciones" 
               />
             </div>
           </div>
           
           <!-- Botones de acción -->
-          <div class="mt-6 flex justify-end space-x-3 md:col-span-2 border-t pt-4">
+          <div class="mt-6 flex justify-end space-x-4 md:col-span-2 border-t pt-6">
             <button 
               type="button" 
               @click="modalVisible = false" 
-              class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium"
             >
               Cancelar
             </button>
             <button 
               type="submit" 
-              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              class="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-colors shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium transform hover:scale-[1.02]"
             >
               Subir archivo
             </button>
@@ -449,32 +481,41 @@
 
     <!-- Modal de confirmación de archivo subido -->
     <div v-if="confirmacionVisible" class="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
-      <!-- Fondo oscuro con animación de fade in -->
+      <!-- Fondo oscuro con animación mejorada -->
       <div 
-        class="fixed inset-0 bg-black bg-opacity-50 transition-opacity animate-fade-in" 
+        class="fixed inset-0 bg-black transition-opacity duration-300"
+        :class="{ 'bg-opacity-70': confirmacionVisible, 'bg-opacity-0': !confirmacionVisible }" 
         @click="cerrarConfirmacion"
       ></div>
       
-      <!-- Modal con animación de slide in -->
-      <div class="relative bg-white rounded-lg max-w-md w-full mx-4 shadow-xl transform animate-slide-in">
-        <div class="flex flex-col items-center p-8 text-center">
-          <!-- Icono de éxito con animación -->
-          <div class="bg-green-100 rounded-full p-4 mb-4 animate-bounce-short">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
+      <!-- Modal con animación mejorada -->
+      <div 
+        class="relative bg-white rounded-2xl max-w-md w-full mx-4 shadow-2xl transform transition-all duration-300 overflow-hidden"
+        :class="{ 'translate-y-0 scale-100 opacity-100': confirmacionVisible, 'translate-y-4 scale-95 opacity-0': !confirmacionVisible }"
+      >
+        <div class="bg-gradient-to-b from-white to-gray-50 flex flex-col items-center p-8 text-center">
+          <!-- Icono de éxito con animación mejorada -->
+          <div class="relative">
+            <!-- Círculo exterior pulsante -->
+            <div class="absolute inset-0 rounded-full bg-green-100 animate-ping opacity-25"></div>
+            <!-- Círculo base -->
+            <div class="relative bg-gradient-to-r from-green-500 to-emerald-500 rounded-full p-5 shadow-lg mb-5">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
           </div>
           
-          <h3 class="text-xl font-bold text-gray-900 mb-1">¡Archivo subido exitosamente!</h3>
+          <h3 class="text-2xl font-bold text-gray-800 mb-2">¡Archivo subido exitosamente!</h3>
           
-          <p class="text-gray-600 mb-4">
+          <p class="text-gray-600 mb-6">
             {{ archivoSubido?.nombre }} se ha añadido correctamente a la biblioteca.
           </p>
           
           <div class="flex justify-center">
             <button 
               @click="cerrarConfirmacion" 
-              class="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              class="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 font-medium transform hover:scale-[1.02]"
             >
               Aceptar
             </button>
@@ -507,6 +548,12 @@ style.innerHTML = `
   50% { transform: translateY(-10px); }
 }
 
+@keyframes popIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  70% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out;
 }
@@ -518,6 +565,10 @@ style.innerHTML = `
 .animate-bounce-short {
   animation: bounceShort 1s ease infinite;
 }
+
+.animate-pop-in {
+  animation: popIn 0.3s ease-out forwards;
+}
 `
 document.head.appendChild(style)
 
@@ -526,8 +577,46 @@ const archivos = ref([])
 const archivoSubir = ref(null)
 const archivoNombre = ref('')
 const descripcion = ref("")
-const etiquetas = ref("")
+const etiquetasArray = ref([])
+const etiquetaInput = ref("")
 const responsable = ref("")
+
+// Función para gestionar las etiquetas
+function gestionarEtiquetas(event) {
+  const valor = etiquetaInput.value.trim()
+  
+  // Si se presiona Espacio, Enter o Coma
+  if ((event.key === ' ' || event.key === 'Enter' || event.key === ',') && valor !== '') {
+    event.preventDefault()
+    // Si la etiqueta no está ya en el array, la añadimos
+    if (!etiquetasArray.value.includes(valor)) {
+      etiquetasArray.value.push(valor)
+    }
+    etiquetaInput.value = ''
+  }
+  
+  // Si se presiona Backspace con el input vacío, elimina la última etiqueta
+  if (event.key === 'Backspace' && etiquetaInput.value === '' && etiquetasArray.value.length > 0) {
+    etiquetasArray.value.pop()
+  }
+}
+
+// Función para eliminar una etiqueta específica
+function eliminarEtiqueta(index) {
+  etiquetasArray.value.splice(index, 1)
+}
+
+// Computed property para convertir las etiquetas a formato de string cuando sea necesario
+const etiquetas = computed({
+  get: () => etiquetasArray.value.join(','),
+  set: (val) => {
+    if (val) {
+      etiquetasArray.value = val.split(',').map(tag => tag.trim()).filter(tag => tag !== '')
+    } else {
+      etiquetasArray.value = []
+    }
+  }
+})
 const fuente = ref("")
 const confirmacionVisible = ref(false)
 const archivoSubido = ref(null)
@@ -678,6 +767,7 @@ async function subirArchivo() {
     const formData = new FormData()
     formData.append("file", archivoSubir.value)
     formData.append("descripcion", descripcion.value)
+    // Las etiquetas se envían como string gracias a la computed property
     formData.append("etiquetas", etiquetas.value)
     formData.append("responsable", responsable.value)
     formData.append("fuente", fuente.value)
@@ -739,7 +829,9 @@ function formatDate(dateString) {
 // Función para cerrar el modal de confirmación
 function cerrarConfirmacion() {
   confirmacionVisible.value = false
-  archivoSubido.value = null
+  setTimeout(() => {
+    archivoSubido.value = null
+  }, 300) // Espera a que termine la animación de salida
 }
 
 // Función para cambiar de página
@@ -767,3 +859,90 @@ function formatSize(bytes) {
   return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i]
 }
 </script>
+
+<style scoped>
+/* Animaciones personalizadas para los modales */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+/* Efecto de hover para inputs y selectores */
+input:hover, select:hover, textarea:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+}
+
+/* Animaciones para los botones */
+button {
+  transition: all 0.2s ease;
+}
+
+/* Efecto de rebote para los modales */
+@keyframes modalBounce {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Animación para inputs en focus */
+input:focus, select:focus, textarea:focus {
+  animation: focusGlow 0.3s ease forwards;
+}
+
+@keyframes focusGlow {
+  0% {
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  }
+}
+
+/* Efecto de entrada para modales */
+.modal-enter-active {
+  animation: modalBounce 0.4s ease-out;
+}
+
+/* Efecto de salida para modales */
+.modal-leave-active {
+  animation: modalBounce 0.3s ease-in reverse;
+}
+
+/* Transición suave para todos los elementos */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+/* Estilos para los chips de etiquetas */
+.animate-pop-in {
+  animation: popIn 0.3s ease-out forwards;
+}
+
+/* Evita que el contenedor de etiquetas sea demasiado pequeño */
+.min-h-\[58px\] {
+  min-height: 58px;
+}
+
+/* Asegura que el input dentro del contenedor de etiquetas se comporte correctamente */
+.flex-grow {
+  flex-grow: 1;
+}
+</style>
