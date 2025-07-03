@@ -421,9 +421,22 @@
       </div>
       
       <table class="w-full divide-y divide-gray-200 table-fixed">
+        <colgroup>
+          <col style="width: 15%"> <!-- Nombre -->
+          <col style="width: 15%"> <!-- Etiquetas -->
+          <col style="width: 10%"> <!-- Validación -->
+          <col style="width: 15%"> <!-- Alcance geográfico -->
+          <col style="width: 12%"> <!-- Fecha -->
+          <col style="width: 8%"> <!-- Tipo -->
+          <col style="width: 10%"> <!-- Tamaño -->
+          <col style="width: 15%"> <!-- Acciones -->
+        </colgroup>
         <thead class="bg-gray-50">
           <tr>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Etiquetas</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Validación</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alcance geográfico</th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tamaño</th>
@@ -457,6 +470,44 @@
                   </span>
                 </div>
                 <div class="truncate max-w-xs">{{ archivo.nombre }}</div>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex flex-wrap gap-1">
+                <span 
+                  v-for="(tag, index) in (archivo.etiquetas || '').split(',')" 
+                  :key="index" 
+                  v-show="tag.trim()"
+                  class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full text-xs font-medium"
+                >
+                  {{ tag.trim() }}
+                </span>
+                <span v-if="!archivo.etiquetas" class="text-gray-400 text-xs italic">Sin etiquetas</span>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span 
+                class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+                :class="{
+                  'bg-blue-100 text-blue-800': archivo.validacion === 'Verificado',
+                  'bg-yellow-100 text-yellow-800': archivo.validacion === 'Preliminar',
+                  'bg-gray-100 text-gray-800': archivo.validacion === 'Borrador' || !archivo.validacion
+                }"
+              >
+                {{ archivo.validacion || 'No definido' }}
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex flex-wrap gap-1">
+                <span 
+                  v-for="(lugar, index) in (archivo.alcance || '').split(',')" 
+                  :key="index" 
+                  v-show="lugar.trim()"
+                  class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-medium"
+                >
+                  {{ lugar.trim() }}
+                </span>
+                <span v-if="!archivo.alcance" class="text-gray-400 text-xs italic">No especificado</span>
               </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(archivo.fecha_actualizacion) }}</td>
@@ -494,7 +545,7 @@
             </td>
           </tr>
           <tr v-if="archivosFiltrados.length === 0">
-            <td colspan="5" class="px-6 py-10 text-center text-gray-500">
+            <td colspan="8" class="px-6 py-10 text-center text-gray-500">
               <div class="flex flex-col items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
