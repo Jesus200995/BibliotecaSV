@@ -25,7 +25,7 @@
       <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="modalVisible = false"></div>
       
       <!-- Contenido del modal -->
-      <div class="relative bg-white rounded-lg max-w-3xl w-full mx-4 shadow-xl transform transition-all">
+      <div class="relative bg-white rounded-lg w-full max-w-5xl mx-4 shadow-xl transform transition-all">
         <!-- Cabecera del modal -->
         <div class="bg-blue-600 text-white rounded-t-lg px-6 py-4 flex items-center justify-between">
           <h3 class="text-lg font-medium flex items-center gap-2">
@@ -232,13 +232,13 @@
     </div>
 
     <!-- Barra de búsqueda y filtros -->
-    <div class="flex flex-wrap items-center gap-4 mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-      <div class="w-full md:w-auto">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+      <div>
         <label class="block text-xs font-medium text-gray-500 mb-1">Buscar por nombre</label>
         <input 
           v-model="busqueda" 
           type="text" 
-          class="w-full md:w-64 rounded-md border border-gray-300 px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+          class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
           placeholder="Nombre del archivo" 
         />
       </div>
@@ -282,7 +282,7 @@
     </div>
 
     <!-- Tabla de archivos con paginación -->
-    <div class="relative overflow-x-auto">
+    <div class="relative overflow-x-auto bg-white rounded-lg shadow">
       <!-- Indicador de carga -->
       <div 
         v-if="cargandoPagina" 
@@ -294,7 +294,7 @@
         </div>
       </div>
       
-      <table class="min-w-full divide-y divide-gray-200">
+      <table class="w-full divide-y divide-gray-200 table-fixed">
         <thead class="bg-gray-50">
           <tr>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
@@ -304,7 +304,7 @@
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
           </tr>
         </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
+        <tbody class="bg-white divide-y divide-gray-200" style="max-height: calc(100vh - 350px); overflow-y: auto;">
           <tr v-for="archivo in archivosFiltrados" :key="archivo.id" class="hover:bg-gray-50">
             <td class="px-6 py-4 text-sm font-medium text-gray-900">
               <div class="flex items-center">
@@ -383,7 +383,7 @@
       </table>
       
       <!-- Controles de paginación -->
-      <div class="px-6 py-3 flex items-center justify-between border-t border-gray-200 bg-white">
+      <div class="px-6 py-4 flex items-center justify-between border-t border-gray-200 bg-white rounded-b-lg">
         <div class="flex-1 flex justify-between items-center">
           <div>
             <p class="text-sm text-gray-700">

@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen w-full bg-gray-50">
+  <div class="flex h-screen w-full bg-gray-50 overflow-hidden">
     <!-- Sidebar -->
     <aside class="w-64 bg-blue-700 text-white shadow-lg flex-shrink-0">
       <!-- Logo y título -->
@@ -9,7 +9,7 @@
       </div>
       
       <!-- Menú de navegación -->
-      <nav class="mt-5">
+      <nav class="mt-5 overflow-y-auto" style="height: calc(100vh - 80px);">
         <div class="px-4 py-3 text-xs uppercase font-semibold text-blue-200">
           Principal
         </div>
@@ -62,7 +62,7 @@
     <div class="flex-1 flex flex-col overflow-hidden">
       <!-- Header -->
       <header class="bg-white shadow-sm z-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+        <div class="w-full px-4 py-4 flex justify-between items-center">
           <h1 class="text-2xl font-semibold text-blue-700">Biblioteca de Datos</h1>
           <div class="text-gray-600">
             Plataforma de gestión documental
@@ -71,8 +71,8 @@
       </header>
 
       <!-- Contenido principal -->
-      <main class="flex-1 overflow-y-auto p-4 bg-gray-50">
-        <div class="max-w-7xl mx-auto">
+      <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+        <div class="w-full">
           <ArchivoTable @ver="verFicha"/>
         </div>
       </main>
@@ -86,7 +86,7 @@
 
       <!-- Footer -->
       <footer class="bg-white text-gray-500 text-sm py-3 shadow-inner">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div class="w-full px-6 text-center">
           © 2025 Biblioteca de Datos - Todos los derechos reservados
         </div>
       </footer>
