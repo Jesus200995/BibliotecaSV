@@ -100,12 +100,12 @@
                 <div 
                   v-for="(tag, index) in etiquetasArray" 
                   :key="index"
-                  class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1.5 animate-pop-in"
+                  class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1.5 animate-pop-in"
                 >
                   {{ tag }}
                   <button 
                     @click="eliminarEtiqueta(index)" 
-                    class="text-blue-500 hover:text-blue-700 focus:outline-none transition-colors rounded-full hover:bg-blue-200 p-0.5"
+                    class="text-orange-500 hover:text-orange-700 focus:outline-none transition-colors rounded-full hover:bg-orange-200 p-0.5"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
