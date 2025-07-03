@@ -383,12 +383,80 @@
         </table>
       </div>
     </div>
+    
+    <!-- Modal de confirmación de archivo subido -->
+    <div v-if="confirmacionVisible" class="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
+      <!-- Fondo oscuro con animación de fade in -->
+      <div 
+        class="fixed inset-0 bg-black bg-opacity-50 transition-opacity animate-fade-in" 
+        @click="cerrarConfirmacion"
+      ></div>
+      
+      <!-- Modal con animación de slide in -->
+      <div class="relative bg-white rounded-lg max-w-md w-full mx-4 shadow-xl transform animate-slide-in">
+        <div class="flex flex-col items-center p-8 text-center">
+          <!-- Icono de éxito con animación -->
+          <div class="bg-green-100 rounded-full p-4 mb-4 animate-bounce-short">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          
+          <h3 class="text-xl font-bold text-gray-900 mb-1">¡Archivo subido exitosamente!</h3>
+          
+          <p class="text-gray-600 mb-4">
+            {{ archivoSubido?.nombre }} se ha añadido correctamente a la biblioteca.
+          </p>
+          
+          <div class="flex justify-center">
+            <button 
+              @click="cerrarConfirmacion" 
+              class="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              Aceptar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
+
+// Estilos de animación personalizados
+const style = document.createElement('style')
+style.innerHTML = `
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes bounceShort {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.4s ease-out;
+}
+
+.animate-bounce-short {
+  animation: bounceShort 1s ease infinite;
+}
+`
+document.head.appendChild(style)
 
 const BACKEND_URL = 'http://localhost:4000'
 const archivos = ref([])
@@ -398,6 +466,9 @@ const descripcion = ref("")
 const etiquetas = ref("")
 const responsable = ref("")
 const fuente = ref("")
+const confirmacionVisible = ref(false)
+const archivoSubido = ref(null)
+const cargando = ref(false)
 const alcance = ref("")
 const validacion = ref("")
 const observaciones = ref("")
@@ -517,6 +588,9 @@ async function subirArchivo() {
   }
   
   try {
+    // Mostrar indicador de carga
+    cargando.value = true
+    
     const formData = new FormData()
     formData.append("file", archivoSubir.value)
     formData.append("descripcion", descripcion.value)
@@ -527,16 +601,21 @@ async function subirArchivo() {
     formData.append("validacion", validacion.value)
     formData.append("observaciones", observaciones.value)
     
-    await axios.post(`${BACKEND_URL}/archivos/upload`, formData, {
+    const response = await axios.post(`${BACKEND_URL}/archivos/upload`, formData, {
       headers: { "Content-Type": "multipart/form-data" }
     })
     
-    // Cerrar modal y mostrar mensaje de éxito
+    // Cerrar modal de subida
     modalVisible.value = false
     
-    // Mensaje de éxito más elegante utilizando un toast o notificación temporal
-    // Por ahora usamos alert, pero esto podría mejorarse con una librería de notificaciones
-    alert("Archivo subido correctamente")
+    // Guardar información del archivo subido
+    archivoSubido.value = {
+      nombre: archivoNombre.value,
+      tipo: archivoNombre.value.split('.').pop().toUpperCase()
+    }
+    
+    // Mostrar modal de confirmación
+    confirmacionVisible.value = true
     
     // Limpiar los campos del formulario
     archivoSubir.value = null
@@ -549,10 +628,14 @@ async function subirArchivo() {
     validacion.value = ""
     observaciones.value = ""
     
+    // Actualizar la lista de archivos
     await cargarArchivos()
   } catch (err) {
     console.error('Error al subir el archivo:', err)
     alert("Error al subir el archivo: " + (err.response?.data?.error || err.message))
+  } finally {
+    // Desactivar indicador de carga
+    cargando.value = false
   }
 }
 
@@ -567,6 +650,12 @@ function formatDate(dateString) {
     hour: '2-digit',
     minute: '2-digit'
   }).format(date)
+}
+
+// Función para cerrar el modal de confirmación
+function cerrarConfirmacion() {
+  confirmacionVisible.value = false
+  archivoSubido.value = null
 }
 
 function formatSize(bytes) {
