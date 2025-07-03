@@ -166,7 +166,7 @@
                     @blur="setTimeout(() => mostrarSugerencias = false, 200)"
                     type="text" 
                     class="flex-grow min-w-[120px] py-1 px-2 focus:outline-none text-gray-700" 
-                    placeholder="Busca una ubicación en México..." 
+                    placeholder="Escribe para buscar lugares en México..." 
                   />
                 </div>
                 
@@ -208,7 +208,7 @@
                   Buscando ubicaciones...
                 </div>
               </div>
-              <p class="text-xs text-gray-500 mt-1">Escribe al menos 2 letras para buscar ubicaciones en México (ciudades, municipios, estados)</p>
+              <p class="text-xs text-gray-500 mt-1">Comienza a escribir para buscar ubicaciones en México (ciudades, municipios, estados)</p>
             </div>
           </div>
           
@@ -960,49 +960,93 @@ function buscarUbicaciones() {
   // Limpiar el timer existente
   clearTimeout(timerBusqueda.value)
   
-  // No buscar si hay menos de 2 caracteres
-  if (alcanceInput.value.length < 2) {
+  // No buscar si está vacío
+  if (alcanceInput.value.trim() === '') {
     sugerenciasUbicacion.value = []
     cargandoUbicaciones.value = false
     mostrarSugerencias.value = false
     return
   }
   
-  // Configurar debounce (esperar 300ms después de que el usuario deja de escribir)
+  // Configurar debounce (esperar 250ms después de que el usuario deja de escribir)
+  // Reducido de 300ms a 250ms para una respuesta más rápida
   cargandoUbicaciones.value = true
   mostrarSugerencias.value = true // Mostrar indicador de carga mientras se busca
   
   timerBusqueda.value = setTimeout(async () => {
     try {
-      console.log("Buscando:", alcanceInput.value)
+      // Normalizar el término de búsqueda (eliminar acentos, convertir a minúscula)
+      const terminoBusqueda = alcanceInput.value.trim();
       
-      // Construir URL con parámetros correctos para México
-      const url = `https://nominatim.openstreetmap.org/search?countrycodes=MX&q=${encodeURIComponent(alcanceInput.value)}&format=json&addressdetails=1&limit=5`
+      console.log("Buscando:", terminoBusqueda)
+      
+      // Parámetros mejorados para la búsqueda:
+      // - countrycodes=MX: Limitar a México
+      // - q: Término de búsqueda
+      // - format=json: Formato de respuesta
+      // - addressdetails=1: Incluir detalles de dirección
+      // - limit=8: Aumentado de 5 a 8 resultados
+      // - namedetails=1: Obtener detalles adicionales de nombres
+      // - accept-language=es: Preferir resultados en español
+      // - dedupe=1: Eliminar duplicados
+      const url = `https://nominatim.openstreetmap.org/search?` + 
+                 `countrycodes=MX&` +
+                 `q=${encodeURIComponent(terminoBusqueda)}&` +
+                 `format=json&` + 
+                 `addressdetails=1&` +
+                 `namedetails=1&` +
+                 `dedupe=1&` +
+                 `limit=8`
       
       console.log("URL de búsqueda:", url)
       
-      // Usar Axios en lugar de fetch para mejor manejo de CORS
+      // Usar Axios con configuración mejorada
       const response = await axios.get(url, {
         headers: {
           // Headers requeridos por Nominatim
           'User-Agent': 'BibliotecaSV_App/1.0',
-          'Accept-Language': 'es'
-        }
+          'Accept-Language': 'es',
+          'Referer': window.location.origin // Añadir Referer para mejor comportamiento con CORS
+        },
+        // Aumentar el tiempo máximo de espera para mayor confiabilidad
+        timeout: 5000
       })
       
       console.log("Respuesta obtenida:", response.data)
       
       if (response.data && Array.isArray(response.data)) {
-        sugerenciasUbicacion.value = response.data
-        mostrarSugerencias.value = response.data.length > 0
+        // Filtrar y priorizar resultados para mejorar relevancia
+        const resultados = response.data
+          // Ordenar por importancia del tipo de lugar
+          .sort((a, b) => {
+            // Prioridad: ciudad/pueblo > municipio > estado > otros
+            const getPrioridad = (tipo) => {
+              if (!tipo) return 5;
+              tipo = tipo.toLowerCase();
+              if (tipo.includes('city') || tipo.includes('town')) return 1;
+              if (tipo.includes('municipality')) return 2;
+              if (tipo.includes('administrative') && a.address?.state) return 3;
+              if (tipo.includes('administrative')) return 4;
+              return 5;
+            };
+            return getPrioridad(a.type) - getPrioridad(b.type);
+          })
+          // Eliminar lugares con nombres muy similares
+          .filter((lugar, index, self) => {
+            return index === self.findIndex(l => 
+              l.display_name.toLowerCase().includes(lugar.display_name.toLowerCase()) ||
+              lugar.display_name.toLowerCase().includes(l.display_name.toLowerCase())
+            );
+          });
         
-        if (response.data.length === 0) {
-          console.log("No se encontraron resultados para:", alcanceInput.value)
-        }
+        sugerenciasUbicacion.value = resultados;
+        mostrarSugerencias.value = resultados.length > 0;
+        
+        console.log(`Se encontraron ${resultados.length} resultados para: "${alcanceInput.value}"`);
       } else {
-        console.error('Formato de respuesta inesperado:', response.data)
-        sugerenciasUbicacion.value = []
-        mostrarSugerencias.value = false
+        console.error('Formato de respuesta inesperado:', response.data);
+        sugerenciasUbicacion.value = [];
+        mostrarSugerencias.value = false;
       }
     } catch (error) {
       console.error('Error al buscar ubicaciones:', error)
@@ -1012,15 +1056,15 @@ function buscarUbicaciones() {
     } finally {
       cargandoUbicaciones.value = false
     }
-  }, 300)
+  }, 250) // Reducido de 300ms a 250ms para una respuesta más rápida
 }
 
 // Función para activar la búsqueda cuando el input recibe foco
 function activarBusquedaUbicaciones() {
   mostrarSugerencias.value = true;
   
-  // Si hay al menos 2 caracteres, buscar inmediatamente
-  if (alcanceInput.value.length >= 2) {
+  // Buscar inmediatamente si hay algún texto
+  if (alcanceInput.value.trim() !== '') {
     buscarUbicaciones();
   }
 }
@@ -1029,21 +1073,36 @@ function activarBusquedaUbicaciones() {
 function seleccionarUbicacion(lugar) {
   console.log("Seleccionando ubicación:", lugar)
   
-  // Extraer el nombre más significativo
+  // Extraer el nombre más significativo con lógica mejorada
   let nombrePrincipal;
-  if (lugar.name) {
+  
+  // Si tiene namedetails con nombre en español, usar ese prioritariamente
+  if (lugar.namedetails && lugar.namedetails.name) {
+    nombrePrincipal = lugar.namedetails.name;
+  } else if (lugar.namedetails && lugar.namedetails['name:es']) {
+    nombrePrincipal = lugar.namedetails['name:es'];
+  } else if (lugar.name) {
     nombrePrincipal = lugar.name;
   } else if (lugar.address) {
-    // Intentar usar partes de la dirección en orden de relevancia
+    // Lógica mejorada para obtener el nombre más relevante de la dirección
     nombrePrincipal = lugar.address.city || 
                      lugar.address.town || 
                      lugar.address.village || 
                      lugar.address.municipality ||
+                     lugar.address.county ||
                      lugar.address.state ||
                      extraerNombrePrincipal(lugar.display_name);
+                     
+    // Si es un estado y ya incluye "México" o "Estado de", dejarlo así
+    if (lugar.address.state && !lugar.address.city && !lugar.address.town) {
+      nombrePrincipal = lugar.address.state;
+    }
   } else {
     nombrePrincipal = extraerNombrePrincipal(lugar.display_name);
   }
+  
+  // Limpieza adicional (quitar "México" redundante al final si ya está en otro lado)
+  nombrePrincipal = nombrePrincipal.replace(/, México$/, '');
   
   // Crear un objeto con la información relevante
   const nuevaUbicacion = {
