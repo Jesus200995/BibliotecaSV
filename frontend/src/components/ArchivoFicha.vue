@@ -17,7 +17,7 @@
           <tr><td class="font-semibold">Observaciones</td><td>{{ archivo.observaciones }}</td></tr>
         </tbody>
       </table>
-      <a :href="`http://localhost:4000/descargas/${archivo.archivo_url}`" target="_blank" class="bg-blue-600 px-3 py-1 rounded hover:bg-blue-700 text-white">Descargar</a>
+      <a :href="`${BACKEND_URL}/archivos/descargar/${archivo.id}`" target="_blank" class="bg-blue-600 px-3 py-1 rounded hover:bg-blue-700 text-white">Descargar</a>
     </div>
   </div>
 </template>
@@ -26,4 +26,7 @@
 const props = defineProps({
   archivo: Object,
 })
+
+// URL del backend, primero intentamos localhost y si no funciona usamos la IP del VPS
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
 </script>

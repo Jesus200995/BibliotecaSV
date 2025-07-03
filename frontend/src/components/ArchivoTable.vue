@@ -65,6 +65,9 @@
                 />
                 <span class="ml-3 text-sm text-gray-500">{{ archivoNombre || 'Ningún archivo seleccionado' }}</span>
               </div>
+              <p class="text-xs text-gray-500 mt-1">
+                Se aceptan documentos (.doc, .docx, .xls, .xlsx, .ppt, .pptx), imágenes (.jpg, .png, .gif), PDFs y otros formatos de archivo. Tamaño máximo: 50MB.
+              </p>
             </div>
             
             <div>
@@ -347,7 +350,7 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div class="flex items-center space-x-2">
-                  <a :href="`${BACKEND_URL}/descargas/${archivo.archivo_url}`" 
+                  <a :href="`${BACKEND_URL}/archivos/descargar/${archivo.id}`" 
                      target="_blank" 
                      class="text-blue-600 hover:text-blue-900 p-1">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -486,13 +489,30 @@ async function cargarArchivos() {
 }
 
 function seleccionarArchivo(e) {
-  archivoSubir.value = e.target.files[0]
-  archivoNombre.value = e.target.files[0]?.name || ''
+  const file = e.target.files[0]
+  
+  // Validar tamaño de archivo (50MB máximo)
+  if (file && file.size > 50 * 1024 * 1024) {
+    alert("El archivo es demasiado grande. El tamaño máximo permitido es 50MB.")
+    e.target.value = null
+    archivoSubir.value = null
+    archivoNombre.value = ''
+    return
+  }
+  
+  archivoSubir.value = file
+  archivoNombre.value = file?.name || ''
 }
 
 async function subirArchivo() {
   if (!archivoSubir.value) {
     alert("Selecciona un archivo para subir")
+    return
+  }
+  
+  // Validar tamaño nuevamente antes de subir
+  if (archivoSubir.value.size > 50 * 1024 * 1024) {
+    alert("El archivo es demasiado grande. El tamaño máximo permitido es 50MB.")
     return
   }
   
