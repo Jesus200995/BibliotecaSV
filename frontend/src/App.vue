@@ -44,13 +44,24 @@
           Principal
         </div>
         
-        <a href="#" class="flex items-center px-6 py-3 text-purple-100 bg-purple-800 border-l-4 border-white">
+        <a href="#" @click="vistaActual = 'dashboard'" 
+           class="flex items-center px-6 py-3 text-purple-100 transition-colors"
+           :class="vistaActual === 'dashboard' ? 'bg-purple-800 border-l-4 border-white' : 'hover:bg-purple-800'">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" />
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z" />
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z" />
           </svg>
           Dashboard
+        </a>
+        
+        <a href="#" @click="vistaActual = 'archivos'" 
+           class="flex items-center px-6 py-3 text-purple-100 transition-colors"
+           :class="vistaActual === 'archivos' ? 'bg-purple-800 border-l-4 border-white' : 'hover:bg-purple-800'">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Archivos
         </a>
       </nav>
     </aside>
@@ -70,7 +81,11 @@
       <!-- Contenido principal -->
       <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
         <div class="w-full">
-          <ArchivoTable @ver="verFicha"/>
+          <!-- Dashboard -->
+          <ArchivoTable v-if="vistaActual === 'dashboard'" @ver="verFicha"/>
+          
+          <!-- Vista de Archivos -->
+          <ArchivosView v-if="vistaActual === 'archivos'"/>
         </div>
       </main>
 
@@ -96,8 +111,10 @@ import { ref } from 'vue'
 import axios from 'axios'
 import ArchivoTable from './components/ArchivoTable.vue'
 import ArchivoFicha from './components/ArchivoFicha.vue'
+import ArchivosView from './components/ArchivosView.vue'
 
 const archivoSeleccionado = ref(null)
+const vistaActual = ref('dashboard') // Estado para controlar la vista actual
 const BACKEND_URL = 'http://localhost:4000'
 
 async function verFicha(id) {
