@@ -5,18 +5,17 @@
       <!-- Logo y título -->
       <div class="p-5 border-b border-purple-600 flex flex-col items-center">
         <div class="mb-3 book-container">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14 logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <!-- Fondo circular con degradado -->
-            <circle cx="12" cy="12" r="10" class="logo-bg" />
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <!-- Libro base -->
+            <rect x="4" y="4" width="16" height="16" rx="1" class="book-cover" />
             
-            <!-- Tallo de la planta -->
-            <path d="M12 20v-6" class="logo-stem" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- Páginas animadas -->
+            <path d="M6 4.5c0 0 3 0.9 6 0.9s6 -0.9 6 -0.9v15c0 0 -3 0.9 -6 0.9s-6 -0.9 -6 -0.9v-15z" class="book-page page-1" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M7 4.7c0 0 2.5 0.7 5 0.7s5 -0.7 5 -0.7v14.6c0 0 -2.5 0.7 -5 0.7s-5 -0.7 -5 -0.7v-14.6z" class="book-page page-2" stroke-width="1.2" stroke-linecap="round"/>
+            <path d="M8 4.9c0 0 2 0.5 4 0.5s4 -0.5 4 -0.5v14.2c0 0 -2 0.5 -4 0.5s-4 -0.5 -4 -0.5v-14.2z" class="book-page page-3" stroke-width="0.9" stroke-linecap="round"/>
             
-            <!-- Hojas animadas -->
-            <path d="M8 10c2,-2 4,0 4,2" class="logo-leaf leaf-left" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M16 10c-2,-2 -4,0 -4,2" class="logo-leaf leaf-right" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M9 7c1,-1 3,0 3,1" class="logo-leaf leaf-topleft" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M15 7c-1,-1 -3,0 -3,1" class="logo-leaf leaf-topright" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- Marcapáginas -->
+            <path d="M18 7l0.8 -2.5l0.8 2.5" class="book-bookmark" stroke-width="0.75" stroke-linecap="round"/>
           </svg>
         </div>
         <div class="text-center">
@@ -148,30 +147,36 @@ body, html {
   font-family: "Montserrat", "Segoe UI", Roboto, -apple-system, sans-serif;
 }
 
-/* Estilos del logo y animación de las hojas */
+/* Estilos del logo y animación del libro */
 .book-container {
-  filter: drop-shadow(0px 3px 3px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.4));
+  perspective: 800px;
+  transform-style: preserve-3d;
+  margin-top: 5px;
 }
 
 .logo-icon {
   color: #e9d5ff; /* Morado muy claro para el logo */
+  overflow: visible;
 }
 
-.logo-bg {
-  fill: rgba(167, 139, 250, 0.15); /* Fondo morado claro con transparencia */
-  stroke: rgba(233, 213, 255, 0.6); /* Borde morado muy claro */
+.book-cover {
+  stroke: #a78bfa; /* Morado claro para la cubierta del libro */
+  stroke-width: 1.5;
+  fill: rgba(139, 92, 246, 0.5); /* Morado con transparencia */
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.2));
 }
 
-.logo-stem {
-  stroke: #a78bfa; /* Morado claro para el tallo */
-  stroke-width: 2;
+.book-page {
+  stroke: #e9d5ff; /* Morado muy claro para las páginas */
+  fill: rgba(255, 255, 255, 0.95); /* Páginas blancas con ligera transparencia */
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.7));
 }
 
-.logo-leaf {
-  stroke: #e9d5ff; /* Morado muy claro para las hojas */
-  stroke-width: 2;
-  fill: none;
-  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.6));
+.book-bookmark {
+  stroke: #fb7185; /* Color rosa para el marcapáginas */
+  stroke-width: 1.25;
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.8));
 }
 
 /* Efectos de degradado en el texto */
@@ -211,58 +216,58 @@ body, html {
   font-weight: 500;
 }
 
-/* Animaciones para las hojas */
-.leaf-left {
-  animation: leaf-float 4s ease-in-out infinite;
-  transform-origin: bottom right;
+/* Animaciones para las páginas del libro */
+.page-1 {
+  animation: page-turn 4s ease-in-out infinite;
+  transform-origin: center left;
+  transform-style: preserve-3d;
+  perspective: 1000px;
 }
 
-.leaf-right {
-  animation: leaf-float 4.5s ease-in-out 0.3s infinite;
-  transform-origin: bottom left;
+.page-2 {
+  animation: page-turn 4.5s ease-in-out 1.2s infinite;
+  transform-origin: center left;
+  transform-style: preserve-3d;
+  perspective: 1000px;
 }
 
-.leaf-topleft {
-  animation: leaf-sway 3.8s ease-in-out 0.5s infinite;
-  transform-origin: bottom right;
+.page-3 {
+  animation: page-turn 5s ease-in-out 2.4s infinite;
+  transform-origin: center left;
+  transform-style: preserve-3d;
+  perspective: 1000px;
 }
 
-.leaf-topright {
-  animation: leaf-sway 4.2s ease-in-out 0.7s infinite;
-  transform-origin: bottom left;
+.book-bookmark {
+  animation: bookmark-sway 3s ease-in-out infinite;
+  transform-origin: top center;
 }
 
-@keyframes leaf-float {
+@keyframes page-turn {
   0%, 100% {
-    transform: rotate(0deg) translateY(0);
-    filter: brightness(1) drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
+    transform: rotateY(0deg) translateX(0);
+    filter: brightness(1) drop-shadow(0 0 1px rgba(255, 255, 255, 0.3));
   }
-  25% {
-    transform: rotate(3deg) translateY(-2px) scale(1.03);
-    filter: brightness(1.2) drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
+  45% {
+    transform: rotateY(-30deg) translateX(2px);
+    filter: brightness(1.1) drop-shadow(0 0 2px rgba(255, 255, 255, 0.5));
   }
   50% {
-    transform: rotate(1deg) translateY(-1px);
-    filter: brightness(1.1) drop-shadow(0 0 2px rgba(255, 255, 255, 0.4));
+    transform: rotateY(-40deg) translateX(3px);
+    filter: brightness(1.2) drop-shadow(0 0 3px rgba(255, 255, 255, 0.6));
   }
-  75% {
-    transform: rotate(-2deg) translateY(1px);
-    filter: brightness(0.98) drop-shadow(0 0 1px rgba(255, 255, 255, 0.3));
+  55% {
+    transform: rotateY(-30deg) translateX(2px);
+    filter: brightness(1.1) drop-shadow(0 0 2px rgba(255, 255, 255, 0.5));
   }
 }
 
-@keyframes leaf-sway {
+@keyframes bookmark-sway {
   0%, 100% {
-    transform: rotate(0deg) scale(1);
-    filter: brightness(1) drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
+    transform: rotate(0deg);
   }
-  30% {
-    transform: rotate(4deg) scale(1.02);
-    filter: brightness(1.15) drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
-  }
-  70% {
-    transform: rotate(-3deg) scale(0.98);
-    filter: brightness(0.95) drop-shadow(0 0 1px rgba(255, 255, 255, 0.2));
+  50% {
+    transform: rotate(5deg);
   }
 }
 </style>
