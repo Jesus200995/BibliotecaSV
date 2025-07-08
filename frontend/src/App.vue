@@ -1,20 +1,40 @@
 <template>
   <div class="flex h-screen w-full bg-gray-50 overflow-hidden">
     <!-- Sidebar -->
-    <aside class="w-64 bg-blue-700 text-white shadow-lg flex-shrink-0">
+    <aside class="w-64 bg-purple-700 text-white shadow-lg flex-shrink-0">
       <!-- Logo y título -->
-      <div class="p-5 border-b border-blue-600 flex items-center">
-        <img src="/vite.svg" class="w-8 h-8 mr-2" />
-        <h2 class="text-xl font-bold">Biblioteca SV</h2>
+      <div class="p-5 border-b border-purple-600 flex flex-col items-center">
+        <div class="mb-3 book-container">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14 logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <!-- Fondo circular con degradado -->
+            <circle cx="12" cy="12" r="10" class="logo-bg" />
+            
+            <!-- Tallo de la planta -->
+            <path d="M12 20v-6" class="logo-stem" stroke-width="1.5" stroke-linecap="round"/>
+            
+            <!-- Hojas animadas -->
+            <path d="M8 10c2,-2 4,0 4,2" class="logo-leaf leaf-left" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M16 10c-2,-2 -4,0 -4,2" class="logo-leaf leaf-right" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M9 7c1,-1 3,0 3,1" class="logo-leaf leaf-topleft" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M15 7c-1,-1 -3,0 -3,1" class="logo-leaf leaf-topright" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="text-center">
+          <h2 class="sv-title tracking-wider">
+            <span class="text-sm uppercase font-bold sv-gradient tracking-wider">SEMBRANDO VIDA</span>
+          </h2>
+        </div>
+        <div class="w-32 h-0.5 bg-gradient-to-r from-white via-purple-400 to-white mt-2"></div>
+        <div class="text-xs mt-2 font-extrabold biblioteca-gradient uppercase">BIBLIOTECA DE DATOS</div>
       </div>
       
       <!-- Menú de navegación -->
       <nav class="mt-5 overflow-y-auto" style="height: calc(100vh - 80px);">
-        <div class="px-4 py-3 text-xs uppercase font-semibold text-blue-200">
+        <div class="px-4 py-3 text-xs uppercase font-semibold text-purple-200">
           Principal
         </div>
         
-        <a href="#" class="flex items-center px-6 py-3 text-blue-100 bg-blue-800 border-l-4 border-white">
+        <a href="#" class="flex items-center px-6 py-3 text-purple-100 bg-purple-800 border-l-4 border-white">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" />
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z" />
@@ -23,14 +43,14 @@
           Dashboard
         </a>
         
-        <a href="#" class="flex items-center px-6 py-3 text-blue-100 hover:bg-blue-800 transition-colors">
+        <a href="#" class="flex items-center px-6 py-3 text-purple-100 hover:bg-purple-800 transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           Archivos
         </a>
         
-        <a href="#" class="flex items-center px-6 py-3 text-blue-100 hover:bg-blue-800 transition-colors">
+        <a href="#" class="flex items-center px-6 py-3 text-purple-100 hover:bg-purple-800 transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -38,18 +58,18 @@
           Configuración
         </a>
         
-        <div class="px-4 py-3 mt-6 text-xs uppercase font-semibold text-blue-200">
+        <div class="px-4 py-3 mt-6 text-xs uppercase font-semibold text-purple-200">
           Gestión
         </div>
         
-        <a href="#" class="flex items-center px-6 py-3 text-blue-100 hover:bg-blue-800 transition-colors">
+        <a href="#" class="flex items-center px-6 py-3 text-purple-100 hover:bg-purple-800 transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
           Usuarios
         </a>
         
-        <a href="#" class="flex items-center px-6 py-3 text-blue-100 hover:bg-blue-800 transition-colors">
+        <a href="#" class="flex items-center px-6 py-3 text-purple-100 hover:bg-purple-800 transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
@@ -63,7 +83,7 @@
       <!-- Header -->
       <header class="bg-white shadow-sm z-10">
         <div class="w-full px-4 py-4 flex justify-between items-center">
-          <h1 class="text-2xl font-semibold text-blue-700">Biblioteca de Datos</h1>
+          <h1 class="text-2xl font-semibold text-purple-700">Biblioteca de Datos</h1>
           <div class="text-gray-600">
             Plataforma de gestión documental
           </div>
@@ -118,3 +138,131 @@ function cerrarFicha() {
   archivoSeleccionado.value = null
 }
 </script>
+
+<style>
+/* Importar fuentes profesionales */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
+/* Estilos globales */
+body, html {
+  font-family: "Montserrat", "Segoe UI", Roboto, -apple-system, sans-serif;
+}
+
+/* Estilos del logo y animación de las hojas */
+.book-container {
+  filter: drop-shadow(0px 3px 3px rgba(0, 0, 0, 0.3));
+}
+
+.logo-icon {
+  color: #e9d5ff; /* Morado muy claro para el logo */
+}
+
+.logo-bg {
+  fill: rgba(167, 139, 250, 0.15); /* Fondo morado claro con transparencia */
+  stroke: rgba(233, 213, 255, 0.6); /* Borde morado muy claro */
+}
+
+.logo-stem {
+  stroke: #a78bfa; /* Morado claro para el tallo */
+  stroke-width: 2;
+}
+
+.logo-leaf {
+  stroke: #e9d5ff; /* Morado muy claro para las hojas */
+  stroke-width: 2;
+  fill: none;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.6));
+}
+
+/* Efectos de degradado en el texto */
+.text-gradient {
+  background: linear-gradient(to right, #FFFFFF 0%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: 0.12em;
+  font-family: "Montserrat", "Segoe UI", Roboto, -apple-system, sans-serif;
+  font-weight: 700;
+}
+
+.biblioteca-gradient {
+  background: linear-gradient(to right, #FFFFFF 80%, rgba(255, 255, 255, 0.7) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: 0.12em;
+  font-family: "Montserrat", "Segoe UI", Roboto, -apple-system, sans-serif;
+  font-weight: 700;
+}
+
+.sv-gradient {
+  background: linear-gradient(to right, #FFFFFF 0%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.sv-title {
+  letter-spacing: 0.05em;
+  font-family: "Montserrat", "Segoe UI", Roboto, -apple-system, sans-serif;
+  font-weight: 500;
+}
+
+/* Animaciones para las hojas */
+.leaf-left {
+  animation: leaf-float 4s ease-in-out infinite;
+  transform-origin: bottom right;
+}
+
+.leaf-right {
+  animation: leaf-float 4.5s ease-in-out 0.3s infinite;
+  transform-origin: bottom left;
+}
+
+.leaf-topleft {
+  animation: leaf-sway 3.8s ease-in-out 0.5s infinite;
+  transform-origin: bottom right;
+}
+
+.leaf-topright {
+  animation: leaf-sway 4.2s ease-in-out 0.7s infinite;
+  transform-origin: bottom left;
+}
+
+@keyframes leaf-float {
+  0%, 100% {
+    transform: rotate(0deg) translateY(0);
+    filter: brightness(1) drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
+  }
+  25% {
+    transform: rotate(3deg) translateY(-2px) scale(1.03);
+    filter: brightness(1.2) drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
+  }
+  50% {
+    transform: rotate(1deg) translateY(-1px);
+    filter: brightness(1.1) drop-shadow(0 0 2px rgba(255, 255, 255, 0.4));
+  }
+  75% {
+    transform: rotate(-2deg) translateY(1px);
+    filter: brightness(0.98) drop-shadow(0 0 1px rgba(255, 255, 255, 0.3));
+  }
+}
+
+@keyframes leaf-sway {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+    filter: brightness(1) drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
+  }
+  30% {
+    transform: rotate(4deg) scale(1.02);
+    filter: brightness(1.15) drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
+  }
+  70% {
+    transform: rotate(-3deg) scale(0.98);
+    filter: brightness(0.95) drop-shadow(0 0 1px rgba(255, 255, 255, 0.2));
+  }
+}
+</style>
