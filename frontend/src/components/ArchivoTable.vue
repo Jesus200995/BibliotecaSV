@@ -573,14 +573,14 @@
             <td class="px-6 py-4">
               <div class="flex flex-wrap gap-1">
                 <span 
-                  v-for="(lugar, index) in (archivo.alcance || '').split(',')" 
+                  v-for="(lugar, index) in (archivo.alcance_geografico || '').split(',')" 
                   :key="index" 
                   v-show="lugar.trim()"
                   class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-medium"
                 >
                   {{ lugar.trim() }}
                 </span>
-                <span v-if="!archivo.alcance" class="text-gray-400 text-xs italic">No especificado</span>
+                <span v-if="!archivo.alcance_geografico" class="text-gray-400 text-xs italic">No especificado</span>
               </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(archivo.fecha_actualizacion) }}</td>

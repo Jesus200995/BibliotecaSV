@@ -85,7 +85,7 @@
           <ArchivoTable v-if="vistaActual === 'dashboard'" @ver="verFicha"/>
           
           <!-- Vista de Archivos -->
-          <ArchivosView v-if="vistaActual === 'archivos'"/>
+          <ArchivosView v-if="vistaActual === 'archivos'" @ver="verFicha"/>
         </div>
       </main>
 
