@@ -364,6 +364,39 @@
                   placeholder="Descripción del archivo"
                 ></textarea>
               </div>
+              
+              <!-- Sección para reemplazar archivo -->
+              <div class="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <h5 class="text-sm font-semibold text-amber-800 mb-3 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
+                  </svg>
+                  Reemplazar archivo (opcional)
+                </h5>
+                <div class="flex items-center gap-3">
+                  <label for="nuevo-archivo" class="cursor-pointer bg-amber-100 hover:bg-amber-200 text-amber-700 px-4 py-2 rounded-lg border border-amber-300 transition-all hover:shadow-md flex items-center gap-2 text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    Seleccionar nuevo archivo
+                  </label>
+                  <input 
+                    type="file" 
+                    id="nuevo-archivo"
+                    @change="seleccionarNuevoArchivo" 
+                    class="hidden"
+                  />
+                  <div v-if="nuevoArchivoSeleccionado" class="text-sm text-gray-600 bg-white px-3 py-2 rounded border max-w-xs truncate">
+                    {{ nuevoArchivoSeleccionado.name }}
+                  </div>
+                  <div v-else class="text-xs text-amber-600 italic">
+                    No se ha seleccionado un nuevo archivo
+                  </div>
+                </div>
+                <p class="text-xs text-amber-600 mt-2">
+                  Si seleccionas un nuevo archivo, reemplazará completamente el archivo actual.
+                </p>
+              </div>
             </div>
 
             <!-- Información del responsable -->
@@ -511,6 +544,7 @@ const BACKEND_URL = 'http://localhost:4000'
 const modalEditarVisible = ref(false)
 const archivoEditando = ref(null)
 const guardandoCambios = ref(false)
+const nuevoArchivoSeleccionado = ref(null)
 const formularioEdicion = ref({
   nombre: '',
   descripcion: '',
@@ -726,6 +760,7 @@ function abrirModalEditar(archivo) {
 function cerrarModalEditar() {
   modalEditarVisible.value = false
   archivoEditando.value = null
+  nuevoArchivoSeleccionado.value = null
   formularioEdicion.value = {
     nombre: '',
     descripcion: '',
@@ -739,23 +774,68 @@ function cerrarModalEditar() {
   }
 }
 
+function seleccionarNuevoArchivo(event) {
+  const file = event.target.files[0]
+  
+  // Validar tamaño de archivo (50MB máximo)
+  if (file && file.size > 50 * 1024 * 1024) {
+    alert("El archivo es demasiado grande. El tamaño máximo permitido es 50MB.")
+    event.target.value = null
+    nuevoArchivoSeleccionado.value = null
+    return
+  }
+  
+  nuevoArchivoSeleccionado.value = file
+  
+  // Actualizar automáticamente el nombre y tipo si se selecciona un nuevo archivo
+  if (file) {
+    formularioEdicion.value.nombre = file.name
+    formularioEdicion.value.tipo = file.name.split('.').pop()?.toUpperCase() || ''
+  }
+}
+
 async function guardarCambios() {
   if (!archivoEditando.value) return
   
   try {
     guardandoCambios.value = true
     
-    const response = await axios.put(`${BACKEND_URL}/archivos/${archivoEditando.value.id}`, {
-      nombre: formularioEdicion.value.nombre,
-      descripcion: formularioEdicion.value.descripcion,
-      tipo: formularioEdicion.value.tipo,
-      responsable: formularioEdicion.value.responsable,
-      fuente: formularioEdicion.value.fuente,
-      etiquetas: formularioEdicion.value.etiquetas,
-      alcance_geografico: formularioEdicion.value.alcance_geografico,
-      validacion: formularioEdicion.value.validacion,
-      observaciones: formularioEdicion.value.observaciones
-    })
+    // Si hay un nuevo archivo seleccionado, usar FormData para enviarlo
+    if (nuevoArchivoSeleccionado.value) {
+      const formData = new FormData()
+      formData.append('file', nuevoArchivoSeleccionado.value)
+      formData.append('nombre', formularioEdicion.value.nombre)
+      formData.append('descripcion', formularioEdicion.value.descripcion)
+      formData.append('tipo', formularioEdicion.value.tipo)
+      formData.append('responsable', formularioEdicion.value.responsable)
+      formData.append('fuente', formularioEdicion.value.fuente)
+      formData.append('etiquetas', formularioEdicion.value.etiquetas)
+      formData.append('alcance', formularioEdicion.value.alcance_geografico)
+      formData.append('validacion', formularioEdicion.value.validacion)
+      formData.append('observaciones', formularioEdicion.value.observaciones)
+      
+      // Usar endpoint especial para actualizar con archivo
+      const response = await axios.put(`${BACKEND_URL}/archivos/${archivoEditando.value.id}/with-file`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      })
+      
+      console.log('Archivo actualizado con nuevo archivo:', response.data)
+    } else {
+      // Solo actualizar metadatos sin cambiar el archivo
+      const response = await axios.put(`${BACKEND_URL}/archivos/${archivoEditando.value.id}`, {
+        nombre: formularioEdicion.value.nombre,
+        descripcion: formularioEdicion.value.descripcion,
+        tipo: formularioEdicion.value.tipo,
+        responsable: formularioEdicion.value.responsable,
+        fuente: formularioEdicion.value.fuente,
+        etiquetas: formularioEdicion.value.etiquetas,
+        alcance_geografico: formularioEdicion.value.alcance_geografico,
+        validacion: formularioEdicion.value.validacion,
+        observaciones: formularioEdicion.value.observaciones
+      })
+      
+      console.log('Metadatos actualizados:', response.data)
+    }
     
     // Actualizar el archivo en la lista local
     const index = archivos.value.findIndex(a => a.id === archivoEditando.value.id)
