@@ -330,78 +330,151 @@
       </div>
     </div>
 
-    <!-- Barra de búsqueda y filtros -->
-    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl shadow-md mb-8 border border-blue-100 transition-all hover:shadow-lg">
-      <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
-        </svg>
-        Filtros de búsqueda
-      </h3>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+    <!-- Barra de búsqueda y filtros mejorada -->
+    <div class="bg-white p-5 rounded-2xl shadow-lg mb-8 border border-gray-100 transition-all hover:shadow-xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base font-semibold text-gray-700 flex items-center gap-2">
+          <div class="bg-gradient-to-r from-blue-500 to-indigo-500 p-1.5 rounded-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          Filtros de búsqueda
+        </h3>
+        <div v-if="hayFiltrosActivos" class="flex items-center gap-2">
+          <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
+            {{ archivosFiltrados.length }} / {{ archivos.length }} resultados
+          </span>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3">
+        <!-- Búsqueda por nombre -->
         <div class="relative">
-          <label class="block text-sm font-medium text-gray-600 mb-1.5">Buscar por nombre</label>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Buscar por nombre</label>
           <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
             <input 
               v-model="busqueda" 
               type="text" 
-              class="w-full pl-10 rounded-lg border border-gray-300 px-4 py-2.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+              class="w-full pl-8 pr-3 py-2 text-xs rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white focus:bg-white" 
               placeholder="Buscar archivo..." 
             />
           </div>
         </div>
+
+        <!-- Tipo -->
         <div>
-          <label class="block text-sm font-medium text-gray-600 mb-1.5">Tipo</label>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Tipo</label>
           <select 
             v-model="filtroTipo" 
-            class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white transition-all"
-            style="background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M6 9l6 6 6-6%22/></svg>'); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px;"
+            class="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 appearance-none bg-gray-50 hover:bg-white focus:bg-white transition-all"
+            style="background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M6 9l6 6 6-6%22/></svg>'); background-repeat: no-repeat; background-position: right 8px center; padding-right: 24px;"
           >
-            <option value="">Todos los tipos</option>
+            <option value="">Todos</option>
             <option v-for="tipo in uniqueTypes" :key="tipo" :value="tipo">{{ tipo }}</option>
           </select>
         </div>
+
+        <!-- Año -->
         <div>
-          <label class="block text-sm font-medium text-gray-600 mb-1.5">Año</label>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Año</label>
           <select 
             v-model="filtroAnio" 
-            class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white transition-all"
-            style="background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M6 9l6 6 6-6%22/></svg>'); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px;"
+            class="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 appearance-none bg-gray-50 hover:bg-white focus:bg-white transition-all"
+            style="background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M6 9l6 6 6-6%22/></svg>'); background-repeat: no-repeat; background-position: right 8px center; padding-right: 24px;"
           >
-            <option value="">Todos los años</option>
+            <option value="">Todos</option>
             <option v-for="anio in aniosDisponibles" :key="anio" :value="anio">{{ anio }}</option>
           </select>
         </div>
+
+        <!-- Responsable -->
         <div>
-          <label class="block text-sm font-medium text-gray-600 mb-1.5">Responsable</label>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Responsable</label>
           <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
             <input 
               v-model="filtroResponsable" 
               type="text" 
-              class="w-full pl-10 rounded-lg border border-gray-300 px-4 py-2.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
-              placeholder="Nombre responsable" 
+              class="w-full pl-8 pr-3 py-2 text-xs rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white focus:bg-white" 
+              placeholder="Responsable" 
             />
           </div>
         </div>
+
+        <!-- Etiquetas -->
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Etiquetas</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+            </div>
+            <input 
+              v-model="filtroEtiquetas" 
+              type="text" 
+              class="w-full pl-8 pr-3 py-2 text-xs rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white focus:bg-white" 
+              placeholder="Etiquetas" 
+            />
+          </div>
+        </div>
+
+        <!-- Alcance geográfico -->
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Alcance geográfico</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <input 
+              v-model="filtroAlcanceGeografico" 
+              type="text" 
+              class="w-full pl-8 pr-3 py-2 text-xs rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white focus:bg-white" 
+              placeholder="Ubicación" 
+            />
+          </div>
+        </div>
+
+        <!-- Validación -->
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Validación</label>
+          <select 
+            v-model="filtroValidacion" 
+            class="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 appearance-none bg-gray-50 hover:bg-white focus:bg-white transition-all"
+            style="background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M6 9l6 6 6-6%22/></svg>'); background-repeat: no-repeat; background-position: right 8px center; padding-right: 24px;"
+          >
+            <option value="">Todas</option>
+            <option value="Verificado">✓ Verificado</option>
+            <option value="Preliminar">⚠ Preliminar</option>
+            <option value="Borrador">📝 Borrador</option>
+            <option value="En revisión">🔄 En revisión</option>
+          </select>
+        </div>
+
+        <!-- Botón limpiar -->
         <div class="self-end">
           <button 
             @click="limpiarFiltros"
-            class="w-full flex items-center justify-center gap-2 px-6 py-2.5 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-lg border border-gray-300 shadow-sm transition-all hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            v-show="hayFiltrosActivos"
+            class="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-700 text-xs font-medium rounded-lg border border-gray-200 shadow-sm transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 transform hover:scale-105"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            Limpiar filtros
+            Limpiar
           </button>
         </div>
       </div>
@@ -795,6 +868,9 @@ const busqueda = ref("")
 const filtroTipo = ref("")
 const filtroAnio = ref("")
 const filtroResponsable = ref("")
+const filtroEtiquetas = ref("")
+const filtroAlcanceGeografico = ref("")
+const filtroValidacion = ref("")
 
 // Función para limpiar todos los filtros
 function limpiarFiltros() {
@@ -802,6 +878,9 @@ function limpiarFiltros() {
   filtroTipo.value = ""
   filtroAnio.value = ""
   filtroResponsable.value = ""
+  filtroEtiquetas.value = ""
+  filtroAlcanceGeografico.value = ""
+  filtroValidacion.value = ""
 }
 
 // Años disponibles para filtrar
@@ -815,7 +894,9 @@ const aniosDisponibles = computed(() => {
 
 // Verificar si hay filtros activos
 const hayFiltrosActivos = computed(() => {
-  return busqueda.value !== "" || filtroTipo.value !== "" || filtroAnio.value !== "" || filtroResponsable.value !== ""
+  return busqueda.value !== "" || filtroTipo.value !== "" || filtroAnio.value !== "" || 
+         filtroResponsable.value !== "" || filtroEtiquetas.value !== "" || 
+         filtroAlcanceGeografico.value !== "" || filtroValidacion.value !== ""
 })
 
 // Archivos filtrados según los criterios de búsqueda
@@ -834,7 +915,19 @@ const archivosFiltrados = computed(() => {
     const coincideResp = !filtroResponsable.value || 
                         (a.responsable || '').toLowerCase().includes(filtroResponsable.value.toLowerCase())
     
-    return coincideNombre && coincideTipo && coincideAnio && coincideResp
+    // Filtro por etiquetas (búsqueda parcial en múltiples etiquetas)
+    const coincideEtiquetas = !filtroEtiquetas.value || 
+                             (a.etiquetas || '').toLowerCase().includes(filtroEtiquetas.value.toLowerCase())
+    
+    // Filtro por alcance geográfico (búsqueda parcial)
+    const coincideAlcance = !filtroAlcanceGeografico.value || 
+                           (a.alcance_geografico || '').toLowerCase().includes(filtroAlcanceGeografico.value.toLowerCase())
+    
+    // Filtro por validación (coincidencia exacta)
+    const coincideValidacion = !filtroValidacion.value || a.validacion === filtroValidacion.value
+    
+    return coincideNombre && coincideTipo && coincideAnio && coincideResp && 
+           coincideEtiquetas && coincideAlcance && coincideValidacion
   })
 })
 
