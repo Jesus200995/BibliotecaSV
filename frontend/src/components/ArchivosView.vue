@@ -141,9 +141,8 @@
             class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
           >
             <option value="">Todas las validaciones</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="validado">Validado</option>
-            <option value="rechazado">Rechazado</option>
+            <option value="Borrador">Borrador</option>
+            <option value="Verificado">Verificado</option>
           </select>
         </div>
         
@@ -259,6 +258,17 @@
                     </svg>
                   </button>
                   
+                  <!-- Botón Editar -->
+                  <button 
+                    @click="abrirModalEditar(archivo)"
+                    class="w-8 h-8 bg-amber-100 hover:bg-amber-200 text-amber-600 hover:text-amber-700 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
+                    title="Editar archivo"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  
                   <!-- Botón Descargar -->
                   <a 
                     :href="`http://localhost:4000/archivos/${archivo.id}/download`"
@@ -277,6 +287,211 @@
         </table>
       </div>
     </div>
+
+    <!-- Modal de Edición -->
+    <div v-if="modalEditarVisible" class="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
+      <!-- Fondo oscuro con animación -->
+      <div 
+        class="fixed inset-0 bg-black transition-opacity duration-300"
+        :class="{ 'bg-opacity-70': modalEditarVisible, 'bg-opacity-0': !modalEditarVisible }" 
+        @click="cerrarModalEditar"
+      ></div>
+      
+      <!-- Contenido del modal con animación -->
+      <div 
+        class="relative bg-white rounded-2xl w-full max-w-4xl mx-4 shadow-2xl transform transition-all duration-300 overflow-hidden max-h-[90vh]"
+        :class="{ 'scale-100 opacity-100': modalEditarVisible, 'scale-95 opacity-0': !modalEditarVisible }"
+      >
+        <!-- Cabecera del modal -->
+        <div class="bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-t-2xl px-8 py-5 flex items-center justify-between">
+          <h3 class="text-xl font-semibold flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Editar archivo: {{ archivoEditando?.nombre }}
+          </h3>
+          <button 
+            @click="cerrarModalEditar" 
+            class="text-white hover:text-gray-200 transition-colors p-1 rounded-full hover:bg-white/20"
+          >
+            <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Formulario de edición -->
+        <div class="p-8 overflow-y-auto max-h-[calc(90vh-120px)]">
+          <form @submit.prevent="guardarCambios" class="space-y-6">
+            <!-- Información básica -->
+            <div class="bg-blue-50 rounded-xl p-6 border border-blue-200">
+              <h4 class="text-lg font-semibold text-blue-800 mb-4 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Información General
+              </h4>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre del archivo</label>
+                  <input 
+                    v-model="formularioEdicion.nombre" 
+                    type="text" 
+                    class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all" 
+                    placeholder="Nombre del archivo"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo</label>
+                  <input 
+                    v-model="formularioEdicion.tipo" 
+                    type="text" 
+                    class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all" 
+                    placeholder="Tipo de archivo"
+                  />
+                </div>
+              </div>
+              
+              <div class="mt-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Descripción</label>
+                <textarea 
+                  v-model="formularioEdicion.descripcion" 
+                  rows="3" 
+                  class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all" 
+                  placeholder="Descripción del archivo"
+                ></textarea>
+              </div>
+            </div>
+
+            <!-- Información del responsable -->
+            <div class="bg-green-50 rounded-xl p-6 border border-green-200">
+              <h4 class="text-lg font-semibold text-green-800 mb-4 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Detalles del Responsable
+              </h4>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Responsable</label>
+                  <input 
+                    v-model="formularioEdicion.responsable" 
+                    type="text" 
+                    class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all" 
+                    placeholder="Nombre del responsable"
+                  />
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Fuente</label>
+                  <input 
+                    v-model="formularioEdicion.fuente" 
+                    type="text" 
+                    class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all" 
+                    placeholder="Fuente del archivo"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Etiquetas y ubicación -->
+            <div class="bg-purple-50 rounded-xl p-6 border border-purple-200">
+              <h4 class="text-lg font-semibold text-purple-800 mb-4 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                Etiquetas y Ubicación
+              </h4>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Etiquetas</label>
+                  <input 
+                    v-model="formularioEdicion.etiquetas" 
+                    type="text" 
+                    class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all" 
+                    placeholder="Etiquetas separadas por comas"
+                  />
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Alcance geográfico</label>
+                  <input 
+                    v-model="formularioEdicion.alcance_geografico" 
+                    type="text" 
+                    class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all" 
+                    placeholder="Ubicación geográfica"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Validación y observaciones -->
+            <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+              <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Validación y Notas
+              </h4>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Estado de validación</label>
+                  <select 
+                    v-model="formularioEdicion.validacion" 
+                    class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                  >
+                    <option value="">Sin validar</option>
+                    <option value="Borrador">Borrador</option>
+                    <option value="Verificado">Verificado</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Observaciones</label>
+                <textarea 
+                  v-model="formularioEdicion.observaciones" 
+                  rows="3" 
+                  class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all" 
+                  placeholder="Observaciones adicionales"
+                ></textarea>
+              </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
+              <button 
+                type="button"
+                @click="cerrarModalEditar"
+                class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all font-medium"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="submit"
+                :disabled="guardandoCambios"
+                class="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg hover:from-amber-700 hover:to-orange-700 transition-all font-medium shadow-lg flex items-center gap-2"
+              >
+                <svg v-if="guardandoCambios" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                {{ guardandoCambios ? 'Guardando...' : 'Guardar cambios' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -291,6 +506,22 @@ defineEmits(['ver'])
 const archivos = ref([])
 const cargandoPagina = ref(false)
 const BACKEND_URL = 'http://localhost:4000'
+
+// Variables para el modal de edición
+const modalEditarVisible = ref(false)
+const archivoEditando = ref(null)
+const guardandoCambios = ref(false)
+const formularioEdicion = ref({
+  nombre: '',
+  descripcion: '',
+  tipo: '',
+  responsable: '',
+  fuente: '',
+  etiquetas: '',
+  alcance_geografico: '',
+  validacion: '',
+  observaciones: ''
+})
 
 // Variables para búsqueda y filtros
 const busqueda = ref("")
@@ -433,6 +664,8 @@ function getFileTypeColor(tipo) {
 
 function getValidationColor(validacion) {
   const colors = {
+    'Verificado': 'bg-green-100 text-green-800',
+    'Borrador': 'bg-yellow-100 text-yellow-800',
     'validado': 'bg-green-100 text-green-800',
     'pendiente': 'bg-yellow-100 text-yellow-800',
     'rechazado': 'bg-red-100 text-red-800'
@@ -443,6 +676,8 @@ function getValidationColor(validacion) {
 
 function getValidationText(validacion) {
   const texts = {
+    'Verificado': 'Verificado',
+    'Borrador': 'Borrador',
     'validado': 'Validado',
     'pendiente': 'Pendiente',
     'rechazado': 'Rechazado'
@@ -468,6 +703,80 @@ async function cargarArchivos() {
     console.error('Error al cargar archivos:', err)
   } finally {
     cargandoPagina.value = false
+  }
+}
+
+// Funciones del modal de edición
+function abrirModalEditar(archivo) {
+  archivoEditando.value = archivo
+  formularioEdicion.value = {
+    nombre: archivo.nombre || '',
+    descripcion: archivo.descripcion || '',
+    tipo: archivo.tipo || '',
+    responsable: archivo.responsable || '',
+    fuente: archivo.fuente || '',
+    etiquetas: archivo.etiquetas || '',
+    alcance_geografico: archivo.alcance_geografico || '',
+    validacion: archivo.validacion || '',
+    observaciones: archivo.observaciones || ''
+  }
+  modalEditarVisible.value = true
+}
+
+function cerrarModalEditar() {
+  modalEditarVisible.value = false
+  archivoEditando.value = null
+  formularioEdicion.value = {
+    nombre: '',
+    descripcion: '',
+    tipo: '',
+    responsable: '',
+    fuente: '',
+    etiquetas: '',
+    alcance_geografico: '',
+    validacion: '',
+    observaciones: ''
+  }
+}
+
+async function guardarCambios() {
+  if (!archivoEditando.value) return
+  
+  try {
+    guardandoCambios.value = true
+    
+    const response = await axios.put(`${BACKEND_URL}/archivos/${archivoEditando.value.id}`, {
+      nombre: formularioEdicion.value.nombre,
+      descripcion: formularioEdicion.value.descripcion,
+      tipo: formularioEdicion.value.tipo,
+      responsable: formularioEdicion.value.responsable,
+      fuente: formularioEdicion.value.fuente,
+      etiquetas: formularioEdicion.value.etiquetas,
+      alcance_geografico: formularioEdicion.value.alcance_geografico,
+      validacion: formularioEdicion.value.validacion,
+      observaciones: formularioEdicion.value.observaciones
+    })
+    
+    // Actualizar el archivo en la lista local
+    const index = archivos.value.findIndex(a => a.id === archivoEditando.value.id)
+    if (index !== -1) {
+      archivos.value[index] = { ...archivos.value[index], ...formularioEdicion.value }
+    }
+    
+    // Mostrar mensaje de éxito
+    alert('Archivo actualizado correctamente')
+    
+    // Cerrar modal
+    cerrarModalEditar()
+    
+    // Recargar la lista para asegurar datos actualizados
+    await cargarArchivos()
+    
+  } catch (error) {
+    console.error('Error al actualizar archivo:', error)
+    alert('Error al actualizar el archivo: ' + (error.response?.data?.error || error.message))
+  } finally {
+    guardandoCambios.value = false
   }
 }
 </script>
@@ -598,6 +907,10 @@ async function cargarArchivos() {
 
 .bg-green-100:hover {
   box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+.bg-amber-100:hover {
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
 /* Transiciones suaves para los iconos */

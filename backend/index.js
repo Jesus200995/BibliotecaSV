@@ -318,6 +318,75 @@ app.post('/archivos/upload', upload.single('file'), async (req, res) => {
   }
 });
 
+// Endpoint para actualizar un archivo por su ID
+app.put('/archivos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      nombre,
+      descripcion,
+      tipo,
+      responsable,
+      fuente,
+      etiquetas,
+      alcance_geografico,
+      validacion,
+      observaciones
+    } = req.body;
+
+    console.log('Actualizando archivo ID:', id);
+    console.log('Datos recibidos:', req.body);
+
+    // Actualizar el archivo en la base de datos
+    const query = `
+      UPDATE catalogo_archivos 
+      SET 
+        nombre = $1,
+        descripcion = $2,
+        tipo = $3,
+        responsable = $4,
+        fuente = $5,
+        etiquetas = $6,
+        alcance_geografico = $7,
+        validacion = $8,
+        observaciones = $9,
+        fecha_actualizacion = $10
+      WHERE id = $11
+      RETURNING id, nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, archivo_url, fuente, responsable, alcance_geografico, validacion, observaciones
+    `;
+
+    const values = [
+      nombre,
+      descripcion,
+      tipo,
+      responsable,
+      fuente,
+      etiquetas,
+      alcance_geografico,
+      validacion,
+      observaciones,
+      new Date(), // fecha_actualizacion
+      id
+    ];
+
+    const result = await pool.query(query, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Archivo no encontrado' });
+    }
+
+    console.log('Archivo actualizado exitosamente:', result.rows[0]);
+    res.json({ 
+      mensaje: 'Archivo actualizado correctamente', 
+      archivo: result.rows[0] 
+    });
+
+  } catch (error) {
+    console.error('Error al actualizar archivo:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Página de prueba para subir archivos
 app.get('/test-upload', (req, res) => {
   res.send(`
