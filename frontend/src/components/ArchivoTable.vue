@@ -358,17 +358,96 @@
               />
             </div>
             
+            <!-- Campo de Validación rediseñado - Solo 3 opciones específicas -->
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Validación</label>
-              <select 
-                v-model="validacion" 
-                class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none bg-white"
-              >
-                <option value="">Selecciona</option>
-                <option value="Borrador">Borrador</option>
-                <option value="Verificado">Verificado</option>
-                <option value="Preliminar">Preliminar</option>
-              </select>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Estado de validación</label>
+              
+              <!-- Radio buttons visuales con colores específicos -->
+              <div class="grid grid-cols-1 gap-3">
+                
+                <!-- Opción 1: Verificado (Verde) -->
+                <label class="cursor-pointer">
+                  <input 
+                    type="radio" 
+                    v-model="validacion" 
+                    value="Verificado" 
+                    class="sr-only"
+                  />
+                  <div class="flex items-center p-3 rounded-lg border-2 transition-all duration-200"
+                       :class="validacion === 'Verificado' 
+                         ? 'border-green-500 bg-green-50 shadow-md' 
+                         : 'border-gray-200 bg-white hover:border-green-300 hover:bg-green-25'">
+                    <div class="flex items-center justify-center w-5 h-5 mr-3 rounded-full border-2"
+                         :class="validacion === 'Verificado' 
+                           ? 'border-green-500 bg-green-500' 
+                           : 'border-gray-300'">
+                      <div v-if="validacion === 'Verificado'" class="w-2 h-2 bg-white rounded-full"></div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                      <span class="font-medium text-gray-800">Verificado</span>
+                      <span class="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">Aprobado</span>
+                    </div>
+                  </div>
+                </label>
+                
+                <!-- Opción 2: Sin definir (Gris claro) -->
+                <label class="cursor-pointer">
+                  <input 
+                    type="radio" 
+                    v-model="validacion" 
+                    value="Sin definir" 
+                    class="sr-only"
+                  />
+                  <div class="flex items-center p-3 rounded-lg border-2 transition-all duration-200"
+                       :class="validacion === 'Sin definir' 
+                         ? 'border-gray-400 bg-gray-50 shadow-md' 
+                         : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-25'">
+                    <div class="flex items-center justify-center w-5 h-5 mr-3 rounded-full border-2"
+                         :class="validacion === 'Sin definir' 
+                           ? 'border-gray-400 bg-gray-400' 
+                           : 'border-gray-300'">
+                      <div v-if="validacion === 'Sin definir'" class="w-2 h-2 bg-white rounded-full"></div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
+                      <span class="font-medium text-gray-800">Sin definir</span>
+                      <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">Pendiente</span>
+                    </div>
+                  </div>
+                </label>
+                
+                <!-- Opción 3: Borrador (Amarillo-naranja) -->
+                <label class="cursor-pointer">
+                  <input 
+                    type="radio" 
+                    v-model="validacion" 
+                    value="Borrador" 
+                    class="sr-only"
+                  />
+                  <div class="flex items-center p-3 rounded-lg border-2 transition-all duration-200"
+                       :class="validacion === 'Borrador' 
+                         ? 'border-orange-400 bg-orange-50 shadow-md' 
+                         : 'border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-25'">
+                    <div class="flex items-center justify-center w-5 h-5 mr-3 rounded-full border-2"
+                         :class="validacion === 'Borrador' 
+                           ? 'border-orange-400 bg-orange-400' 
+                           : 'border-gray-300'">
+                      <div v-if="validacion === 'Borrador'" class="w-2 h-2 bg-white rounded-full"></div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <div class="w-3 h-3 bg-orange-400 rounded-full"></div>
+                      <span class="font-medium text-gray-800">Borrador</span>
+                      <span class="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded-full">En proceso</span>
+                    </div>
+                  </div>
+                </label>
+              </div>
+              
+              <!-- Nota informativa -->
+              <p class="text-xs text-gray-500 mt-2 italic">
+                Selecciona el estado de validación del archivo. Este campo es obligatorio.
+              </p>
             </div>
             
             <div>
@@ -588,7 +667,7 @@ const alcance = computed({
     }
   }
 })
-const validacion = ref("")
+const validacion = ref("Sin definir") // Valor por defecto: "Sin definir" para campo obligatorio
 const observaciones = ref("")
 const modalVisible = ref(false)
 
@@ -633,6 +712,12 @@ function seleccionarArchivo(e) {
 async function subirArchivo() {
   if (!archivoSubir.value) {
     alert("Selecciona un archivo para subir")
+    return
+  }
+  
+  // Validación obligatoria del estado de validación - SOLO acepta los 3 valores específicos
+  if (!validacion.value || !['Verificado', 'Sin definir', 'Borrador'].includes(validacion.value)) {
+    alert("Debes seleccionar un estado de validación válido: Verificado, Sin definir o Borrador")
     return
   }
   
@@ -683,7 +768,7 @@ async function subirArchivo() {
     fuente.value = ""
     alcanceArray.value = [] // Limpiar el array de ubicaciones
     alcanceInput.value = "" // Limpiar el input
-    validacion.value = ""
+    validacion.value = "Sin definir" // Volver al valor por defecto para el campo obligatorio
     observaciones.value = ""
     
     // Actualizar la lista de archivos
