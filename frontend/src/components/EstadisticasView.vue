@@ -269,29 +269,52 @@
           </div>
         </div>
 
-      <!-- Ubicaciones más frecuentes con gráfico de burbujas -->
+      <!-- Ubicaciones más frecuentes con gráfico de burbujas moderno -->
       <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+        <h3 class="text-lg font-semibold text-gray-800 mb-6 flex items-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
           Ubicaciones más frecuentes
         </h3>
-        <div class="bubble-chart">
-          <div v-for="(ubicacion, index) in estadisticas.ubicacionesFrecuentes.slice(0, 8)" 
-               :key="ubicacion.ubicacion" 
-               class="bubble animate-bubble-grow"
-               :style="{ 
-                 '--size': getBubbleSize(ubicacion.cantidad, estadisticas.maxUbicacionCount) + 'px',
-                 '--color': getBubbleColor(index),
-                 '--delay': index * 0.1 + 's',
-                 '--x': getBubbleX(index) + '%',
-                 '--y': getBubbleY(index) + '%'
-               }">
-            <div class="bubble-content">
-              <div class="bubble-text">{{ ubicacion.ubicacion }}</div>
-              <div class="bubble-count">{{ ubicacion.cantidad }}</div>
+        
+        <!-- Explicación del gráfico -->
+        <div class="text-xs text-gray-500 mb-6 bg-red-50 p-3 rounded-lg border border-red-200">
+          <p class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <strong>Bubble Chart:</strong> El tamaño de cada burbuja es proporcional a la frecuencia de archivos por ubicación. Ordenadas de mayor a menor frecuencia.
+          </p>
+        </div>
+        
+        <!-- Contenedor de burbujas moderno con layout responsivo -->
+        <div class="bubble-chart-modern">
+          <!-- Contenedor scrolleable horizontal para dispositivos pequeños -->
+          <div class="bubble-container-responsive">
+            <div v-for="(ubicacion, index) in estadisticas.ubicacionesFrecuentes.slice(0, 10)" 
+                 :key="ubicacion.ubicacion" 
+                 class="bubble-modern animate-bubble-grow-modern"
+                 :style="{ 
+                   '--size': getBubbleSizeModern(ubicacion.cantidad, estadisticas.maxUbicacionCount) + 'px',
+                   '--color': getBubbleColorModern(index),
+                   '--border-color': getBubbleBorderColor(index),
+                   '--delay': index * 0.1 + 's'
+                 }">
+              <!-- Contenido de la burbuja con texto adaptativo -->
+              <div class="bubble-content-modern">
+                <div class="bubble-text-modern" :title="ubicacion.ubicacion">
+                  {{ getShortLocationName(ubicacion.ubicacion) }}
+                </div>
+                <div class="bubble-count-modern">
+                  {{ ubicacion.cantidad }}
+                </div>
+                <!-- Porcentaje opcional para ubicaciones principales -->
+                <div v-if="index < 3" class="bubble-percentage-modern">
+                  {{ getUbicacionPorcentaje(ubicacion.cantidad) }}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -692,26 +715,85 @@ function unhighlightLegendItem() {
   })
 }
 
-// Funciones para el gráfico de burbujas
-function getBubbleSize(cantidad, max) {
-  const minSize = 60
-  const maxSize = 120
-  return max > 0 ? minSize + (cantidad / max) * (maxSize - minSize) : minSize
+// Funciones para el gráfico de burbujas moderno
+// Calcula el tamaño de las burbujas de forma proporcional con rango controlado
+function getBubbleSizeModern(cantidad, max) {
+  const minSize = 70   // Tamaño mínimo para legibilidad
+  const maxSize = 140  // Tamaño máximo para evitar que dominen la pantalla
+  
+  if (max === 0) return minSize
+  
+  // Calcular tamaño proporcional con escala suave
+  const ratio = cantidad / max
+  const size = minSize + (ratio * (maxSize - minSize))
+  
+  return Math.round(size)
 }
 
-function getBubbleColor(index) {
-  const colores = ['#3b82f6', '#ef4444', '#22c55e', '#eab308', '#a855f7', '#06b6d4', '#84cc16', '#f59e0b']
+// Colores modernos con gradientes y translucidez para las burbujas
+function getBubbleColorModern(index) {
+  const colores = [
+    'rgba(239, 68, 68, 0.85)',    // Rojo vibrante
+    'rgba(59, 130, 246, 0.85)',   // Azul vibrante
+    'rgba(34, 197, 94, 0.85)',    // Verde vibrante
+    'rgba(251, 191, 36, 0.85)',   // Amarillo vibrante
+    'rgba(168, 85, 247, 0.85)',   // Púrpura vibrante
+    'rgba(6, 182, 212, 0.85)',    // Cian vibrante
+    'rgba(132, 204, 22, 0.85)',   // Lima vibrante
+    'rgba(245, 158, 11, 0.85)',   // Ámbar vibrante
+    'rgba(236, 72, 153, 0.85)',   // Rosa vibrante
+    'rgba(99, 102, 241, 0.85)'    // Índigo vibrante
+  ]
   return colores[index % colores.length]
 }
 
-function getBubbleX(index) {
-  const positions = [15, 35, 55, 75, 25, 45, 65, 85]
-  return positions[index % positions.length]
+// Colores de borde brillantes para cada burbuja
+function getBubbleBorderColor(index) {
+  const coloresBorde = [
+    'rgba(255, 255, 255, 0.9)',   // Blanco brillante universal
+    'rgba(255, 255, 255, 0.9)',   
+    'rgba(255, 255, 255, 0.9)',   
+    'rgba(255, 255, 255, 0.9)',   
+    'rgba(255, 255, 255, 0.9)',   
+    'rgba(255, 255, 255, 0.9)',   
+    'rgba(255, 255, 255, 0.9)',   
+    'rgba(255, 255, 255, 0.9)',   
+    'rgba(255, 255, 255, 0.9)',   
+    'rgba(255, 255, 255, 0.9)'    
+  ]
+  return coloresBorde[index % coloresBorde.length]
 }
 
-function getBubbleY(index) {
-  const positions = [20, 60, 30, 70, 80, 40, 50, 90]
-  return positions[index % positions.length]
+// Función para acortar nombres de ubicaciones largas manteniendo legibilidad
+function getShortLocationName(ubicacion) {
+  if (!ubicacion) return ''
+  
+  // Si el nombre es corto, devolverlo completo
+  if (ubicacion.length <= 12) return ubicacion
+  
+  // Para nombres largos, usar abreviaciones inteligentes
+  const palabras = ubicacion.split(' ')
+  
+  if (palabras.length === 1) {
+    // Si es una palabra larga, truncar con puntos suspensivos
+    return ubicacion.substring(0, 10) + '...'
+  } else {
+    // Si son múltiples palabras, tomar las primeras letras o palabras más cortas
+    if (palabras.length === 2) {
+      return palabras[0].substring(0, 6) + ' ' + palabras[1].substring(0, 6)
+    } else {
+      // Para 3+ palabras, tomar la primera completa y abreviar el resto
+      return palabras[0] + ' ' + palabras.slice(1).map(p => p.charAt(0)).join('.')
+    }
+  }
+}
+
+// Función para calcular el porcentaje de cada ubicación
+function getUbicacionPorcentaje(cantidad) {
+  const total = estadisticas.value.ubicacionesFrecuentes.reduce((sum, u) => sum + u.cantidad, 0)
+  if (total === 0) return '0%'
+  const porcentaje = (cantidad / total) * 100
+  return Math.round(porcentaje) + '%'
 }
 
 // Cargar datos al montar el componente
@@ -1334,7 +1416,244 @@ onMounted(() => {
   }
 }
 
-/* Estilos para gráfico de burbujas */
+/* Estilos modernos para gráfico de burbujas con layout responsivo */
+.bubble-chart-modern {
+  width: 100%;
+  padding: 20px 0;
+  /* Fondo con gradiente sutil para mayor elegancia */
+  background: linear-gradient(135deg, 
+    rgba(248, 250, 252, 0.8) 0%, 
+    rgba(241, 245, 249, 0.6) 50%,
+    rgba(248, 250, 252, 0.8) 100%);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Contenedor responsivo que maneja el overflow horizontal */
+.bubble-container-responsive {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: end;
+  gap: 20px;
+  padding: 20px;
+  min-height: 200px;
+  /* Para pantallas pequeñas, permitir scroll horizontal */
+  overflow-x: auto;
+  /* Centrar las burbujas cuando no llenan todo el ancho */
+  width: 100%;
+}
+
+/* Estilos para cada burbuja moderna con efectos premium */
+.bubble-modern {
+  /* Tamaño dinámico calculado por JavaScript */
+  width: var(--size);
+  height: var(--size);
+  min-width: 70px;
+  min-height: 70px;
+  
+  /* Forma circular perfecta */
+  border-radius: 50%;
+  
+  /* Gradiente de color con translucidez */
+  background: radial-gradient(circle at 30% 30%, 
+    color-mix(in srgb, var(--color) 90%, white) 0%,
+    var(--color) 70%,
+    color-mix(in srgb, var(--color) 80%, black) 100%);
+  
+  /* Borde brillante blanco */
+  border: 3px solid var(--border-color);
+  
+  /* Sombras múltiples para efecto de elevación */
+  box-shadow: 
+    0 8px 25px rgba(0,0,0,0.15),
+    0 3px 10px rgba(0,0,0,0.1),
+    inset 0 1px 3px rgba(255,255,255,0.3);
+  
+  /* Centro para el contenido */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Efectos de interacción */
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Evitar que las burbujas se deformen */
+  flex-shrink: 0;
+  position: relative;
+  
+  /* Efecto de resplandor sutil */
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.1));
+}
+
+.bubble-modern:hover {
+  /* Crecimiento suave al hacer hover */
+  transform: scale(1.08) translateY(-5px);
+  
+  /* Sombra más intensa */
+  box-shadow: 
+    0 12px 35px rgba(0,0,0,0.2),
+    0 5px 15px rgba(0,0,0,0.15),
+    inset 0 1px 3px rgba(255,255,255,0.4);
+  
+  /* Mayor resplandor */
+  filter: drop-shadow(0 6px 20px rgba(0,0,0,0.15)) brightness(1.05);
+  
+  /* Asegurar que esté por encima de otras burbujas */
+  z-index: 10;
+}
+
+/* Contenido dentro de cada burbuja */
+.bubble-content-modern {
+  text-align: center;
+  padding: 8px;
+  color: white;
+  /* Sombra en el texto para máxima legibilidad */
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3);
+  width: 90%;
+  height: 90%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Nombre de la ubicación */
+.bubble-text-modern {
+  font-size: clamp(9px, calc(var(--size) * 0.08), 13px);
+  font-weight: 700;
+  line-height: 1.1;
+  word-break: break-word;
+  hyphens: auto;
+  /* Limitar el ancho para evitar desbordamiento */
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Número de archivos */
+.bubble-count-modern {
+  font-size: clamp(11px, calc(var(--size) * 0.12), 18px);
+  font-weight: 800;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+/* Porcentaje para ubicaciones principales */
+.bubble-percentage-modern {
+  font-size: clamp(8px, calc(var(--size) * 0.07), 11px);
+  font-weight: 600;
+  opacity: 0.9;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+/* Animación de aparición moderna */
+.animate-bubble-grow-modern {
+  animation: bubbleGrowModern 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) var(--delay, 0s) both;
+}
+
+@keyframes bubbleGrowModern {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+    filter: blur(4px);
+  }
+  50% {
+    transform: scale(1.1) rotate(-90deg);
+    opacity: 0.8;
+    filter: blur(1px);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+    filter: blur(0px);
+  }
+}
+
+/* Responsive design para diferentes tamaños de pantalla */
+@media (max-width: 1024px) {
+  .bubble-container-responsive {
+    gap: 16px;
+    padding: 16px;
+  }
+  
+  .bubble-modern {
+    min-width: 60px;
+    min-height: 60px;
+  }
+}
+
+@media (max-width: 768px) {
+  .bubble-chart-modern {
+    padding: 15px 0;
+  }
+  
+  .bubble-container-responsive {
+    gap: 12px;
+    padding: 12px;
+    /* En móvil, permitir scroll horizontal si es necesario */
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    /* Padding para que no se corten las burbujas en los bordes */
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  
+  .bubble-modern {
+    min-width: 55px;
+    min-height: 55px;
+    /* Evitar que se encojan en móvil */
+    flex-shrink: 0;
+  }
+  
+  .bubble-content-modern {
+    padding: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bubble-container-responsive {
+    gap: 10px;
+    padding: 10px 15px;
+  }
+  
+  .bubble-modern {
+    min-width: 50px;
+    min-height: 50px;
+    border-width: 2px;
+  }
+  
+  .bubble-content-modern {
+    padding: 4px;
+    gap: 1px;
+  }
+  
+  .bubble-text-modern {
+    font-size: 8px !important;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+  }
+  
+  .bubble-count-modern {
+    font-size: 10px !important;
+  }
+  
+  .bubble-percentage-modern {
+    display: none; /* Ocultar porcentaje en pantallas muy pequeñas */
+  }
+}
+
+/* Estilos para gráfico de burbujas original (mantener para compatibilidad) */
 .bubble-chart {
   position: relative;
   height: 300px;
