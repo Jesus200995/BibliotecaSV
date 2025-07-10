@@ -480,6 +480,93 @@ app.put('/archivos/:id/with-file', upload.single('file'), async (req, res) => {
   }
 });
 
+// Endpoint para eliminar un archivo por su ID
+app.delete('/archivos/:id', async (req, res) => {
+  console.log(`=== DELETE /archivos/${req.params.id} ===`);
+  
+  try {
+    const { id } = req.params;
+    
+    console.log('Eliminando archivo ID:', id);
+    
+    // Verificar si el archivo existe antes de eliminar
+    const checkQuery = 'SELECT nombre FROM catalogo_archivos WHERE id = $1';
+    const checkResult = await pool.query(checkQuery, [id]);
+    
+    if (checkResult.rows.length === 0) {
+      console.log(`Archivo con ID ${id} no encontrado`);
+      return res.status(404).json({ error: 'Archivo no encontrado' });
+    }
+    
+    const nombreArchivo = checkResult.rows[0].nombre;
+    console.log(`Archivo encontrado: ${nombreArchivo}`);
+    
+    // Eliminar el archivo de la base de datos
+    const deleteQuery = 'DELETE FROM catalogo_archivos WHERE id = $1 RETURNING *';
+    const deleteResult = await pool.query(deleteQuery, [id]);
+    
+    if (deleteResult.rows.length === 0) {
+      console.log(`No se pudo eliminar el archivo con ID ${id}`);
+      return res.status(404).json({ error: 'No se pudo eliminar el archivo' });
+    }
+    
+    console.log(`Archivo eliminado exitosamente: ${nombreArchivo}`);
+    
+    res.json({ 
+      mensaje: 'Archivo eliminado correctamente', 
+      archivo: deleteResult.rows[0] 
+    });
+    
+  } catch (error) {
+    console.error('Error al eliminar archivo:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Endpoint para eliminar un archivo por su ID
+app.delete('/archivos/:id', async (req, res) => {
+  console.log(`=== DELETE /archivos/${req.params.id} ===`);
+  
+  try {
+    const { id } = req.params;
+    
+    console.log('Eliminando archivo con ID:', id);
+    
+    // Primero verificar que el archivo existe
+    const checkQuery = 'SELECT id, nombre FROM catalogo_archivos WHERE id = $1';
+    const checkResult = await pool.query(checkQuery, [id]);
+    
+    if (checkResult.rows.length === 0) {
+      console.log(`Archivo con ID ${id} no encontrado`);
+      return res.status(404).json({ error: 'Archivo no encontrado' });
+    }
+    
+    const archivo = checkResult.rows[0];
+    console.log('Archivo encontrado:', archivo.nombre);
+    
+    // Eliminar el archivo de la base de datos
+    const deleteQuery = 'DELETE FROM catalogo_archivos WHERE id = $1 RETURNING id, nombre';
+    const deleteResult = await pool.query(deleteQuery, [id]);
+    
+    if (deleteResult.rows.length === 0) {
+      console.log(`Error al eliminar archivo con ID ${id}`);
+      return res.status(500).json({ error: 'Error al eliminar el archivo' });
+    }
+    
+    const archivoEliminado = deleteResult.rows[0];
+    console.log('Archivo eliminado exitosamente:', archivoEliminado);
+    
+    res.json({ 
+      mensaje: 'Archivo eliminado correctamente',
+      archivo: archivoEliminado
+    });
+    
+  } catch (error) {
+    console.error('Error al eliminar archivo:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Página de prueba para subir archivos
 app.get('/test-upload', (req, res) => {
   res.send(`

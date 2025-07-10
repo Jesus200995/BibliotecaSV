@@ -280,6 +280,17 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </a>
+                  
+                  <!-- Botón Eliminar -->
+                  <button 
+                    @click="confirmarEliminar(archivo)"
+                    class="w-8 h-8 bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
+                    title="Eliminar archivo"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -525,6 +536,172 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal de Confirmación para Eliminar -->
+    <div v-if="modalEliminarVisible" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <!-- Overlay con animación de fade -->
+      <div 
+        class="fixed inset-0 bg-black transition-opacity duration-300 ease-out"
+        :class="modalEliminarVisible ? 'opacity-50' : 'opacity-0'"
+        @click="cerrarModalEliminar"
+      ></div>
+      
+      <!-- Modal con animación de escala y rebote -->
+      <div 
+        class="relative bg-white rounded-2xl shadow-2xl transform transition-all duration-300 ease-out w-full max-w-md mx-auto"
+        :class="modalEliminarVisible ? 'scale-100 opacity-100' : 'scale-75 opacity-0'"
+        style="animation: modalBounce 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);"
+      >
+        <!-- Cabecera con degradado rojo -->
+        <div class="bg-gradient-to-r from-red-500 to-red-600 rounded-t-2xl p-6 text-center">
+          <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-white">¿Eliminar archivo?</h3>
+          <p class="text-red-100 text-sm mt-1">Esta acción no se puede deshacer</p>
+        </div>
+        
+        <!-- Contenido del modal -->
+        <div class="p-6">
+          <!-- Información del archivo -->
+          <div class="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-200">
+            <div class="flex items-center space-x-3">
+              <div class="flex-shrink-0">
+                <div class="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-xs"
+                     :class="getFileTypeColor(archivoAEliminar?.tipo)">
+                  {{ archivoAEliminar?.tipo || 'DOC' }}
+                </div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4 class="text-sm font-semibold text-gray-900 truncate" :title="archivoAEliminar?.nombre">
+                  {{ archivoAEliminar?.nombre }}
+                </h4>
+                <p class="text-xs text-gray-500 truncate" :title="archivoAEliminar?.descripcion">
+                  {{ archivoAEliminar?.descripcion || 'Sin descripción' }}
+                </p>
+                <div class="flex items-center space-x-4 mt-1 text-xs text-gray-400">
+                  <span>{{ formatFileSize(archivoAEliminar?.tamano) }}</span>
+                  <span>{{ formatDate(archivoAEliminar?.fecha_actualizacion) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Mensaje de advertencia -->
+          <div class="text-center mb-6">
+            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+            </div>
+            <p class="text-gray-600 text-sm leading-relaxed">
+              El archivo será eliminado permanentemente de la biblioteca y la base de datos.
+            </p>
+          </div>
+          
+          <!-- Botones de acción -->
+          <div class="flex space-x-3">
+            <button 
+              @click="cerrarModalEliminar"
+              class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
+            >
+              Cancelar
+            </button>
+            <button 
+              @click="eliminarArchivo"
+              :disabled="eliminandoArchivo"
+              class="flex-1 px-4 py-3 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+            >
+              <svg v-if="eliminandoArchivo" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+              <span>{{ eliminandoArchivo ? 'Eliminando...' : 'Eliminar' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sistema de Notificaciones -->
+    <div class="fixed top-4 right-4 z-50 space-y-3 max-w-sm">
+      <div 
+        v-for="notificacion in notificaciones" 
+        :key="notificacion.id"
+        class="transform transition-all duration-500 ease-out"
+        :class="[
+          notificacion.visible ? 'translate-x-0 opacity-100 scale-100' : 'translate-x-full opacity-0 scale-95',
+          'bg-white rounded-xl shadow-lg border-l-4 p-4 min-w-[320px]',
+          notificacion.tipo === 'success' ? 'border-green-500' : '',
+          notificacion.tipo === 'error' ? 'border-red-500' : '',
+          notificacion.tipo === 'info' ? 'border-blue-500' : '',
+          notificacion.tipo === 'warning' ? 'border-yellow-500' : ''
+        ]"
+      >
+        <div class="flex items-start space-x-3">
+          <div class="flex-shrink-0">
+            <!-- Icono de éxito con animación -->
+            <div v-if="notificacion.tipo === 'success'" class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+              <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <!-- Icono de error -->
+            <div v-else-if="notificacion.tipo === 'error'" class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+              <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <!-- Icono de información -->
+            <div v-else-if="notificacion.tipo === 'info'" class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <!-- Icono de advertencia -->
+            <div v-else-if="notificacion.tipo === 'warning'" class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+              <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-900 leading-relaxed">
+              {{ notificacion.mensaje }}
+            </p>
+          </div>
+          <div class="flex-shrink-0">
+            <button 
+              @click="ocultarNotificacion(notificacion.id)"
+              class="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Barra de progreso para auto-cierre -->
+        <div class="mt-2 w-full bg-gray-200 rounded-full h-1 overflow-hidden">
+          <div 
+            class="h-full rounded-full transition-all duration-75 ease-linear"
+            :class="[
+              notificacion.tipo === 'success' ? 'bg-green-500' : '',
+              notificacion.tipo === 'error' ? 'bg-red-500' : '',
+              notificacion.tipo === 'info' ? 'bg-blue-500' : '',
+              notificacion.tipo === 'warning' ? 'bg-yellow-500' : ''
+            ]"
+            style="animation: progressBar 5s linear forwards;"
+          ></div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -556,6 +733,15 @@ const formularioEdicion = ref({
   validacion: '',
   observaciones: ''
 })
+
+// Variables para el modal de eliminación
+const modalEliminarVisible = ref(false)
+const archivoAEliminar = ref(null)
+const eliminandoArchivo = ref(false)
+
+// Variables para notificaciones
+const notificaciones = ref([])
+let notificacionId = 0
 
 // Variables para búsqueda y filtros
 const busqueda = ref("")
@@ -844,7 +1030,7 @@ async function guardarCambios() {
     }
     
     // Mostrar mensaje de éxito
-    alert('Archivo actualizado correctamente')
+    mostrarNotificacion('Archivo actualizado correctamente', 'success')
     
     // Cerrar modal
     cerrarModalEditar()
@@ -854,9 +1040,81 @@ async function guardarCambios() {
     
   } catch (error) {
     console.error('Error al actualizar archivo:', error)
-    alert('Error al actualizar el archivo: ' + (error.response?.data?.error || error.message))
+    mostrarNotificacion('Error al actualizar el archivo: ' + (error.response?.data?.error || error.message), 'error')
   } finally {
     guardandoCambios.value = false
+  }
+}
+
+// Funciones para eliminar archivo
+function confirmarEliminar(archivo) {
+  archivoAEliminar.value = archivo
+  modalEliminarVisible.value = true
+}
+
+function cerrarModalEliminar() {
+  modalEliminarVisible.value = false
+  archivoAEliminar.value = null
+}
+
+async function eliminarArchivo() {
+  if (!archivoAEliminar.value) return
+  
+  try {
+    eliminandoArchivo.value = true
+    
+    // Llamar al endpoint DELETE del backend
+    const response = await axios.delete(`${BACKEND_URL}/archivos/${archivoAEliminar.value.id}`)
+    
+    console.log('Archivo eliminado:', response.data)
+    
+    // Eliminar el archivo de la lista local
+    const index = archivos.value.findIndex(a => a.id === archivoAEliminar.value.id)
+    if (index !== -1) {
+      archivos.value.splice(index, 1)
+    }
+    
+    // Mostrar mensaje de éxito
+    mostrarNotificacion('Archivo eliminado correctamente de la biblioteca', 'success')
+    
+    // Cerrar modal
+    cerrarModalEliminar()
+    
+  } catch (error) {
+    console.error('Error al eliminar archivo:', error)
+    mostrarNotificacion('Error al eliminar el archivo: ' + (error.response?.data?.error || error.message), 'error')
+  } finally {
+    eliminandoArchivo.value = false
+  }
+}
+
+// Función para mostrar notificaciones
+function mostrarNotificacion(mensaje, tipo = 'info') {
+  const id = ++notificacionId
+  const notificacion = {
+    id,
+    mensaje,
+    tipo, // 'success', 'error', 'info', 'warning'
+    visible: true
+  }
+  
+  notificaciones.value.push(notificacion)
+  
+  // Auto-eliminar después de 5 segundos
+  setTimeout(() => {
+    ocultarNotificacion(id)
+  }, 5000)
+}
+
+// Función para ocultar notificaciones
+function ocultarNotificacion(id) {
+  const index = notificaciones.value.findIndex(n => n.id === id)
+  if (index !== -1) {
+    notificaciones.value[index].visible = false
+    // Eliminar después de la animación
+    setTimeout(() => {
+      notificaciones.value.splice(index, 1)
+    }, 300)
   }
 }
 </script>
@@ -871,6 +1129,45 @@ async function guardarCambios() {
   100% {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* Animación de rebote para el modal */
+@keyframes modalBounce {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translate3d(0, 0, 0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Animación suave para el overlay */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.5;
+  }
+}
+
+/* Animación de la barra de progreso */
+@keyframes progressBar {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
   }
 }
 
@@ -991,6 +1288,10 @@ async function guardarCambios() {
 
 .bg-amber-100:hover {
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.bg-red-100:hover {
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 /* Transiciones suaves para los iconos */
