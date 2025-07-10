@@ -378,15 +378,11 @@
                        : 'border-gray-200 bg-white hover:border-green-300 hover:bg-green-50'">
                   <div class="flex items-center justify-center mb-2">
                     <div class="w-4 h-4 rounded-full transition-all"
-                         :class="validacion === 'Verificado' ? 'bg-green-500 ring-2 ring-green-200' : 'bg-gray-300'"></div>
+                         :class="validacion === 'Verificado' ? 'bg-green-500 ring-2 ring-green-200' : 'bg-green-200'"></div>
                   </div>
-                  <div class="text-sm font-bold transition-all"
-                       :class="validacion === 'Verificado' ? 'text-green-700' : 'text-gray-600'">
+                  <div class="text-sm transition-all"
+                       :class="validacion === 'Verificado' ? 'text-gray-800 font-bold' : 'text-gray-600 font-medium'">
                     Verificado
-                  </div>
-                  <div class="text-xs mt-1 transition-all"
-                       :class="validacion === 'Verificado' ? 'text-green-600' : 'text-gray-500'">
-                    ✓ Aprobado
                   </div>
                 </div>
               </label>
@@ -407,13 +403,9 @@
                     <div class="w-4 h-4 rounded-full transition-all"
                          :class="validacion === 'Sin definir' ? 'bg-gray-500 ring-2 ring-gray-200' : 'bg-gray-300'"></div>
                   </div>
-                  <div class="text-sm font-bold transition-all"
-                       :class="validacion === 'Sin definir' ? 'text-gray-700' : 'text-gray-600'">
+                  <div class="text-sm transition-all"
+                       :class="validacion === 'Sin definir' ? 'text-gray-800 font-bold' : 'text-gray-600 font-medium'">
                     Sin definir
-                  </div>
-                  <div class="text-xs mt-1 transition-all"
-                       :class="validacion === 'Sin definir' ? 'text-gray-600' : 'text-gray-500'">
-                    ? Pendiente
                   </div>
                 </div>
               </label>
@@ -432,15 +424,11 @@
                        : 'border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50'">
                   <div class="flex items-center justify-center mb-2">
                     <div class="w-4 h-4 rounded-full transition-all"
-                         :class="validacion === 'Borrador' ? 'bg-orange-500 ring-2 ring-orange-200' : 'bg-gray-300'"></div>
+                         :class="validacion === 'Borrador' ? 'bg-orange-500 ring-2 ring-orange-200' : 'bg-orange-200'"></div>
                   </div>
-                  <div class="text-sm font-bold transition-all"
-                       :class="validacion === 'Borrador' ? 'text-orange-700' : 'text-gray-600'">
+                  <div class="text-sm transition-all"
+                       :class="validacion === 'Borrador' ? 'text-gray-800 font-bold' : 'text-gray-600 font-medium'">
                     Borrador
-                  </div>
-                  <div class="text-xs mt-1 transition-all"
-                       :class="validacion === 'Borrador' ? 'text-orange-600' : 'text-gray-500'">
-                    ✏ Trabajo
                   </div>
                 </div>
               </label>
