@@ -82,9 +82,26 @@
             </svg>
             Filtros de búsqueda
           </h3>
-          <div v-if="hayFiltrosActivos" class="flex items-center gap-2">
-            <span class="text-sm text-green-600 font-medium">{{ archivosFiltrados.length }} resultados</span>
-            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          
+          <!-- Sección derecha: Resultados de filtros y botón "Subir archivo" compacto -->
+          <div class="flex items-center gap-4">
+            <!-- Indicador de resultados de filtros -->
+            <div v-if="hayFiltrosActivos" class="flex items-center gap-2">
+              <span class="text-sm text-green-600 font-medium">{{ archivosFiltrados.length }} resultados</span>
+              <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            </div>
+            
+            <!-- NUEVO: Botón compacto "Subir archivo" en morado -->
+            <button 
+              @click="modalSubidaVisible = true"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-full transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
+              </svg>
+              <span class="hidden sm:inline">Subir archivo</span>
+              <span class="sm:hidden">Subir</span>
+            </button>
           </div>
         </div>
         
@@ -644,6 +661,369 @@
       </div>
     </div>
 
+    <!-- NUEVO: Modal para subir archivos (Mismo del Dashboard adaptado) -->
+    <div v-if="modalSubidaVisible" class="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center p-3">
+      <!-- Fondo oscuro con animación -->
+      <div 
+        class="fixed inset-0 bg-black transition-opacity duration-300"
+        :class="{ 'bg-opacity-70': modalSubidaVisible, 'bg-opacity-0': !modalSubidaVisible }" 
+        @click="modalSubidaVisible = false"
+      ></div>
+      
+      <!-- Contenido del modal compacto pero más grande - Ancho optimizado 620px, máximo 80% altura -->
+      <div 
+        class="relative bg-white rounded-xl w-full max-w-[620px] max-h-[80vh] shadow-2xl transform transition-all duration-300 overflow-hidden"
+        :class="{ 'scale-100 opacity-100': modalSubidaVisible, 'scale-95 opacity-0': !modalSubidaVisible }"
+      >
+        <!-- Cabecera del modal con tema morado desvanecido -->
+        <div class="bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-t-xl px-4 py-2 flex items-center justify-between">
+          <h3 class="text-base font-semibold flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
+            </svg>
+            Subir nuevo archivo
+          </h3>
+          <button 
+            @click="modalSubidaVisible = false" 
+            class="text-white hover:text-purple-100 transition-colors p-1 rounded-full hover:bg-white/20"
+          >
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Formulario compacto pero más grande sin scroll interno -->
+        <form @submit.prevent="subirArchivo" class="p-4 space-y-3 bg-white">
+          
+          <!-- Campo de archivo compacto pero con mejor espaciado -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Archivo *</label>
+            <div class="flex items-center gap-3">
+              <label for="file-upload-archivos" class="cursor-pointer bg-purple-50 hover:bg-purple-100 text-purple-600 px-3 py-2 rounded-lg border border-purple-200 transition-all flex items-center gap-2 text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+                Seleccionar archivo
+              </label>
+              <input 
+                type="file" 
+                id="file-upload-archivos"
+                @change="seleccionarArchivo" 
+                class="hidden" 
+                required 
+              />
+              <div class="flex-1 py-2 px-3 bg-gray-50 text-sm text-gray-600 rounded-lg border border-gray-200 truncate h-8">
+                {{ archivoNombre || 'Ningún archivo seleccionado' }}
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Tamaño máximo: 50MB</p>
+          </div>
+          
+          <!-- Descripción con mejor espaciado -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+            <textarea 
+              v-model="descripcion" 
+              rows="2" 
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all resize-none" 
+              placeholder="Descripción del archivo">
+            </textarea>
+          </div>
+          
+          <!-- Grid de 2 columnas para campos básicos con mejor espaciado -->
+          <div class="grid grid-cols-2 gap-3">
+            <!-- Responsable -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Responsable</label>
+              <input 
+                v-model="responsable" 
+                type="text" 
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 h-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all" 
+                placeholder="Responsable" 
+              />
+            </div>
+            
+            <!-- Fuente -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Fuente</label>
+              <input 
+                v-model="fuente" 
+                type="text" 
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 h-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all" 
+                placeholder="Fuente" 
+              />
+            </div>
+          </div>
+          
+          <!-- Grid de 2 columnas para campos con chips con mejor espaciado -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            
+            <!-- Etiquetas con mejor espaciado -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Etiquetas</label>
+              <div class="flex flex-wrap gap-2 p-2 rounded-lg border border-gray-300 bg-white min-h-[32px] focus-within:ring-2 focus-within:ring-purple-500 focus-within:border-purple-500 transition-all">
+                <!-- Chips de etiquetas con mejor tamaño -->
+                <div 
+                  v-for="(tag, index) in etiquetasArray" 
+                  :key="index"
+                  class="bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 animate-pop-in"
+                >
+                  {{ tag }}
+                  <button 
+                    @click="eliminarEtiqueta(index)" 
+                    class="text-orange-500 hover:text-orange-700 focus:outline-none transition-colors rounded-full hover:bg-orange-200 p-0.5"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <!-- Input para etiquetas -->
+                <input 
+                  v-model="etiquetaInput" 
+                  @keydown="gestionarEtiquetas"
+                  @blur="agregarEtiquetaEnBlur"
+                  type="text" 
+                  class="flex-grow min-w-[80px] py-1 px-2 focus:outline-none text-sm text-gray-700" 
+                  placeholder="Agregar etiquetas..."
+                />
+              </div>
+            </div>
+            
+            <!-- Alcance geográfico con mejor espaciado -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Alcance geográfico</label>
+              <div class="relative alcance-geografico-container">
+                <div class="flex flex-wrap gap-2 p-2 rounded-lg border border-gray-300 bg-white min-h-[32px] focus-within:ring-2 focus-within:ring-purple-500 focus-within:border-purple-500 transition-all">
+                  <!-- Chips de ubicaciones con mejor tamaño -->
+                  <div 
+                    v-for="(lugar, index) in alcanceArray" 
+                    :key="index"
+                    class="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 animate-pop-in"
+                  >
+                    {{ lugar.name }}
+                    <button 
+                      @click="eliminarLugar(index)" 
+                      class="text-purple-500 hover:text-purple-700 focus:outline-none transition-colors rounded-full hover:bg-purple-200 p-0.5"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <!-- Input de búsqueda -->
+                  <input 
+                    v-model="alcanceInput" 
+                    @input="buscarUbicaciones"
+                    @keydown="gestionarTeclasAlcance"
+                    @focus="activarBusquedaUbicaciones"
+                    @blur="setTimeout(() => mostrarSugerencias = false, 200)"
+                    type="text" 
+                    class="flex-grow min-w-[80px] py-1 px-2 focus:outline-none text-sm text-gray-700" 
+                    placeholder="Buscar ubicaciones..." 
+                  />
+                </div>
+                
+                <!-- Lista de sugerencias ultra compacta -->
+                <div 
+                  v-if="mostrarSugerencias && !cargandoUbicaciones" 
+                  class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-32 overflow-y-auto"
+                >
+                  <div 
+                    v-if="sugerenciasUbicacion.length > 0"
+                    v-for="(sugerencia, index) in sugerenciasUbicacion" 
+                    :key="index"
+                    @click="seleccionarUbicacion(sugerencia)"
+                    class="px-2 py-1 hover:bg-purple-50 cursor-pointer text-xs text-gray-700 border-b border-gray-100 last:border-b-0 flex items-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 mr-1 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>{{ sugerencia.display_name }}</span>
+                  </div>
+                  
+                  <div 
+                    v-if="sugerenciasUbicacion.length === 0 && alcanceInput.length >= 2"
+                    class="px-2 py-1 text-xs text-gray-600 text-center"
+                  >
+                    No encontrado
+                  </div>
+                </div>
+                
+                <!-- Cargando mini -->
+                <div 
+                  v-if="cargandoUbicaciones && mostrarSugerencias" 
+                  class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-1 text-center text-xs text-gray-600"
+                >
+                  <div class="animate-spin inline-block mr-1 h-2.5 w-2.5 border-t-2 border-purple-500 rounded-full"></div>
+                  Buscando...
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Campo de Validación COMPACTO - Radio buttons minimalistas y profesionales -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Estado de validación *</label>
+            
+            <!-- Radio buttons compactos horizontales -->
+            <div class="flex gap-2">
+              
+              <!-- Opción 1: Verificado (Verde) -->
+              <label class="cursor-pointer flex-1">
+                <input 
+                  type="radio" 
+                  v-model="validacion" 
+                  value="Verificado" 
+                  class="sr-only"
+                />
+                <div class="p-3 rounded-lg border-2 text-center transition-all"
+                     :class="validacion === 'Verificado' 
+                       ? 'border-green-500 bg-green-50 shadow-md' 
+                       : 'border-gray-200 bg-white hover:border-green-300 hover:bg-green-50'">
+                  <div class="flex items-center justify-center mb-2">
+                    <div class="w-4 h-4 rounded-full transition-all"
+                         :class="validacion === 'Verificado' ? 'bg-green-500 ring-2 ring-green-200' : 'bg-green-200'"></div>
+                  </div>
+                  <div class="text-sm transition-all"
+                       :class="validacion === 'Verificado' ? 'text-gray-800 font-bold' : 'text-gray-600 font-medium'">
+                    Verificado
+                  </div>
+                </div>
+              </label>
+              
+              <!-- Opción 2: Sin definir (Gris) -->
+              <label class="cursor-pointer flex-1">
+                <input 
+                  type="radio" 
+                  v-model="validacion" 
+                  value="Sin definir" 
+                  class="sr-only"
+                />
+                <div class="p-3 rounded-lg border-2 text-center transition-all"
+                     :class="validacion === 'Sin definir' 
+                       ? 'border-gray-500 bg-gray-50 shadow-md' 
+                       : 'border-gray-200 bg-white hover:border-gray-400 hover:bg-gray-50'">
+                  <div class="flex items-center justify-center mb-2">
+                    <div class="w-4 h-4 rounded-full transition-all"
+                         :class="validacion === 'Sin definir' ? 'bg-gray-500 ring-2 ring-gray-200' : 'bg-gray-300'"></div>
+                  </div>
+                  <div class="text-sm transition-all"
+                       :class="validacion === 'Sin definir' ? 'text-gray-800 font-bold' : 'text-gray-600 font-medium'">
+                    Sin definir
+                  </div>
+                </div>
+              </label>
+              
+              <!-- Opción 3: Borrador (Naranja) -->
+              <label class="cursor-pointer flex-1">
+                <input 
+                  type="radio" 
+                  v-model="validacion" 
+                  value="Borrador" 
+                  class="sr-only"
+                />
+                <div class="p-3 rounded-lg border-2 text-center transition-all"
+                     :class="validacion === 'Borrador' 
+                       ? 'border-orange-500 bg-orange-50 shadow-md' 
+                       : 'border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50'">
+                  <div class="flex items-center justify-center mb-2">
+                    <div class="w-4 h-4 rounded-full transition-all"
+                         :class="validacion === 'Borrador' ? 'bg-orange-500 ring-2 ring-orange-200' : 'bg-orange-200'"></div>
+                  </div>
+                  <div class="text-sm transition-all"
+                       :class="validacion === 'Borrador' ? 'text-gray-800 font-bold' : 'text-gray-600 font-medium'">
+                    Borrador
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+          
+          <!-- Observaciones con mejor espaciado -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
+            <input 
+              v-model="observaciones" 
+              type="text" 
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 h-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all" 
+              placeholder="Observaciones adicionales" 
+            />
+          </div>
+          
+          <!-- Botones de acción con mejor espaciado -->
+          <div class="flex justify-end gap-3 pt-3 border-t border-gray-200">
+            <button 
+              type="button" 
+              @click="modalSubidaVisible = false" 
+              class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 transition-colors min-w-[100px]"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit" 
+              :disabled="subiendo"
+              class="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-colors text-sm font-medium min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <svg v-if="subiendo" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{ subiendo ? 'Subiendo...' : 'Subir archivo' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal de confirmación de archivo subido -->
+    <div v-if="confirmacionVisible" class="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
+      <!-- Fondo oscuro con animación mejorada -->
+      <div 
+        class="fixed inset-0 bg-black transition-opacity duration-300"
+        :class="{ 'bg-opacity-70': confirmacionVisible, 'bg-opacity-0': !confirmacionVisible }" 
+        @click="cerrarConfirmacion"
+      ></div>
+      
+      <!-- Modal con animación mejorada -->
+      <div 
+        class="relative bg-white rounded-2xl max-w-md w-full mx-4 shadow-2xl transform transition-all duration-300 overflow-hidden"
+        :class="{ 'translate-y-0 scale-100 opacity-100': confirmacionVisible, 'translate-y-4 scale-95 opacity-0': !confirmacionVisible }"
+      >
+        <div class="bg-gradient-to-b from-white to-gray-50 flex flex-col items-center p-8 text-center">
+          <!-- Icono de éxito con animación mejorada -->
+          <div class="relative">
+            <!-- Círculo exterior pulsante -->
+            <div class="absolute inset-0 rounded-full bg-green-100 animate-ping opacity-25"></div>
+            <!-- Círculo base -->
+            <div class="relative w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+          
+          <!-- Texto de confirmación -->
+          <h3 class="mt-6 text-xl font-bold text-gray-900">¡Archivo subido!</h3>
+          <p class="mt-2 text-gray-600 leading-relaxed">
+            El archivo se ha guardado correctamente en la biblioteca.
+          </p>
+          
+          <!-- Botón de cierre -->
+          <button 
+            @click="cerrarConfirmacion"
+            class="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
+          >
+            Continuar
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Sistema de Notificaciones -->
     <div class="fixed top-4 right-4 z-50 space-y-3 max-w-sm">
       <div 
@@ -756,6 +1136,26 @@ const formularioEdicion = ref({
 const modalEliminarVisible = ref(false)
 const archivoAEliminar = ref(null)
 const eliminandoArchivo = ref(false)
+
+// NUEVO: Variables para el modal de subida de archivos (reutilizando lógica del Dashboard)
+const modalSubidaVisible = ref(false)
+const archivo = ref(null)
+const archivoNombre = ref('')
+const descripcion = ref('')
+const tipo = ref('')
+const responsable = ref('')
+const fuente = ref('')
+const etiquetasArray = ref([])
+const etiquetaInput = ref('')
+const alcanceArray = ref([])
+const alcanceInput = ref('')
+const validacion = ref('')
+const observaciones = ref('')
+const subiendo = ref(false)
+const confirmacionVisible = ref(false)
+const sugerenciasUbicacion = ref([])
+const mostrarSugerencias = ref(false)
+const cargandoUbicaciones = ref(false)
 
 // Variables para notificaciones
 const notificaciones = ref([])
@@ -1123,6 +1523,184 @@ function ocultarNotificacion(id) {
       notificaciones.value.splice(index, 1)
     }, 300)
   }
+}
+
+// NUEVAS FUNCIONES PARA MODAL DE SUBIDA DE ARCHIVOS (Reutilizando lógica del Dashboard)
+
+// Función para seleccionar archivo
+function seleccionarArchivo(event) {
+  const file = event.target.files[0]
+  if (file) {
+    archivo.value = file
+    archivoNombre.value = file.name
+    
+    // Auto-detectar tipo de archivo
+    const extension = file.name.split('.').pop().toLowerCase()
+    const tiposArchivo = {
+      'pdf': 'PDF',
+      'doc': 'DOC',
+      'docx': 'DOCX',
+      'xls': 'XLS',
+      'xlsx': 'XLSX',
+      'jpg': 'JPG',
+      'jpeg': 'JPEG',
+      'png': 'PNG',
+      'txt': 'TXT',
+      'zip': 'ZIP',
+      'rar': 'RAR'
+    }
+    tipo.value = tiposArchivo[extension] || extension.toUpperCase()
+  }
+}
+
+// Funciones para manejar etiquetas
+function gestionarEtiquetas(event) {
+  if (event.key === 'Enter' || event.key === ',') {
+    event.preventDefault()
+    agregarEtiqueta()
+  } else if (event.key === 'Backspace' && !etiquetaInput.value && etiquetasArray.value.length > 0) {
+    eliminarEtiqueta(etiquetasArray.value.length - 1)
+  }
+}
+
+function agregarEtiqueta() {
+  if (etiquetaInput.value.trim() && !etiquetasArray.value.includes(etiquetaInput.value.trim())) {
+    etiquetasArray.value.push(etiquetaInput.value.trim())
+    etiquetaInput.value = ''
+  }
+}
+
+function agregarEtiquetaEnBlur() {
+  if (etiquetaInput.value.trim()) {
+    agregarEtiqueta()
+  }
+}
+
+function eliminarEtiqueta(index) {
+  etiquetasArray.value.splice(index, 1)
+}
+
+// Funciones para alcance geográfico
+async function buscarUbicaciones() {
+  if (alcanceInput.value.length < 2) {
+    mostrarSugerencias.value = false
+    return
+  }
+
+  try {
+    cargandoUbicaciones.value = true
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(alcanceInput.value)}&limit=5&addressdetails=1`)
+    const data = await response.json()
+    
+    sugerenciasUbicacion.value = data.map(item => ({
+      name: item.display_name.split(',').slice(0, 3).join(', '),
+      display_name: item.display_name,
+      lat: item.lat,
+      lon: item.lon
+    }))
+    
+    mostrarSugerencias.value = true
+  } catch (error) {
+    console.error('Error al buscar ubicaciones:', error)
+  } finally {
+    cargandoUbicaciones.value = false
+  }
+}
+
+function activarBusquedaUbicaciones() {
+  if (alcanceInput.value.length >= 2) {
+    mostrarSugerencias.value = true
+  }
+}
+
+function seleccionarUbicacion(ubicacion) {
+  if (!alcanceArray.value.find(item => item.name === ubicacion.name)) {
+    alcanceArray.value.push(ubicacion)
+  }
+  alcanceInput.value = ''
+  mostrarSugerencias.value = false
+}
+
+function eliminarLugar(index) {
+  alcanceArray.value.splice(index, 1)
+}
+
+function gestionarTeclasAlcance(event) {
+  if (event.key === 'Backspace' && !alcanceInput.value && alcanceArray.value.length > 0) {
+    eliminarLugar(alcanceArray.value.length - 1)
+  }
+}
+
+// Función principal para subir archivo
+async function subirArchivo() {
+  if (!archivo.value) {
+    mostrarNotificacion('Debe seleccionar un archivo', 'error')
+    return
+  }
+
+  if (!validacion.value) {
+    mostrarNotificacion('Debe seleccionar un estado de validación', 'error')
+    return
+  }
+
+  try {
+    subiendo.value = true
+
+    const formData = new FormData()
+    formData.append('file', archivo.value)
+    formData.append('descripcion', descripcion.value || '')
+    formData.append('etiquetas', etiquetasArray.value.join(', '))
+    formData.append('responsable', responsable.value || '')
+    formData.append('fuente', fuente.value || '')
+    formData.append('alcance', alcanceArray.value.map(u => u.name).join(', '))
+    formData.append('validacion', validacion.value)
+    formData.append('observaciones', observaciones.value || '')
+
+    const response = await axios.post(`${BACKEND_URL}/archivos/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+
+    console.log('Archivo subido exitosamente:', response.data)
+    
+    // Limpiar formulario
+    limpiarFormularioSubida()
+    
+    // Mostrar confirmación
+    confirmacionVisible.value = true
+    
+    // Recargar lista de archivos
+    await cargarArchivos()
+    
+  } catch (error) {
+    console.error('Error al subir archivo:', error)
+    mostrarNotificacion('Error al subir el archivo: ' + (error.response?.data?.error || error.message), 'error')
+  } finally {
+    subiendo.value = false
+  }
+}
+
+// Función para limpiar el formulario de subida
+function limpiarFormularioSubida() {
+  archivo.value = null
+  archivoNombre.value = ''
+  descripcion.value = ''
+  tipo.value = ''
+  responsable.value = ''
+  fuente.value = ''
+  etiquetasArray.value = []
+  etiquetaInput.value = ''
+  alcanceArray.value = []
+  alcanceInput.value = ''
+  validacion.value = ''
+  observaciones.value = ''
+  modalSubidaVisible.value = false
+}
+
+// Función para cerrar confirmación
+function cerrarConfirmacion() {
+  confirmacionVisible.value = false
 }
 </script>
 
