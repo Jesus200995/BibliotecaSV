@@ -1655,6 +1655,11 @@ async function subirArchivo() {
     formData.append('alcance', alcanceArray.value.map(u => u.name).join(', '))
     formData.append('validacion', validacion.value)
     formData.append('observaciones', observaciones.value || '')
+    
+    // Agregar coordenadas si están disponibles
+    if (alcanceArray.value.length > 0) {
+      formData.append('alcance_coordenadas', JSON.stringify(alcanceArray.value))
+    }
 
     const response = await axios.post(`${BACKEND_URL}/archivos/upload`, formData, {
       headers: {

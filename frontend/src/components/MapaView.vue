@@ -412,40 +412,92 @@ async function generarMarcadores() {
           cantidad: 1,
           tipos: new Set([archivo.tipo || 'Sin tipo']),
           archivos: [archivo],
-          estado: archivo.estado || 'sin-definir'
+          estado: archivo.estado || archivo.validacion || 'sin-definir',
+          // Usar coordenadas de la base de datos si están disponibles
+          coordenadas_db: archivo.latitud && archivo.longitud ? [archivo.latitud, archivo.longitud] : null,
+          coordenadas_json: archivo.coordenadas_json
         }
       }
     }
   })
   
   // Convertir a array de marcadores con coordenadas
-  marcadores.value = Object.values(ubicacionesMap)
-    .map(item => ({
-      ...item,
-      tipos: Array.from(item.tipos),
-      posicion: obtenerCoordenadas(item.ubicacion)
-    }))
-    .filter(item => item.posicion) // Solo incluir ubicaciones con coordenadas válidas
+  marcadores.value = await Promise.all(
+    Object.values(ubicacionesMap).map(async (item) => {
+      const coordenadas = await obtenerCoordenadas(item.ubicacion, item.coordenadas_db, item.coordenadas_json)
+      return {
+        ...item,
+        tipos: Array.from(item.tipos),
+        posicion: coordenadas
+      }
+    })
+  )
+  
+  // Filtrar solo ubicaciones con coordenadas válidas
+  marcadores.value = marcadores.value.filter(item => item.posicion)
+  
+  console.log('Marcadores generados:', marcadores.value)
 }
 
 // Función para obtener coordenadas de una ubicación
-function obtenerCoordenadas(ubicacion) {
-  // Buscar coincidencia exacta primero
+async function obtenerCoordenadas(ubicacion, coordenadas_db = null, coordenadas_json = null) {
+  // 1. Prioridad: usar coordenadas de la base de datos si están disponibles
+  if (coordenadas_db && coordenadas_db.length === 2) {
+    console.log(`Usando coordenadas de BD para ${ubicacion}:`, coordenadas_db)
+    return coordenadas_db
+  }
+  
+  // 2. Intentar usar coordenadas JSON almacenadas
+  if (coordenadas_json) {
+    try {
+      const coords = typeof coordenadas_json === 'string' ? JSON.parse(coordenadas_json) : coordenadas_json
+      if (Array.isArray(coords) && coords.length > 0) {
+        const primera = coords[0]
+        if (primera.lat && primera.lon) {
+          const coordenadas = [parseFloat(primera.lat), parseFloat(primera.lon)]
+          console.log(`Usando coordenadas JSON para ${ubicacion}:`, coordenadas)
+          return coordenadas
+        }
+      }
+    } catch (err) {
+      console.log('Error al parsear coordenadas JSON:', err)
+    }
+  }
+  
+  // 3. Buscar en el diccionario de El Salvador como fallback
   if (coordenadasElSalvador[ubicacion]) {
+    console.log(`Usando coordenadas de diccionario para ${ubicacion}`)
     return coordenadasElSalvador[ubicacion]
   }
   
-  // Buscar coincidencia parcial
+  // 4. Buscar coincidencia parcial en el diccionario
   const ubicacionLower = ubicacion.toLowerCase()
   for (const [lugar, coords] of Object.entries(coordenadasElSalvador)) {
     if (ubicacionLower.includes(lugar.toLowerCase()) || lugar.toLowerCase().includes(ubicacionLower)) {
+      console.log(`Usando coordenadas parciales de diccionario para ${ubicacion} -> ${lugar}`)
       return coords
     }
   }
   
-  // Si no se encuentra, usar coordenadas aleatorias dentro de El Salvador
-  const lat = 13.5 + Math.random() * 1.0 // Entre 13.5 y 14.5
-  const lng = -90.0 + Math.random() * 1.5 // Entre -90.0 y -88.5
+  // 5. Usar API de geocodificación como último recurso
+  try {
+    console.log(`Buscando coordenadas en Nominatim para: ${ubicacion}`)
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(ubicacion)}&limit=1`)
+    const data = await response.json()
+    
+    if (data && data.length > 0) {
+      const coordenadas = [parseFloat(data[0].lat), parseFloat(data[0].lon)]
+      console.log(`Coordenadas encontradas en Nominatim para ${ubicacion}:`, coordenadas)
+      return coordenadas
+    }
+  } catch (error) {
+    console.error(`Error al buscar coordenadas para ${ubicacion}:`, error)
+  }
+  
+  // 6. Como última opción, usar coordenadas aleatorias en región de Centroamérica
+  console.log(`Usando coordenadas aleatorias para ${ubicacion}`)
+  const lat = 12.0 + Math.random() * 6.0 // Entre 12 y 18 (incluye México, Centroamérica)
+  const lng = -95.0 + Math.random() * 10.0 // Entre -95 y -85 (costa del Pacífico a Caribe)
   return [lat, lng]
 }
 

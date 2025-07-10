@@ -90,7 +90,8 @@ app.get('/archivos', async (req, res) => {
     // Excluir el campo archivo_contenido para mejorar el rendimiento
     const query = `
       SELECT id, nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, 
-             archivo_url, fuente, responsable, alcance_geografico, validacion, observaciones
+             archivo_url, fuente, responsable, alcance_geografico, validacion, observaciones,
+             latitud, longitud, coordenadas_json
       FROM catalogo_archivos 
       ORDER BY fecha_actualizacion DESC
       LIMIT $1 OFFSET $2
@@ -290,22 +291,50 @@ app.post('/archivos/upload', upload.single('file'), async (req, res) => {
     const alcance_geografico = req.body.alcance || '';
     const validacion = req.body.validacion || '';
     const observaciones = req.body.observaciones || '';
+    
+    // Procesar coordenadas si vienen en el alcance
+    let coordenadas_json = null;
+    let latitud = null;
+    let longitud = null;
+    
+    try {
+      const coordenadas = req.body.coordenadas || req.body.alcance_coordenadas;
+      if (coordenadas) {
+        if (typeof coordenadas === 'string') {
+          coordenadas_json = JSON.parse(coordenadas);
+        } else {
+          coordenadas_json = coordenadas;
+        }
+        
+        // Si es un array de ubicaciones, tomar la primera
+        if (Array.isArray(coordenadas_json) && coordenadas_json.length > 0) {
+          const primeraUbicacion = coordenadas_json[0];
+          if (primeraUbicacion.lat && primeraUbicacion.lon) {
+            latitud = parseFloat(primeraUbicacion.lat);
+            longitud = parseFloat(primeraUbicacion.lon);
+          }
+        }
+      }
+    } catch (err) {
+      console.log('Error al procesar coordenadas:', err.message);
+    }
 
     console.log('Campos adicionales:', {
       descripcion, etiquetas, responsable, fuente, 
-      alcance_geografico, validacion, observaciones
+      alcance_geografico, validacion, observaciones, latitud, longitud
     });
 
     // Insertar en PostgreSQL incluyendo el contenido del archivo (que está en memoria)
     const query = `
       INSERT INTO catalogo_archivos
-      (nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, archivo_url, fuente, responsable, alcance_geografico, validacion, observaciones, archivo_contenido)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-      RETURNING id, nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, archivo_url, fuente, responsable, alcance_geografico, validacion, observaciones
+      (nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, archivo_url, fuente, responsable, alcance_geografico, validacion, observaciones, archivo_contenido, latitud, longitud, coordenadas_json)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+      RETURNING id, nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, archivo_url, fuente, responsable, alcance_geografico, validacion, observaciones, latitud, longitud, coordenadas_json
     `;
     const values = [
       nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, archivo_url,
-      fuente, responsable, alcance_geografico, validacion, observaciones, archivo.buffer
+      fuente, responsable, alcance_geografico, validacion, observaciones, archivo.buffer,
+      latitud, longitud, coordenadas_json ? JSON.stringify(coordenadas_json) : null
     ];
 
     const result = await pool.query(query, values);
@@ -335,11 +364,40 @@ app.put('/archivos/:id', async (req, res) => {
       etiquetas,
       alcance_geografico,
       validacion,
-      observaciones
+      observaciones,
+      coordenadas,
+      alcance_coordenadas
     } = req.body;
 
     console.log('Actualizando archivo ID:', id);
     console.log('Datos recibidos:', req.body);
+
+    // Procesar coordenadas si vienen en el alcance
+    let coordenadas_json = null;
+    let latitud = null;
+    let longitud = null;
+    
+    try {
+      const coords = coordenadas || alcance_coordenadas;
+      if (coords) {
+        if (typeof coords === 'string') {
+          coordenadas_json = JSON.parse(coords);
+        } else {
+          coordenadas_json = coords;
+        }
+        
+        // Si es un array de ubicaciones, tomar la primera
+        if (Array.isArray(coordenadas_json) && coordenadas_json.length > 0) {
+          const primeraUbicacion = coordenadas_json[0];
+          if (primeraUbicacion.lat && primeraUbicacion.lon) {
+            latitud = parseFloat(primeraUbicacion.lat);
+            longitud = parseFloat(primeraUbicacion.lon);
+          }
+        }
+      }
+    } catch (err) {
+      console.log('Error al procesar coordenadas en actualización:', err.message);
+    }
 
     // Actualizar el archivo en la base de datos
     const query = `
@@ -354,9 +412,12 @@ app.put('/archivos/:id', async (req, res) => {
         alcance_geografico = $7,
         validacion = $8,
         observaciones = $9,
-        fecha_actualizacion = $10
-      WHERE id = $11
-      RETURNING id, nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, archivo_url, fuente, responsable, alcance_geografico, validacion, observaciones
+        fecha_actualizacion = $10,
+        latitud = $11,
+        longitud = $12,
+        coordenadas_json = $13
+      WHERE id = $14
+      RETURNING id, nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, archivo_url, fuente, responsable, alcance_geografico, validacion, observaciones, latitud, longitud, coordenadas_json
     `;
 
     const values = [
@@ -370,6 +431,9 @@ app.put('/archivos/:id', async (req, res) => {
       validacion,
       observaciones,
       new Date(), // fecha_actualizacion
+      latitud,
+      longitud,
+      coordenadas_json ? JSON.stringify(coordenadas_json) : null,
       id
     ];
 
@@ -419,9 +483,36 @@ app.put('/archivos/:id/with-file', upload.single('file'), async (req, res) => {
     const validacion = req.body.validacion || '';
     const observaciones = req.body.observaciones || '';
 
+    // Procesar coordenadas si vienen en el alcance
+    let coordenadas_json = null;
+    let latitud = null;
+    let longitud = null;
+    
+    try {
+      const coords = req.body.coordenadas || req.body.alcance_coordenadas;
+      if (coords) {
+        if (typeof coords === 'string') {
+          coordenadas_json = JSON.parse(coords);
+        } else {
+          coordenadas_json = coords;
+        }
+        
+        // Si es un array de ubicaciones, tomar la primera
+        if (Array.isArray(coordenadas_json) && coordenadas_json.length > 0) {
+          const primeraUbicacion = coordenadas_json[0];
+          if (primeraUbicacion.lat && primeraUbicacion.lon) {
+            latitud = parseFloat(primeraUbicacion.lat);
+            longitud = parseFloat(primeraUbicacion.lon);
+          }
+        }
+      }
+    } catch (err) {
+      console.log('Error al procesar coordenadas en actualización con archivo:', err.message);
+    }
+
     console.log('Datos de actualización:', {
       nombre, tipo, tamano, descripcion, responsable, fuente,
-      etiquetas, alcance_geografico, validacion, observaciones
+      etiquetas, alcance_geografico, validacion, observaciones, latitud, longitud
     });
 
     // Actualizar el archivo en la base de datos con el nuevo contenido
@@ -440,9 +531,12 @@ app.put('/archivos/:id/with-file', upload.single('file'), async (req, res) => {
         fecha_actualizacion = $10,
         tamano = $11,
         archivo_url = $12,
-        archivo_contenido = $13
-      WHERE id = $14
-      RETURNING id, nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, archivo_url, fuente, responsable, alcance_geografico, validacion, observaciones
+        archivo_contenido = $13,
+        latitud = $14,
+        longitud = $15,
+        coordenadas_json = $16
+      WHERE id = $17
+      RETURNING id, nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, archivo_url, fuente, responsable, alcance_geografico, validacion, observaciones, latitud, longitud, coordenadas_json
     `;
 
     const values = [
@@ -459,6 +553,9 @@ app.put('/archivos/:id/with-file', upload.single('file'), async (req, res) => {
       tamano,
       archivo_url,
       archivo.buffer, // Nuevo contenido del archivo
+      latitud,
+      longitud,
+      coordenadas_json ? JSON.stringify(coordenadas_json) : null,
       id
     ];
 
