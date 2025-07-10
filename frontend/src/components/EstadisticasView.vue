@@ -115,7 +115,7 @@
           </div>
         </div>
 
-        <!-- Gráfico de dona - Estados de validación -->
+        <!-- Gráfico de pastel - Estados de validación -->
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
           <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -124,26 +124,23 @@
             Estados de validación
           </h3>
           <div class="chart-container flex items-center">
-            <div class="donut-chart" style="width: 200px; height: 200px;">
-              <svg width="200" height="200" class="animate-donut-draw">
-                <g transform="translate(100, 100)">
-                  <circle cx="0" cy="0" r="80" fill="none" stroke="#f3f4f6" stroke-width="20"/>
-                  <circle v-for="(estado, index) in estadisticas.estadosValidacion" 
-                          :key="estado.estado"
-                          cx="0" cy="0" r="80" 
-                          fill="none" 
-                          :stroke="getEstadoColorHex(estado.estado)"
-                          stroke-width="20"
-                          :stroke-dasharray="getSegmentLength(estado.cantidad)"
-                          :stroke-dashoffset="getSegmentOffset(index)"
-                          :style="{ '--delay': index * 0.2 + 's' }"
-                          class="donut-segment animate-segment-draw"
-                          transform="rotate(-90)"/>
+            <div class="pie-chart" style="width: 200px; height: 200px; position: relative;">
+              <svg width="200" height="200" viewBox="0 0 200 200">
+                <!-- Círculos de fondo para el pastel -->
+                <g>
+                  <path 
+                    v-for="(estado, index) in estadisticas.estadosValidacion" 
+                    :key="estado.estado"
+                    :fill="getEstadoColorHex(estado.estado)"
+                    :d="getPieSlicePath(index)"
+                    :style="{ '--delay': index * 0.2 + 's' }"
+                    class="pie-slice animate-pie-appear"
+                  />
                 </g>
-                <text x="100" y="100" text-anchor="middle" dy="0.35em" class="text-2xl font-bold text-gray-800">
+                <text x="100" y="85" text-anchor="middle" class="text-2xl font-bold text-gray-800">
                   {{ estadisticas.totalArchivos }}
                 </text>
-                <text x="100" y="120" text-anchor="middle" dy="0.35em" class="text-sm text-gray-500">
+                <text x="100" y="115" text-anchor="middle" class="text-sm text-gray-500">
                   Total
                 </text>
               </svg>
@@ -485,21 +482,37 @@ function getMonthColor(index) {
   return colores[index % colores.length]
 }
 
-// Funciones para el gráfico de dona
-function getSegmentLength(cantidad) {
-  const circumference = 2 * Math.PI * 80
-  const percentage = cantidad / estadisticas.value.totalArchivos
-  return `${circumference * percentage} ${circumference}`
-}
-
-function getSegmentOffset(index) {
-  const circumference = 2 * Math.PI * 80
-  let offset = 0
+// Funciones para el gráfico de pastel
+function getPieSlicePath(index) {
+  const total = estadisticas.value.totalArchivos
+  const estados = estadisticas.value.estadosValidacion
+  
+  // Calcular ángulos iniciales y finales para esta sección
+  let startAngle = 0
   for (let i = 0; i < index; i++) {
-    const percentage = estadisticas.value.estadosValidacion[i].cantidad / estadisticas.value.totalArchivos
-    offset += circumference * percentage
+    const percentage = estados[i].cantidad / total
+    startAngle += percentage * 2 * Math.PI
   }
-  return -offset
+  
+  const percentage = estados[index].cantidad / total
+  const endAngle = startAngle + percentage * 2 * Math.PI
+  
+  // Radio del pastel
+  const radius = 80
+  const centerX = 100
+  const centerY = 100
+  
+  // Calcular puntos de inicio y fin para el arco
+  const x1 = centerX + radius * Math.cos(startAngle - Math.PI / 2)
+  const y1 = centerY + radius * Math.sin(startAngle - Math.PI / 2)
+  const x2 = centerX + radius * Math.cos(endAngle - Math.PI / 2)
+  const y2 = centerY + radius * Math.sin(endAngle - Math.PI / 2)
+  
+  // Bandera para arco grande
+  const largeArc = percentage > 0.5 ? 1 : 0
+  
+  // Crear el path del slice
+  return `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`
 }
 
 // Funciones para el gráfico de burbujas
@@ -547,9 +560,9 @@ onMounted(() => {
   to { width: var(--final-width); }
 }
 
-@keyframes donutDraw {
-  from { stroke-dasharray: 0 1000; }
-  to { stroke-dasharray: var(--final-dash); }
+@keyframes pieAppear {
+  from { opacity: 0; transform: scale(0); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes bubbleGrow {
@@ -654,28 +667,37 @@ onMounted(() => {
   animation: barGrow 1s ease-out var(--delay, 0s) both;
 }
 
-/* Estilos para gráfico de dona */
-.donut-chart svg {
-  transform: rotate(-90deg);
+/* Estilos para gráfico de pastel */
+.pie-chart svg {
+  overflow: visible;
 }
 
-.donut-segment {
+.pie-slice {
+  transform-origin: center;
   transition: all 0.3s ease;
-  animation: donutDraw 1.5s ease-out var(--delay, 0s) both;
 }
 
-.donut-segment:hover {
-  stroke-width: 25;
+.pie-slice:hover {
+  transform: translateX(5px) translateY(5px);
   filter: brightness(1.1);
+  stroke: #ffffff;
+  stroke-width: 2;
 }
 
-.animate-donut-draw {
-  animation: fadeIn 0.5s ease-out;
+@keyframes pieAppear {
+  from { 
+    opacity: 0; 
+    transform: scale(0.5);
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1);
+  }
 }
 
-.animate-segment-draw {
-  --final-dash: var(--dash-array);
-  animation: donutDraw 1.5s ease-out var(--delay, 0s) both;
+.animate-pie-appear {
+  animation: pieAppear 0.8s ease-out var(--delay, 0s) both;
+  transform-origin: 100px 100px;
 }
 
 /* Estilos para gráfico de barras horizontales */
@@ -829,7 +851,7 @@ onMounted(() => {
     height: 250px;
   }
   
-  .donut-chart {
+  .pie-chart {
     width: 150px !important;
     height: 150px !important;
   }
