@@ -72,6 +72,15 @@
           </svg>
           Estadísticas
         </a>
+
+        <a href="#" @click="vistaActual = 'mapa'" 
+           class="flex items-center px-6 py-3 text-purple-100 transition-colors"
+           :class="vistaActual === 'mapa' ? 'bg-purple-800 border-l-4 border-white' : 'hover:bg-purple-800'">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg>
+          Mapa
+        </a>
       </nav>
     </aside>
 
@@ -98,6 +107,9 @@
           
           <!-- Vista de Estadísticas -->
           <EstadisticasView v-if="vistaActual === 'estadisticas'"/>
+          
+          <!-- Vista de Mapa -->
+          <MapaView v-if="vistaActual === 'mapa'"/>
         </div>
       </main>
 
@@ -125,6 +137,7 @@ import ArchivoTable from './components/ArchivoTable.vue'
 import ArchivoFicha from './components/ArchivoFicha.vue'
 import ArchivosView from './components/ArchivosView.vue'
 import EstadisticasView from './components/EstadisticasView.vue'
+import MapaView from './components/MapaView.vue'
 
 const archivoSeleccionado = ref(null)
 const vistaActual = ref('dashboard') // Estado para controlar la vista actual
