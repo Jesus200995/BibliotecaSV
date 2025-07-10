@@ -63,6 +63,15 @@
           </svg>
           Archivos
         </a>
+
+        <a href="#" @click="vistaActual = 'estadisticas'" 
+           class="flex items-center px-6 py-3 text-purple-100 transition-colors"
+           :class="vistaActual === 'estadisticas' ? 'bg-purple-800 border-l-4 border-white' : 'hover:bg-purple-800'">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          Estadísticas
+        </a>
       </nav>
     </aside>
 
@@ -86,6 +95,9 @@
           
           <!-- Vista de Archivos -->
           <ArchivosView v-if="vistaActual === 'archivos'" @ver="verFicha"/>
+          
+          <!-- Vista de Estadísticas -->
+          <EstadisticasView v-if="vistaActual === 'estadisticas'"/>
         </div>
       </main>
 
@@ -112,6 +124,7 @@ import axios from 'axios'
 import ArchivoTable from './components/ArchivoTable.vue'
 import ArchivoFicha from './components/ArchivoFicha.vue'
 import ArchivosView from './components/ArchivosView.vue'
+import EstadisticasView from './components/EstadisticasView.vue'
 
 const archivoSeleccionado = ref(null)
 const vistaActual = ref('dashboard') // Estado para controlar la vista actual
