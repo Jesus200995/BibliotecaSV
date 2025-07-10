@@ -101,12 +101,13 @@
                      :key="tipo.tipo" 
                      class="bar-wrapper"
                      :style="{ '--delay': index * 0.1 + 's' }">
-                  <div class="bar-vertical animate-bar-grow" 
+                  <div class="building-vertical animate-building-grow" 
                        :style="{ 
                          height: getBarHeight(tipo.cantidad, estadisticas.maxTipoCount) + '%',
                          backgroundColor: getTipoColorHex(tipo.tipo)
                        }">
-                    <div class="bar-value">{{ tipo.cantidad }}</div>
+                    <div class="building-value">{{ tipo.cantidad }}</div>
+                    <div class="building-windows"></div>
                   </div>
                   <div class="bar-label">{{ tipo.tipo }}</div>
                 </div>
@@ -555,6 +556,11 @@ onMounted(() => {
   to { height: var(--final-height); }
 }
 
+@keyframes buildingGrow {
+  from { height: 0%; transform: translateY(10px); opacity: 0.3; }
+  to { height: var(--final-height); transform: translateY(0); opacity: 1; }
+}
+
 @keyframes barGrowHorizontal {
   from { width: 0%; }
   to { width: var(--final-width); }
@@ -621,33 +627,59 @@ onMounted(() => {
   max-width: 80px;
 }
 
-.bar-vertical {
-  width: 40px;
-  background: linear-gradient(to top, var(--color), color-mix(in srgb, var(--color) 80%, white));
-  border-radius: 4px 4px 0 0;
+.building-vertical {
+  width: 48px;
+  background: linear-gradient(to top, var(--color), color-mix(in srgb, var(--color) 90%, white));
+  border-radius: 6px 6px 0 0;
   position: relative;
   transition: all 0.3s ease;
-  animation: barGrow 1s ease-out var(--delay, 0s) both;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  animation: buildingGrow 1.2s ease-out var(--delay, 0s) both;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+  position: relative;
+  min-height: 30px;
 }
 
-.bar-vertical:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+.building-vertical:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
 
-.bar-value {
+.building-windows {
+  position: absolute;
+  top: 15%;
+  left: 10%;
+  right: 10%;
+  bottom: 10%;
+  background-image: 
+    linear-gradient(to right, rgba(255,255,255,0.3) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.3) 1px, transparent 1px);
+  background-size: 10px 10px;
+  border-radius: 2px;
+}
+
+.building-value {
   position: absolute;
   top: -25px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: bold;
   color: #374151;
   background: white;
   padding: 2px 6px;
   border-radius: 4px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.building-windows {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 2px;
 }
 
 .bar-label {
@@ -665,6 +697,11 @@ onMounted(() => {
 .animate-bar-grow {
   --final-height: var(--height);
   animation: barGrow 1s ease-out var(--delay, 0s) both;
+}
+
+.animate-building-grow {
+  --final-height: var(--height);
+  animation: buildingGrow 1.2s ease-out var(--delay, 0s) both;
 }
 
 /* Estilos para gráfico de pastel */
