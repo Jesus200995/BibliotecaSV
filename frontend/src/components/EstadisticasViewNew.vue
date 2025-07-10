@@ -245,14 +245,9 @@ async function obtenerEstadisticas() {
   try {
     cargando.value = true
     
-    // Obtener todos los archivos (sin paginación para estadísticas completas)
-    const response = await axios.get(`${BACKEND_URL}/archivos?limit=1000`)
-    
-    // Extraer los archivos del objeto de respuesta
-    const archivos = response.data.items || response.data || []
-    
-    console.log('Archivos obtenidos:', archivos.length)
-    console.log('Ejemplo de archivo:', archivos[0])
+    // Obtener todos los archivos
+    const response = await axios.get(`${BACKEND_URL}/archivos`)
+    const archivos = response.data
 
     // Calcular estadísticas
     calcularEstadisticas(archivos)
@@ -268,8 +263,6 @@ async function obtenerEstadisticas() {
 
 // Función para calcular estadísticas
 function calcularEstadisticas(archivos) {
-  console.log('Calculando estadísticas para', archivos.length, 'archivos')
-  
   const ahora = new Date()
   const mesActual = ahora.getMonth() + 1
   const anioActual = ahora.getFullYear()
@@ -277,50 +270,26 @@ function calcularEstadisticas(archivos) {
   // Total de archivos
   estadisticas.value.totalArchivos = archivos.length
   
-  // Tamaño total (manejar diferentes formatos de tamaño)
-  estadisticas.value.tamanoTotal = archivos.reduce((total, archivo) => {
-    let tamano = 0
-    if (archivo.tamano) {
-      // Si ya es un número
-      if (typeof archivo.tamano === 'number') {
-        tamano = archivo.tamano
-      } else if (typeof archivo.tamano === 'string') {
-        // Si es string, intentar parsearlo
-        const num = parseInt(archivo.tamano.replace(/[^\d]/g, ''))
-        tamano = isNaN(num) ? 0 : num
-      }
-    }
-    return total + tamano
-  }, 0)
+  // Tamaño total
+  estadisticas.value.tamanoTotal = archivos.reduce((total, archivo) => total + (archivo.tamano || 0), 0)
   
   // Tipos de archivo
   const tiposMap = {}
   archivos.forEach(archivo => {
-    let tipo = archivo.tipo
-    if (!tipo && archivo.nombre) {
-      // Extraer extensión del nombre del archivo
-      const extension = archivo.nombre.split('.').pop()
-      tipo = extension ? extension.toUpperCase() : 'Sin tipo'
-    }
-    tipo = tipo || 'Sin tipo'
+    const tipo = archivo.tipo || 'Sin tipo'
     tiposMap[tipo] = (tiposMap[tipo] || 0) + 1
   })
-  
   estadisticas.value.tiposArchivo = Object.entries(tiposMap)
     .map(([tipo, cantidad]) => ({ tipo, cantidad }))
     .sort((a, b) => b.cantidad - a.cantidad)
   
-  estadisticas.value.maxTipoCount = Math.max(...estadisticas.value.tiposArchivo.map(t => t.cantidad), 1)
+  estadisticas.value.maxTipoCount = Math.max(...estadisticas.value.tiposArchivo.map(t => t.cantidad))
   
   // Archivos del mes actual
   estadisticas.value.archivosMesActual = archivos.filter(archivo => {
     if (!archivo.fecha_actualizacion) return false
-    try {
-      const fecha = new Date(archivo.fecha_actualizacion)
-      return fecha.getMonth() + 1 === mesActual && fecha.getFullYear() === anioActual
-    } catch {
-      return false
-    }
+    const fecha = new Date(archivo.fecha_actualizacion)
+    return fecha.getMonth() + 1 === mesActual && fecha.getFullYear() === anioActual
   }).length
   
   // Estados de validación
@@ -341,43 +310,31 @@ function calcularEstadisticas(archivos) {
   for (let i = 5; i >= 0; i--) {
     const fecha = new Date()
     fecha.setMonth(fecha.getMonth() - i)
-    const mesKey = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`
+    const mesKey = `${fecha.getFullYear()}-${fecha.getMonth() + 1}`
     const mesNombre = `${meses[fecha.getMonth()]} ${fecha.getFullYear()}`
     actividadMap[mesKey] = { mes: mesNombre, cantidad: 0 }
   }
   
   archivos.forEach(archivo => {
     if (!archivo.fecha_actualizacion) return
-    try {
-      const fecha = new Date(archivo.fecha_actualizacion)
-      const mesKey = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`
-      if (actividadMap[mesKey]) {
-        actividadMap[mesKey].cantidad++
-      }
-    } catch (error) {
-      console.warn('Error al procesar fecha:', archivo.fecha_actualizacion)
+    const fecha = new Date(archivo.fecha_actualizacion)
+    const mesKey = `${fecha.getFullYear()}-${fecha.getMonth() + 1}`
+    if (actividadMap[mesKey]) {
+      actividadMap[mesKey].cantidad++
     }
   })
   
   estadisticas.value.actividadMensual = Object.values(actividadMap)
-  estadisticas.value.maxMesCount = Math.max(...estadisticas.value.actividadMensual.map(m => m.cantidad), 1)
+  estadisticas.value.maxMesCount = Math.max(...estadisticas.value.actividadMensual.map(m => m.cantidad))
   
   // Ubicaciones más frecuentes
   const ubicacionesMap = {}
   archivos.forEach(archivo => {
     if (!archivo.alcance_geografico) return
-    
-    // Manejar diferentes formatos de alcance geográfico
-    let ubicaciones = []
-    if (typeof archivo.alcance_geografico === 'string') {
-      ubicaciones = archivo.alcance_geografico.split(/[,;]/)
-    } else if (Array.isArray(archivo.alcance_geografico)) {
-      ubicaciones = archivo.alcance_geografico
-    }
-    
+    const ubicaciones = archivo.alcance_geografico.split(',')
     ubicaciones.forEach(ubicacion => {
-      const ubicacionTrim = String(ubicacion).trim()
-      if (ubicacionTrim && ubicacionTrim !== '') {
+      const ubicacionTrim = ubicacion.trim()
+      if (ubicacionTrim) {
         ubicacionesMap[ubicacionTrim] = (ubicacionesMap[ubicacionTrim] || 0) + 1
       }
     })
@@ -388,9 +345,7 @@ function calcularEstadisticas(archivos) {
     .sort((a, b) => b.cantidad - a.cantidad)
     .slice(0, 12)
   
-  estadisticas.value.maxUbicacionCount = Math.max(...estadisticas.value.ubicacionesFrecuentes.map(u => u.cantidad), 1)
-  
-  console.log('Estadísticas calculadas:', estadisticas.value)
+  estadisticas.value.maxUbicacionCount = Math.max(...estadisticas.value.ubicacionesFrecuentes.map(u => u.cantidad))
 }
 
 // Función de datos de ejemplo en caso de error
