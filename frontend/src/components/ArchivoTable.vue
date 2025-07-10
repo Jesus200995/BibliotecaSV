@@ -152,8 +152,8 @@
       </div>
     </div>
     
-    <!-- Modal para subir archivos -->
-    <div v-if="modalVisible" class="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
+    <!-- Modal para subir archivos - VERSIÓN ULTRA COMPACTA SIN SCROLL -->
+    <div v-if="modalVisible" class="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center p-3">
       <!-- Fondo oscuro con animación -->
       <div 
         class="fixed inset-0 bg-black transition-opacity duration-300"
@@ -161,15 +161,15 @@
         @click="modalVisible = false"
       ></div>
       
-      <!-- Contenido del modal con animación -->
+      <!-- Contenido del modal compacto pero más grande - Ancho optimizado 620px, máximo 80% altura -->
       <div 
-        class="relative bg-white rounded-2xl w-full max-w-5xl mx-4 shadow-2xl transform transition-all duration-300 overflow-hidden"
+        class="relative bg-white rounded-xl w-full max-w-[620px] max-h-[80vh] shadow-2xl transform transition-all duration-300 overflow-hidden"
         :class="{ 'scale-100 opacity-100': modalVisible, 'scale-95 opacity-0': !modalVisible }"
       >
-        <!-- Cabecera del modal mejorada -->
-        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-2xl px-8 py-5 flex items-center justify-between">
-          <h3 class="text-xl font-semibold flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <!-- Cabecera del modal ultra compacta -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-xl px-4 py-2 flex items-center justify-between">
+          <h3 class="text-base font-semibold flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
             </svg>
             Subir nuevo archivo
@@ -178,120 +178,134 @@
             @click="modalVisible = false" 
             class="text-white hover:text-gray-200 transition-colors p-1 rounded-full hover:bg-white/20"
           >
-            <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
         
-        <!-- Formulario con estilos mejorados -->
-        <form @submit.prevent="subirArchivo" class="p-8 grid grid-cols-1 md:grid-cols-2 gap-6 bg-gradient-to-b from-white to-gray-50">
-          <!-- Columna 1 -->
-          <div class="space-y-5 md:col-span-2">
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Archivo</label>
-              <div class="flex items-center">
-                <label for="file-upload" class="cursor-pointer bg-blue-50 hover:bg-blue-100 text-blue-600 px-5 py-3 rounded-lg border border-blue-200 transition-all hover:shadow-md transform hover:scale-[1.02] flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                  </svg>
-                  Seleccionar archivo
-                </label>
-                <input 
-                  type="file" 
-                  id="file-upload"
-                  @change="seleccionarArchivo" 
-                  class="hidden" 
-                  required 
-                />
-                <div class="ml-4 py-2 px-3 bg-gray-50 text-sm text-gray-600 rounded-lg border border-gray-200 max-w-xs truncate">
-                  {{ archivoNombre || 'Ningún archivo seleccionado' }}
-                </div>
+        <!-- Formulario compacto pero más grande sin scroll interno -->
+        <form @submit.prevent="subirArchivo" class="p-4 space-y-3 bg-white">
+          
+          <!-- Campo de archivo compacto pero con mejor espaciado -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Archivo *</label>
+            <div class="flex items-center gap-3">
+              <label for="file-upload" class="cursor-pointer bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-2 rounded-lg border border-blue-200 transition-all flex items-center gap-2 text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+                Seleccionar archivo
+              </label>
+              <input 
+                type="file" 
+                id="file-upload"
+                @change="seleccionarArchivo" 
+                class="hidden" 
+                required 
+              />
+              <div class="flex-1 py-2 px-3 bg-gray-50 text-sm text-gray-600 rounded-lg border border-gray-200 truncate h-8">
+                {{ archivoNombre || 'Ningún archivo seleccionado' }}
               </div>
-              <p class="text-xs text-gray-500 mt-2 italic">
-                Se aceptan documentos (.doc, .docx, .xls, .xlsx, .ppt, .pptx), imágenes (.jpg, .png, .gif), PDFs y otros formatos de archivo. Tamaño máximo: 50MB.
-              </p>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Tamaño máximo: 50MB</p>
+          </div>
+          
+          <!-- Descripción con mejor espaciado -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+            <textarea 
+              v-model="descripcion" 
+              rows="2" 
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none" 
+              placeholder="Descripción del archivo">
+            </textarea>
+          </div>
+          
+          <!-- Grid de 2 columnas para campos básicos con mejor espaciado -->
+          <div class="grid grid-cols-2 gap-3">
+            <!-- Responsable -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Responsable</label>
+              <input 
+                v-model="responsable" 
+                type="text" 
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 h-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                placeholder="Responsable" 
+              />
             </div>
             
+            <!-- Fuente -->
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Descripción</label>
-              <textarea 
-                v-model="descripcion" 
-                rows="2" 
-                class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
-                placeholder="Descripción del archivo">
-              </textarea>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Fuente</label>
+              <input 
+                v-model="fuente" 
+                type="text" 
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 h-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                placeholder="Fuente" 
+              />
             </div>
           </div>
           
-          <!-- Columna izquierda -->
-          <div class="space-y-5">
+          <!-- Grid de 2 columnas para campos con chips con mejor espaciado -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            
+            <!-- Etiquetas con mejor espaciado -->
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Etiquetas</label>
-              <div class="flex flex-wrap gap-2 p-2 rounded-lg border border-gray-300 bg-white min-h-[58px] focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
-                <!-- Mostrar etiquetas como chips -->
+              <label class="block text-sm font-medium text-gray-700 mb-1">Etiquetas</label>
+              <div class="flex flex-wrap gap-2 p-2 rounded-lg border border-gray-300 bg-white min-h-[32px] focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
+                <!-- Chips de etiquetas con mejor tamaño -->
                 <div 
                   v-for="(tag, index) in etiquetasArray" 
                   :key="index"
-                  class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1.5 animate-pop-in"
+                  class="bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 animate-pop-in"
                 >
                   {{ tag }}
                   <button 
                     @click="eliminarEtiqueta(index)" 
                     class="text-orange-500 hover:text-orange-700 focus:outline-none transition-colors rounded-full hover:bg-orange-200 p-0.5"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
                 </div>
                 
-                <!-- Input para añadir nuevas etiquetas -->
+                <!-- Input para etiquetas -->
                 <input 
                   v-model="etiquetaInput" 
                   @keydown="gestionarEtiquetas"
                   @blur="agregarEtiquetaEnBlur"
                   type="text" 
-                  class="flex-grow min-w-[120px] py-1 px-2 focus:outline-none text-gray-700" 
-                  placeholder="Escribe para agregar etiquetas..."
+                  class="flex-grow min-w-[80px] py-1 px-2 focus:outline-none text-sm text-gray-700" 
+                  placeholder="Agregar etiquetas..."
                 />
               </div>
-              <p class="text-xs text-gray-500 mt-1">Escribe y presiona espacio, coma o haz clic fuera del campo para crear una etiqueta</p>
             </div>
             
+            <!-- Alcance geográfico con mejor espaciado -->
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Responsable</label>
-              <input 
-                v-model="responsable" 
-                type="text" 
-                class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
-                placeholder="Responsable" 
-              />
-            </div>
-            
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Alcance geográfico</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Alcance geográfico</label>
               <div class="relative alcance-geografico-container">
-                <!-- Contenedor de chips y input -->
-                <div class="flex flex-wrap gap-2 p-2 rounded-lg border border-gray-300 bg-white min-h-[58px] focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
-                  <!-- Mostrar ubicaciones seleccionadas como chips -->
+                <div class="flex flex-wrap gap-2 p-2 rounded-lg border border-gray-300 bg-white min-h-[32px] focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
+                  <!-- Chips de ubicaciones con mejor tamaño -->
                   <div 
                     v-for="(lugar, index) in alcanceArray" 
                     :key="index"
-                    class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1.5 animate-pop-in"
+                    class="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 animate-pop-in"
                   >
                     {{ lugar.name }}
                     <button 
                       @click="eliminarLugar(index)" 
                       class="text-blue-500 hover:text-blue-700 focus:outline-none transition-colors rounded-full hover:bg-blue-200 p-0.5"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
                   </div>
                   
-                  <!-- Input para buscar ubicaciones -->
+                  <!-- Input de búsqueda -->
                   <input 
                     v-model="alcanceInput" 
                     @input="buscarUbicaciones"
@@ -299,180 +313,163 @@
                     @focus="activarBusquedaUbicaciones"
                     @blur="setTimeout(() => mostrarSugerencias = false, 200)"
                     type="text" 
-                    class="flex-grow min-w-[120px] py-1 px-2 focus:outline-none text-gray-700" 
-                    placeholder="Escribe para buscar lugares en México..." 
+                    class="flex-grow min-w-[80px] py-1 px-2 focus:outline-none text-sm text-gray-700" 
+                    placeholder="Buscar ubicaciones..." 
                   />
                 </div>
                 
-                <!-- Lista de sugerencias -->
+                <!-- Lista de sugerencias ultra compacta -->
                 <div 
                   v-if="mostrarSugerencias && !cargandoUbicaciones" 
-                  class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                  class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-32 overflow-y-auto"
                 >
-                  <!-- Mostrar sugerencias si hay resultados -->
                   <div 
                     v-if="sugerenciasUbicacion.length > 0"
                     v-for="(sugerencia, index) in sugerenciasUbicacion" 
                     :key="index"
                     @click="seleccionarUbicacion(sugerencia)"
-                    class="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm text-gray-700 border-b border-gray-100 last:border-b-0 flex items-center"
+                    class="px-2 py-1 hover:bg-blue-50 cursor-pointer text-xs text-gray-700 border-b border-gray-100 last:border-b-0 flex items-center"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 mr-1 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                     <span>{{ sugerencia.display_name }}</span>
                   </div>
                   
-                  <!-- Mensaje cuando no hay resultados -->
                   <div 
                     v-if="sugerenciasUbicacion.length === 0 && alcanceInput.length >= 2"
-                    class="px-4 py-3 text-sm text-gray-600 text-center"
+                    class="px-2 py-1 text-xs text-gray-600 text-center"
                   >
-                    No se encontraron ubicaciones para "{{ alcanceInput }}". Intenta con otro término.
+                    No encontrado
                   </div>
                 </div>
                 
-                <!-- Mensaje de cargando -->
+                <!-- Cargando mini -->
                 <div 
                   v-if="cargandoUbicaciones && mostrarSugerencias" 
-                  class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-3 text-center text-sm text-gray-600"
+                  class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-1 text-center text-xs text-gray-600"
                 >
-                  <div class="animate-spin inline-block mr-2 h-4 w-4 border-t-2 border-blue-500 rounded-full"></div>
-                  Buscando ubicaciones...
+                  <div class="animate-spin inline-block mr-1 h-2.5 w-2.5 border-t-2 border-blue-500 rounded-full"></div>
+                  Buscando...
                 </div>
               </div>
-              <p class="text-xs text-gray-500 mt-1">Comienza a escribir para buscar ubicaciones en México (ciudades, municipios, estados)</p>
             </div>
           </div>
           
-          <!-- Columna derecha -->
-          <div class="space-y-5">
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Fuente</label>
-              <input 
-                v-model="fuente" 
-                type="text" 
-                class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
-                placeholder="Fuente" 
-              />
-            </div>
+          <!-- Campo de Validación mejorado - Radio buttons horizontales con selección muy visible -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Estado de validación *</label>
             
-            <!-- Campo de Validación rediseñado - Solo 3 opciones específicas -->
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Estado de validación</label>
+            <!-- Radio buttons horizontales con mejor visibilidad de selección -->
+            <div class="flex gap-3">
               
-              <!-- Radio buttons visuales con colores específicos -->
-              <div class="grid grid-cols-1 gap-3">
-                
-                <!-- Opción 1: Verificado (Verde) -->
-                <label class="cursor-pointer">
-                  <input 
-                    type="radio" 
-                    v-model="validacion" 
-                    value="Verificado" 
-                    class="sr-only"
-                  />
-                  <div class="flex items-center p-3 rounded-lg border-2 transition-all duration-200"
+              <!-- Opción 1: Verificado (Verde) -->
+              <label class="cursor-pointer flex-1">
+                <input 
+                  type="radio" 
+                  v-model="validacion" 
+                  value="Verificado" 
+                  class="sr-only"
+                />
+                <div class="flex items-center justify-center p-3 rounded-lg border-2 transition-all duration-200 relative"
+                     :class="validacion === 'Verificado' 
+                       ? 'border-green-500 bg-green-100 shadow-md ring-2 ring-green-200' 
+                       : 'border-gray-200 bg-white hover:border-green-300 hover:bg-green-50'">
+                  <!-- Indicador de radio button más visible -->
+                  <div class="absolute top-2 right-2 flex items-center justify-center w-5 h-5 rounded-full border-2"
                        :class="validacion === 'Verificado' 
-                         ? 'border-green-500 bg-green-50 shadow-md' 
-                         : 'border-gray-200 bg-white hover:border-green-300 hover:bg-green-25'">
-                    <div class="flex items-center justify-center w-5 h-5 mr-3 rounded-full border-2"
-                         :class="validacion === 'Verificado' 
-                           ? 'border-green-500 bg-green-500' 
-                           : 'border-gray-300'">
-                      <div v-if="validacion === 'Verificado'" class="w-2 h-2 bg-white rounded-full"></div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                      <span class="font-medium text-gray-800">Verificado</span>
-                      <span class="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">Aprobado</span>
-                    </div>
+                         ? 'border-green-600 bg-green-600' 
+                         : 'border-gray-300 bg-white'">
+                    <div v-if="validacion === 'Verificado'" class="w-2 h-2 bg-white rounded-full"></div>
                   </div>
-                </label>
-                
-                <!-- Opción 2: Sin definir (Gris claro) -->
-                <label class="cursor-pointer">
-                  <input 
-                    type="radio" 
-                    v-model="validacion" 
-                    value="Sin definir" 
-                    class="sr-only"
-                  />
-                  <div class="flex items-center p-3 rounded-lg border-2 transition-all duration-200"
-                       :class="validacion === 'Sin definir' 
-                         ? 'border-gray-400 bg-gray-50 shadow-md' 
-                         : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-25'">
-                    <div class="flex items-center justify-center w-5 h-5 mr-3 rounded-full border-2"
-                         :class="validacion === 'Sin definir' 
-                           ? 'border-gray-400 bg-gray-400' 
-                           : 'border-gray-300'">
-                      <div v-if="validacion === 'Sin definir'" class="w-2 h-2 bg-white rounded-full"></div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
-                      <span class="font-medium text-gray-800">Sin definir</span>
-                      <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">Pendiente</span>
-                    </div>
+                  <div class="flex flex-col items-center gap-2">
+                    <div class="w-4 h-4 bg-green-500 rounded-full"></div>
+                    <span class="text-sm font-semibold text-gray-800">Verificado</span>
+                    <span class="text-xs text-green-700 bg-green-200 px-2 py-1 rounded-full">Aprobado</span>
                   </div>
-                </label>
-                
-                <!-- Opción 3: Borrador (Amarillo-naranja) -->
-                <label class="cursor-pointer">
-                  <input 
-                    type="radio" 
-                    v-model="validacion" 
-                    value="Borrador" 
-                    class="sr-only"
-                  />
-                  <div class="flex items-center p-3 rounded-lg border-2 transition-all duration-200"
-                       :class="validacion === 'Borrador' 
-                         ? 'border-orange-400 bg-orange-50 shadow-md' 
-                         : 'border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-25'">
-                    <div class="flex items-center justify-center w-5 h-5 mr-3 rounded-full border-2"
-                         :class="validacion === 'Borrador' 
-                           ? 'border-orange-400 bg-orange-400' 
-                           : 'border-gray-300'">
-                      <div v-if="validacion === 'Borrador'" class="w-2 h-2 bg-white rounded-full"></div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <div class="w-3 h-3 bg-orange-400 rounded-full"></div>
-                      <span class="font-medium text-gray-800">Borrador</span>
-                      <span class="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded-full">En proceso</span>
-                    </div>
-                  </div>
-                </label>
-              </div>
+                </div>
+              </label>
               
-              <!-- Nota informativa -->
-              <p class="text-xs text-gray-500 mt-2 italic">
-                Selecciona el estado de validación del archivo. Este campo es obligatorio.
-              </p>
-            </div>
-            
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Observaciones</label>
-              <input 
-                v-model="observaciones" 
-                type="text" 
-                class="w-full rounded-lg border border-gray-300 shadow-sm px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
-                placeholder="Observaciones" 
-              />
+              <!-- Opción 2: Sin definir (Gris claro) -->
+              <label class="cursor-pointer flex-1">
+                <input 
+                  type="radio" 
+                  v-model="validacion" 
+                  value="Sin definir" 
+                  class="sr-only"
+                />
+                <div class="flex items-center justify-center p-3 rounded-lg border-2 transition-all duration-200 relative"
+                     :class="validacion === 'Sin definir' 
+                       ? 'border-gray-500 bg-gray-100 shadow-md ring-2 ring-gray-200' 
+                       : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'">
+                  <!-- Indicador de radio button más visible -->
+                  <div class="absolute top-2 right-2 flex items-center justify-center w-5 h-5 rounded-full border-2"
+                       :class="validacion === 'Sin definir' 
+                         ? 'border-gray-600 bg-gray-600' 
+                         : 'border-gray-300 bg-white'">
+                    <div v-if="validacion === 'Sin definir'" class="w-2 h-2 bg-white rounded-full"></div>
+                  </div>
+                  <div class="flex flex-col items-center gap-2">
+                    <div class="w-4 h-4 bg-gray-500 rounded-full"></div>
+                    <span class="text-sm font-semibold text-gray-800">Sin definir</span>
+                    <span class="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded-full">Pendiente</span>
+                  </div>
+                </div>
+              </label>
+              
+              <!-- Opción 3: Borrador (Amarillo-naranja) -->
+              <label class="cursor-pointer flex-1">
+                <input 
+                  type="radio" 
+                  v-model="validacion" 
+                  value="Borrador" 
+                  class="sr-only"
+                />
+                <div class="flex items-center justify-center p-3 rounded-lg border-2 transition-all duration-200 relative"
+                     :class="validacion === 'Borrador' 
+                       ? 'border-orange-500 bg-orange-100 shadow-md ring-2 ring-orange-200' 
+                       : 'border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50'">
+                  <!-- Indicador de radio button más visible -->
+                  <div class="absolute top-2 right-2 flex items-center justify-center w-5 h-5 rounded-full border-2"
+                       :class="validacion === 'Borrador' 
+                         ? 'border-orange-600 bg-orange-600' 
+                         : 'border-gray-300 bg-white'">
+                    <div v-if="validacion === 'Borrador'" class="w-2 h-2 bg-white rounded-full"></div>
+                  </div>
+                  <div class="flex flex-col items-center gap-2">
+                    <div class="w-4 h-4 bg-orange-500 rounded-full"></div>
+                    <span class="text-sm font-semibold text-gray-800">Borrador</span>
+                    <span class="text-xs text-orange-700 bg-orange-200 px-2 py-1 rounded-full">En proceso</span>
+                  </div>
+                </div>
+              </label>
             </div>
           </div>
           
-          <!-- Botones de acción -->
-          <div class="mt-6 flex justify-end space-x-4 md:col-span-2 border-t pt-6">
+          <!-- Observaciones con mejor espaciado -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
+            <input 
+              v-model="observaciones" 
+              type="text" 
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 h-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+              placeholder="Observaciones adicionales" 
+            />
+          </div>
+          
+          <!-- Botones de acción con mejor espaciado -->
+          <div class="flex justify-end gap-3 pt-3 border-t border-gray-200">
             <button 
               type="button" 
               @click="modalVisible = false" 
-              class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium"
+              class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 transition-colors min-w-[100px]"
             >
               Cancelar
             </button>
             <button 
               type="submit" 
-              class="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-colors shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium transform hover:scale-[1.02]"
+              class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-colors text-sm font-medium min-w-[120px]"
             >
               Subir archivo
             </button>
@@ -480,8 +477,6 @@
         </form>
       </div>
     </div>
-
-
 
     <!-- Modal de confirmación de archivo subido -->
     <div v-if="confirmacionVisible" class="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
