@@ -829,13 +829,12 @@ const archivosFiltrados = computed(() => {
   })
 })
 
-// Propiedades computadas para estadísticas
+// Propiedades computadas para estadísticas usando funciones utilitarias centralizadas
 const totalSize = computed(() => {
   // Si hay filtros activos, mostrar el tamaño total de los archivos filtrados
   const archivosToSum = hayFiltrosActivos.value ? archivosFiltrados.value : archivos.value
-  return archivosToSum.reduce((total, archivo) => {
-    return total + (archivo.tamano || 0)
-  }, 0)
+  // Usar función utilitaria centralizada para cálculo consistente
+  return calculateTotalSize(archivosToSum)
 })
 
 const lastFileName = computed(() => {
