@@ -91,7 +91,7 @@
       <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
         <div class="w-full">
           <!-- Dashboard -->
-          <ArchivoTable v-if="vistaActual === 'dashboard'" @ver="verFicha"/>
+          <ArchivoTable v-if="vistaActual === 'dashboard'" @ver="verFicha" @navigate="navegarA"/>
           
           <!-- Vista de Archivos -->
           <ArchivosView v-if="vistaActual === 'archivos'" @ver="verFicha"/>
@@ -143,6 +143,11 @@ async function verFicha(id) {
 
 function cerrarFicha() {
   archivoSeleccionado.value = null
+}
+
+// Función para manejar la navegación desde el Dashboard
+function navegarA(vista) {
+  vistaActual.value = vista
 }
 </script>
 

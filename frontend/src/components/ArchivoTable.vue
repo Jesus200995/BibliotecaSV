@@ -1,22 +1,155 @@
 <template>
-  <div>
-    <!-- Título de la página y acciones -->
-    <div class="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-      <div>
-        <h2 class="text-2xl font-bold text-gray-800">Dashboard</h2>
-        <p class="mt-1 text-sm text-gray-500">Gestiona y visualiza todos los archivos del repositorio</p>
+  <!-- Dashboard rediseñado - Home visual profesional -->
+  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">
+    <!-- Header del Dashboard -->
+    <div class="max-w-6xl mx-auto">
+      <!-- Título y descripción del Dashboard -->
+      <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">
+          <span class="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+            Panel de Control
+          </span>
+        </h1>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+          Gestiona tus archivos y datos de manera eficiente. Sube nuevos documentos o accede a las herramientas de análisis.
+        </p>
       </div>
-      
-      <!-- Botón para abrir el modal de subida de archivos -->
-      <button 
-        @click="modalVisible = true" 
-        class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-full shadow-lg transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-        </svg>
-        Subir archivo
-      </button>
+
+      <!-- Botón principal de "Subir archivo" - Call to Action destacado -->
+      <div class="flex justify-center mb-12">
+        <button 
+          @click="modalVisible = true" 
+          class="group relative bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
+        >
+          <!-- Efecto de brillo en hover -->
+          <div class="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+          
+          <div class="relative flex items-center gap-4">
+            <!-- Ícono de subir archivo -->
+            <div class="bg-white/20 p-3 rounded-xl">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+            </div>
+            <div class="text-left">
+              <div class="text-xl font-bold">Subir Archivo</div>
+              <div class="text-blue-100 text-sm">Añadir nuevo documento al repositorio</div>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <!-- Cards principales de acceso rápido -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        
+        <!-- Card 1: Vista previa de Archivos -->
+        <div class="group bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 cursor-pointer border border-gray-100"
+             @click="$emit('navigate', 'archivos')">
+          
+          <!-- Header de la card con gradiente -->
+          <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-t-3xl p-8 text-white relative overflow-hidden">
+            <!-- Efecto decorativo de fondo -->
+            <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
+            
+            <div class="relative z-10">
+              <!-- Ícono principal -->
+              <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-2xl mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6a2 2 0 01-2 2H10a2 2 0 01-2-2V5z" />
+                </svg>
+              </div>
+              
+              <h3 class="text-2xl font-bold mb-2">Gestión de Archivos</h3>
+              <p class="text-green-100">Explora, busca y administra todos los documentos</p>
+            </div>
+          </div>
+          
+          <!-- Contenido de la card -->
+          <div class="p-8">
+            <!-- Estadísticas rápidas -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+              <div class="text-center">
+                <div class="text-2xl font-bold text-gray-800">{{ totalArchivos }}</div>
+                <div class="text-sm text-gray-500">Total archivos</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-gray-800">{{ formatFileSize(totalSize) }}</div>
+                <div class="text-sm text-gray-500">Espacio usado</div>
+              </div>
+            </div>
+            
+            <!-- Botón de acción -->
+            <div class="flex items-center justify-between">
+              <span class="text-gray-600">Ver todos los archivos</span>
+              <div class="bg-green-100 text-green-600 p-2 rounded-full group-hover:bg-green-200 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Vista previa de Estadísticas -->
+        <div class="group bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 cursor-pointer border border-gray-100"
+             @click="$emit('navigate', 'estadisticas')">
+          
+          <!-- Header de la card con gradiente -->
+          <div class="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-t-3xl p-8 text-white relative overflow-hidden">
+            <!-- Efecto decorativo de fondo -->
+            <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
+            
+            <div class="relative z-10">
+              <!-- Ícono principal -->
+              <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-2xl mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              
+              <h3 class="text-2xl font-bold mb-2">Análisis y Reportes</h3>
+              <p class="text-purple-100">Visualiza estadísticas y métricas detalladas</p>
+            </div>
+          </div>
+          
+          <!-- Contenido de la card -->
+          <div class="p-8">
+            <!-- Gráfico miniatura/preview -->
+            <div class="mb-6">
+              <div class="flex items-end justify-between h-20 gap-2">
+                <!-- Barras miniatura representando estadísticas -->
+                <div class="bg-gradient-to-t from-purple-200 to-purple-400 rounded-t w-4 h-12"></div>
+                <div class="bg-gradient-to-t from-purple-200 to-purple-400 rounded-t w-4 h-16"></div>
+                <div class="bg-gradient-to-t from-purple-200 to-purple-400 rounded-t w-4 h-20"></div>
+                <div class="bg-gradient-to-t from-purple-200 to-purple-400 rounded-t w-4 h-14"></div>
+                <div class="bg-gradient-to-t from-purple-200 to-purple-400 rounded-t w-4 h-18"></div>
+                <div class="bg-gradient-to-t from-purple-200 to-purple-400 rounded-t w-4 h-10"></div>
+              </div>
+              <div class="text-xs text-gray-400 text-center mt-2">Vista previa de análisis</div>
+            </div>
+            
+            <!-- Botón de acción -->
+            <div class="flex items-center justify-between">
+              <span class="text-gray-600">Ver estadísticas completas</span>
+              <div class="bg-purple-100 text-purple-600 p-2 rounded-full group-hover:bg-purple-200 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información adicional opcional -->
+      <div class="text-center mt-12">
+        <p class="text-gray-500 text-sm">
+          Última actualización: {{ new Date().toLocaleDateString('es-ES') }}
+        </p>
+      </div>
     </div>
     
     <!-- Modal para subir archivos -->
@@ -269,407 +402,7 @@
       </div>
     </div>
 
-    <!-- Panel de estadísticas -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-gray-500">Total archivos</p>
-            <p class="text-2xl font-bold text-gray-800">
-              {{ hayFiltrosActivos ? `${archivosFiltrados.length} / ${archivos.length}` : archivos.length || 0 }}
-            </p>
-          </div>
-          <div class="rounded-full p-3 bg-blue-50">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-        </div>
-      </div>
 
-      <!-- Componente unificado de tamaño total - Mismo diseño que Estadísticas -->
-      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-gray-500">Espacio utilizado</p>
-            <p class="text-2xl font-bold text-gray-800">{{ formatFileSize(totalSize) }}</p>
-          </div>
-          <div class="rounded-full p-3 bg-green-50">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-gray-500">Último archivo</p>
-            <p class="text-lg font-semibold text-gray-800 truncate">{{ lastFileName || 'Ninguno' }}</p>
-          </div>
-          <div class="rounded-full p-3 bg-purple-50">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-gray-500">Formatos distintos</p>
-            <p class="text-2xl font-bold text-gray-800">{{ uniqueTypes.length || 0 }}</p>
-          </div>
-          <div class="rounded-full p-3 bg-orange-50">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-            </svg>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Barra de búsqueda y filtros mejorada -->
-    <div class="bg-white p-5 rounded-2xl shadow-lg mb-8 border border-gray-100 transition-all hover:shadow-xl">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-base font-semibold text-gray-700 flex items-center gap-2">
-          <div class="bg-gradient-to-r from-blue-500 to-indigo-500 p-1.5 rounded-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
-            </svg>
-          </div>
-          Filtros de búsqueda
-        </h3>
-        <div v-if="hayFiltrosActivos" class="flex items-center gap-2">
-          <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
-            {{ archivosFiltrados.length }} / {{ archivos.length }} resultados
-          </span>
-        </div>
-      </div>
-      
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3">
-        <!-- Búsqueda por nombre -->
-        <div class="relative">
-          <label class="block text-xs font-medium text-gray-500 mb-1">Buscar por nombre</label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <input 
-              v-model="busqueda" 
-              type="text" 
-              class="w-full pl-8 pr-3 py-2 text-xs rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white focus:bg-white" 
-              placeholder="Buscar archivo..." 
-            />
-          </div>
-        </div>
-
-        <!-- Tipo -->
-        <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1">Tipo</label>
-          <select 
-            v-model="filtroTipo" 
-            class="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 appearance-none bg-gray-50 hover:bg-white focus:bg-white transition-all"
-            style="background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M6 9l6 6 6-6%22/></svg>'); background-repeat: no-repeat; background-position: right 8px center; padding-right: 24px;"
-          >
-            <option value="">Todos</option>
-            <option v-for="tipo in uniqueTypes" :key="tipo" :value="tipo">{{ tipo }}</option>
-          </select>
-        </div>
-
-        <!-- Año -->
-        <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1">Año</label>
-          <select 
-            v-model="filtroAnio" 
-            class="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 appearance-none bg-gray-50 hover:bg-white focus:bg-white transition-all"
-            style="background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M6 9l6 6 6-6%22/></svg>'); background-repeat: no-repeat; background-position: right 8px center; padding-right: 24px;"
-          >
-            <option value="">Todos</option>
-            <option v-for="anio in aniosDisponibles" :key="anio" :value="anio">{{ anio }}</option>
-          </select>
-        </div>
-
-        <!-- Responsable -->
-        <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1">Responsable</label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </div>
-            <input 
-              v-model="filtroResponsable" 
-              type="text" 
-              class="w-full pl-8 pr-3 py-2 text-xs rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white focus:bg-white" 
-              placeholder="Responsable" 
-            />
-          </div>
-        </div>
-
-        <!-- Etiquetas -->
-        <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1">Etiquetas</label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-              </svg>
-            </div>
-            <input 
-              v-model="filtroEtiquetas" 
-              type="text" 
-              class="w-full pl-8 pr-3 py-2 text-xs rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white focus:bg-white" 
-              placeholder="Etiquetas" 
-            />
-          </div>
-        </div>
-
-        <!-- Alcance geográfico -->
-        <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1">Alcance geográfico</label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </div>
-            <input 
-              v-model="filtroAlcanceGeografico" 
-              type="text" 
-              class="w-full pl-8 pr-3 py-2 text-xs rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all bg-gray-50 hover:bg-white focus:bg-white" 
-              placeholder="Ubicación" 
-            />
-          </div>
-        </div>
-
-        <!-- Validación -->
-        <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1">Validación</label>
-          <select 
-            v-model="filtroValidacion" 
-            class="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 appearance-none bg-gray-50 hover:bg-white focus:bg-white transition-all"
-            style="background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M6 9l6 6 6-6%22/></svg>'); background-repeat: no-repeat; background-position: right 8px center; padding-right: 24px;"
-          >
-            <option value="">Todas</option>
-            <option value="Verificado">✓ Verificado</option>
-            <option value="Preliminar">⚠ Preliminar</option>
-            <option value="Borrador">📝 Borrador</option>
-            <option value="En revisión">🔄 En revisión</option>
-          </select>
-        </div>
-
-        <!-- Botón limpiar -->
-        <div class="self-end">
-          <button 
-            @click="limpiarFiltros"
-            v-show="hayFiltrosActivos"
-            class="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-700 text-xs font-medium rounded-lg border border-gray-200 shadow-sm transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 transform hover:scale-105"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Limpiar
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tabla de archivos con paginación -->
-    <div class="relative overflow-x-auto bg-white rounded-lg shadow">
-      <!-- Indicador de carga -->
-      <div 
-        v-if="cargandoPagina" 
-        class="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10"
-      >
-        <div class="flex flex-col items-center">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p class="mt-2 text-blue-600 font-medium">Cargando datos...</p>
-        </div>
-      </div>
-      
-      <table class="w-full divide-y divide-gray-200 table-fixed">
-        <colgroup>
-          <col style="width: 15%"> <!-- Nombre -->
-          <col style="width: 15%"> <!-- Etiquetas -->
-          <col style="width: 10%"> <!-- Validación -->
-          <col style="width: 15%"> <!-- Alcance geográfico -->
-          <col style="width: 12%"> <!-- Fecha -->
-          <col style="width: 8%"> <!-- Tipo -->
-          <col style="width: 10%"> <!-- Tamaño -->
-          <col style="width: 15%"> <!-- Acciones -->
-        </colgroup>
-        <thead class="bg-gray-50">
-          <tr>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Etiquetas</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Validación</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alcance geográfico</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tamaño</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200" style="max-height: calc(100vh - 350px); overflow-y: auto;">
-          <tr v-for="archivo in archivosFiltrados" :key="archivo.id" class="hover:bg-gray-50">
-            <td class="px-6 py-4 text-sm font-medium text-gray-900">
-              <div class="flex items-center">
-                <div class="flex-shrink-0 mr-2">
-                  <span v-if="archivo.tipo === 'PDF'" class="bg-red-100 text-red-600 p-1 rounded">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" />
-                    </svg>
-                  </span>
-                  <span v-else-if="archivo.tipo === 'XLSX' || archivo.tipo === 'XLS'" class="bg-green-100 text-green-600 p-1 rounded">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm3 1h10v10H6V5zm1 2a1 1 0 100 2h3a1 1 0 100-2H7z" clip-rule="evenodd" />
-                    </svg>
-                  </span>
-                  <span v-else-if="archivo.tipo === 'CSV'" class="bg-yellow-100 text-yellow-600 p-1 rounded">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm3 1h10v10H6V5zm1 2a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
-                    </svg>
-                  </span>
-                  <span v-else class="bg-blue-100 text-blue-600 p-1 rounded">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" />
-                    </svg>
-                  </span>
-                </div>
-                <div class="truncate max-w-xs">{{ archivo.nombre }}</div>
-              </div>
-            </td>
-            <td class="px-6 py-4">
-              <div class="flex flex-wrap gap-1">
-                <span 
-                  v-for="(tag, index) in (archivo.etiquetas || '').split(',')" 
-                  :key="index" 
-                  v-show="tag.trim()"
-                  class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full text-xs font-medium"
-                >
-                  {{ tag.trim() }}
-                </span>
-                <span v-if="!archivo.etiquetas" class="text-gray-400 text-xs italic">Sin etiquetas</span>
-              </div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span 
-                class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
-                :class="{
-                  'bg-blue-100 text-blue-800': archivo.validacion === 'Verificado',
-                  'bg-yellow-100 text-yellow-800': archivo.validacion === 'Preliminar',
-                  'bg-gray-100 text-gray-800': archivo.validacion === 'Borrador' || !archivo.validacion
-                }"
-              >
-                {{ archivo.validacion || 'No definido' }}
-              </span>
-            </td>
-            <td class="px-6 py-4">
-              <div class="flex flex-wrap gap-1">
-                <span 
-                  v-for="(lugar, index) in (archivo.alcance_geografico || '').split(',')" 
-                  :key="index" 
-                  v-show="lugar.trim()"
-                  class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-medium"
-                >
-                  {{ lugar.trim() }}
-                </span>
-                <span v-if="!archivo.alcance_geografico" class="text-gray-400 text-xs italic">No especificado</span>
-              </div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ formatDate(archivo.fecha_actualizacion) }}</td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full" 
-                    :class="{
-                      'bg-red-100 text-red-800': archivo.tipo === 'PDF',
-                      'bg-green-100 text-green-800': archivo.tipo === 'XLSX' || archivo.tipo === 'XLS',
-                      'bg-yellow-100 text-yellow-800': archivo.tipo === 'CSV',
-                      'bg-blue-100 text-blue-800': !['PDF', 'XLSX', 'XLS', 'CSV'].includes(archivo.tipo)
-                    }">
-                {{ archivo.tipo }}
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {{ formatFileSize(archivo.tamano) }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-              <div class="flex items-center space-x-2">
-                <a :href="`${BACKEND_URL}/archivos/descargar/${archivo.id}`" 
-                   target="_blank" 
-                   class="text-blue-600 hover:text-blue-900 p-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                </a>
-                <button @click="$emit('ver', archivo.id)" 
-                        class="text-blue-600 hover:text-blue-900 p-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                </button>
-              </div>
-            </td>
-          </tr>
-          <tr v-if="archivosFiltrados.length === 0">
-            <td colspan="8" class="px-6 py-10 text-center text-gray-500">
-              <div class="flex flex-col items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                </svg>
-                <p>No hay archivos disponibles</p>
-                <p class="text-sm mt-1" v-if="hayFiltrosActivos">No se encontraron resultados con los filtros actuales</p>
-                <p class="text-sm mt-1" v-else>Sube un archivo para comenzar</p>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      
-      <!-- Controles de paginación -->
-      <div class="px-6 py-4 flex items-center justify-between border-t border-gray-200 bg-white rounded-b-lg">
-        <div class="flex-1 flex justify-between items-center">
-          <div>
-            <p class="text-sm text-gray-700">
-              Mostrando <span class="font-medium">{{ archivos.length }}</span> de <span class="font-medium">{{ totalItems }}</span> resultados
-            </p>
-          </div>
-          <div class="flex items-center space-x-2">
-            <!-- Botón anterior -->
-            <button 
-              @click="cambiarPagina(paginaActual - 1)" 
-              class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-              :disabled="paginaActual <= 1"
-              :class="{ 'opacity-50 cursor-not-allowed': paginaActual <= 1 }"
-            >
-              Anterior
-            </button>
-            
-            <!-- Indicador de página actual -->
-            <span class="px-3 py-1 bg-blue-50 text-blue-600 text-sm font-medium rounded-md">
-              {{ paginaActual }} de {{ totalPaginas }}
-            </span>
-            
-            <!-- Botón siguiente -->
-            <button 
-              @click="cambiarPagina(paginaActual + 1)" 
-              class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-              :disabled="paginaActual >= totalPaginas"
-              :class="{ 'opacity-50 cursor-not-allowed': paginaActual >= totalPaginas }"
-            >
-              Siguiente
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Modal de confirmación de archivo subido -->
     <div v-if="confirmacionVisible" class="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
@@ -859,101 +592,12 @@ const validacion = ref("")
 const observaciones = ref("")
 const modalVisible = ref(false)
 
-// Variables para paginación
-const paginaActual = ref(1)
-const totalPaginas = ref(1)
-const itemsPorPagina = ref(50)
-const totalItems = ref(0)
-const cargandoPagina = ref(false)
-
-// Variables para búsqueda y filtros
-const busqueda = ref("")
-const filtroTipo = ref("")
-const filtroAnio = ref("")
-const filtroResponsable = ref("")
-const filtroEtiquetas = ref("")
-const filtroAlcanceGeografico = ref("")
-const filtroValidacion = ref("")
-
-// Función para limpiar todos los filtros
-function limpiarFiltros() {
-  busqueda.value = ""
-  filtroTipo.value = ""
-  filtroAnio.value = ""
-  filtroResponsable.value = ""
-  filtroEtiquetas.value = ""
-  filtroAlcanceGeografico.value = ""
-  filtroValidacion.value = ""
-}
-
-// Años disponibles para filtrar
-const aniosDisponibles = computed(() => {
-  const years = archivos.value
-    .map(a => (a.fecha_actualizacion || '').substring(0, 4))
-    .filter(year => year && /^\d{4}$/.test(year))
-  
-  return [...new Set(years)].sort().reverse()
-})
-
-// Verificar si hay filtros activos
-const hayFiltrosActivos = computed(() => {
-  return busqueda.value !== "" || filtroTipo.value !== "" || filtroAnio.value !== "" || 
-         filtroResponsable.value !== "" || filtroEtiquetas.value !== "" || 
-         filtroAlcanceGeografico.value !== "" || filtroValidacion.value !== ""
-})
-
-// Archivos filtrados según los criterios de búsqueda
-const archivosFiltrados = computed(() => {
-  return archivos.value.filter(a => {
-    // Filtro por nombre
-    const coincideNombre = a.nombre.toLowerCase().includes(busqueda.value.toLowerCase())
-    
-    // Filtro por tipo
-    const coincideTipo = !filtroTipo.value || a.tipo === filtroTipo.value
-    
-    // Filtro por año
-    const coincideAnio = !filtroAnio.value || (a.fecha_actualizacion || '').substring(0, 4) === filtroAnio.value
-    
-    // Filtro por responsable
-    const coincideResp = !filtroResponsable.value || 
-                        (a.responsable || '').toLowerCase().includes(filtroResponsable.value.toLowerCase())
-    
-    // Filtro por etiquetas (búsqueda parcial en múltiples etiquetas)
-    const coincideEtiquetas = !filtroEtiquetas.value || 
-                             (a.etiquetas || '').toLowerCase().includes(filtroEtiquetas.value.toLowerCase())
-    
-    // Filtro por alcance geográfico (búsqueda parcial)
-    const coincideAlcance = !filtroAlcanceGeografico.value || 
-                           (a.alcance_geografico || '').toLowerCase().includes(filtroAlcanceGeografico.value.toLowerCase())
-    
-    // Filtro por validación (coincidencia exacta)
-    const coincideValidacion = !filtroValidacion.value || a.validacion === filtroValidacion.value
-    
-    return coincideNombre && coincideTipo && coincideAnio && coincideResp && 
-           coincideEtiquetas && coincideAlcance && coincideValidacion
-  })
-})
+// Variables básicas para mostrar totales en las cards
+const totalArchivos = computed(() => archivos.value.length || 0)
 
 // Propiedades computadas para estadísticas usando funciones utilitarias centralizadas
 const totalSize = computed(() => {
-  // Si hay filtros activos, mostrar el tamaño total de los archivos filtrados
-  const archivosToSum = hayFiltrosActivos.value ? archivosFiltrados.value : archivos.value
-  return calculateTotalSize(archivosToSum)
-})
-
-const lastFileName = computed(() => {
-  if (archivos.value.length === 0) return null
-  
-  const sorted = [...archivos.value].sort((a, b) => {
-    return new Date(b.fecha_actualizacion) - new Date(a.fecha_actualizacion)
-  })
-  
-  return sorted[0]?.nombre || null
-})
-
-const uniqueTypes = computed(() => {
-  const types = archivos.value.map(archivo => archivo.tipo)
-  return [...new Set(types)]
+  return calculateTotalSize(archivos.value)
 })
 
 onMounted(async () => {
@@ -962,24 +606,11 @@ onMounted(async () => {
 
 async function cargarArchivos() {
   try {
-    cargandoPagina.value = true
-    
-    const res = await axios.get(`${BACKEND_URL}/archivos`, {
-      params: {
-        page: paginaActual.value,
-        limit: itemsPorPagina.value
-      }
-    })
-    
-    // Actualizar datos y metadatos de paginación
-    archivos.value = res.data.items || []
-    totalItems.value = res.data.metadata?.totalItems || 0
-    totalPaginas.value = res.data.metadata?.totalPages || 1
-    paginaActual.value = res.data.metadata?.page || 1
+    const res = await axios.get(`${BACKEND_URL}/archivos`)
+    archivos.value = res.data.items || res.data || []
   } catch (err) {
     console.error('Error al cargar archivos:', err)
-  } finally {
-    cargandoPagina.value = false
+    archivos.value = []
   }
 }
 
@@ -1066,41 +697,12 @@ async function subirArchivo() {
   }
 }
 
-function formatDate(dateString) {
-  if (!dateString) return ''
-  
-  const date = new Date(dateString)
-  return new Intl.DateTimeFormat('es-ES', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(date)
-}
-
 // Función para cerrar el modal de confirmación
 function cerrarConfirmacion() {
   confirmacionVisible.value = false
   setTimeout(() => {
     archivoSubido.value = null
   }, 300) // Espera a que termine la animación de salida
-}
-
-// Función para cambiar de página
-async function cambiarPagina(nuevaPagina) {
-  if (nuevaPagina < 1 || nuevaPagina > totalPaginas.value || cargandoPagina.value) {
-    return;
-  }
-  
-  paginaActual.value = nuevaPagina;
-  await cargarArchivos();
-  
-  // Hacer scroll hacia arriba de la tabla
-  const tableEl = document.querySelector('.overflow-x-auto');
-  if (tableEl) {
-    tableEl.scrollTop = 0;
-  }
 }
 
 // Función para buscar ubicaciones mediante la API Nominatim
