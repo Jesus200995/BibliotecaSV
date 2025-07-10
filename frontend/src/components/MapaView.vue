@@ -124,23 +124,38 @@
         <div class="relative">
           <!-- Mapa principal -->
           <div id="mapa-contenedor" class="w-full h-[600px] bg-gray-100 relative">
-            <!-- Placeholder del mapa - Aquí se integrará el mapa real -->
-            <div class="absolute inset-0 flex items-center justify-center">
-              <div class="text-center">
-                <div class="w-24 h-24 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                  </svg>
-                </div>
-                <h4 class="text-lg font-semibold text-gray-700 mb-2">Mapa Interactivo</h4>
-                <p class="text-gray-600">
-                  Aquí se mostrará la visualización geográfica de los archivos
-                </p>
-                <p class="text-sm text-gray-500 mt-2">
-                  En desarrollo - Se integrará con mapas de OpenStreetMap o Google Maps
-                </p>
-              </div>
-            </div>
+            <!-- Mapa Leaflet -->
+            <l-map
+              ref="mapaRef"
+              v-model:zoom="zoom"
+              v-model:center="center"
+              :use-global-leaflet="false"
+              @ready="onMapReady"
+              class="w-full h-full"
+            >
+              <l-tile-layer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                layer-type="base"
+                name="OpenStreetMap"
+                attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
+              ></l-tile-layer>
+              
+              <!-- Marcadores para ubicaciones con archivos -->
+              <l-marker
+                v-for="(marcador, index) in marcadores"
+                :key="`marker-${index}`"
+                :lat-lng="marcador.posicion"
+                @click="seleccionarUbicacionMapa(marcador)"
+              >
+                <l-popup>
+                  <div class="p-2">
+                    <h4 class="font-semibold text-sm">{{ marcador.ubicacion }}</h4>
+                    <p class="text-xs text-gray-600">{{ marcador.cantidad }} archivo(s)</p>
+                    <p class="text-xs text-gray-500">{{ marcador.tipos.join(', ') }}</p>
+                  </div>
+                </l-popup>
+              </l-marker>
+            </l-map>
           </div>
           
           <!-- Leyenda del mapa -->
@@ -223,8 +238,25 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import axios from 'axios'
+// Importaciones para Leaflet
+import { 
+  LMap, 
+  LTileLayer, 
+  LMarker, 
+  LPopup, 
+  LIcon
+} from '@vue-leaflet/vue-leaflet'
+import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
+
+// Importaciones para plugins de Leaflet
+import 'leaflet.markercluster/dist/MarkerCluster.css'
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
+import 'leaflet.markercluster'
+import 'leaflet.heat'
+
 // Importar funciones utilitarias centralizadas para manejo de archivos
 import { formatFileSize, calculateTotalSize, bytesToMB } from '../utils/fileUtils.js'
 
@@ -233,8 +265,52 @@ const cargando = ref(true)
 const archivos = ref([])
 const tipoVista = ref('clustered')
 const ubicacionSeleccionada = ref(null)
+const mapaRef = ref(null)
+
+// Variables del mapa
+const zoom = ref(6)
+const center = ref([13.7942, -88.8965]) // Coordenadas de El Salvador
+const marcadores = ref([])
+const mapaInstance = ref(null)
+const clusterGroup = ref(null)
+const heatmapLayer = ref(null)
+const markersLayer = ref(null)
 
 const BACKEND_URL = 'http://localhost:4000'
+
+// Observar cambios en marcadores para actualizar mapa
+watch([marcadores, tipoVista], () => {
+  if (mapaInstance.value && marcadores.value.length > 0) {
+    cambiarTipoVista()
+  }
+}, { deep: true })
+
+// Diccionario de coordenadas para ubicaciones comunes de El Salvador
+const coordenadasElSalvador = {
+  'San Salvador': [13.6929, -89.2182],
+  'Santa Ana': [13.9945, -89.5597],
+  'San Miguel': [13.4833, -88.1833],
+  'Soyapango': [13.7108, -89.1414],
+  'Mejicanos': [13.7408, -89.2147],
+  'Santa Tecla': [13.6760, -89.2797],
+  'Apopa': [13.8072, -89.1795],
+  'Delgado': [13.7342, -89.1820],
+  'Sonsonate': [13.7189, -89.7241],
+  'Ahuachapán': [13.9217, -89.8450],
+  'Usulután': [13.3500, -88.4500],
+  'Cojutepeque': [13.7167, -88.9333],
+  'Zacatecoluca': [13.5000, -88.8667],
+  'La Unión': [13.3369, -87.8439],
+  'Chalatenango': [14.0333, -88.9333],
+  'San Vicente': [13.6333, -88.7833],
+  'Sensuntepeque': [13.8667, -88.6333],
+  'Metapán': [14.3333, -89.4500],
+  'Acajutla': [13.5925, -89.8275],
+  'La Libertad': [13.4883, -89.3222],
+  'Ilopango': [13.7025, -89.1097],
+  'Antiguo Cuscatlán': [13.6644, -89.2531],
+  'El Salvador': [13.7942, -88.8965]
+}
 
 // Computed properties para estadísticas del mapa
 const totalUbicaciones = computed(() => {
@@ -310,6 +386,7 @@ async function obtenerArchivos() {
   try {
     const res = await axios.get(`${BACKEND_URL}/archivos`)
     archivos.value = res.data.items || res.data || []
+    await generarMarcadores()
   } catch (err) {
     console.error('Error al cargar archivos:', err)
     archivos.value = []
@@ -318,25 +395,222 @@ async function obtenerArchivos() {
   }
 }
 
+// Función para generar marcadores del mapa
+async function generarMarcadores() {
+  const ubicacionesMap = {}
+  
+  archivos.value.forEach(archivo => {
+    if (archivo.alcance_geografico && archivo.alcance_geografico.trim() !== '') {
+      const ubicacion = archivo.alcance_geografico.trim()
+      if (ubicacionesMap[ubicacion]) {
+        ubicacionesMap[ubicacion].cantidad++
+        ubicacionesMap[ubicacion].tipos.add(archivo.tipo || 'Sin tipo')
+        ubicacionesMap[ubicacion].archivos.push(archivo)
+      } else {
+        ubicacionesMap[ubicacion] = {
+          ubicacion,
+          cantidad: 1,
+          tipos: new Set([archivo.tipo || 'Sin tipo']),
+          archivos: [archivo],
+          estado: archivo.estado || 'sin-definir'
+        }
+      }
+    }
+  })
+  
+  // Convertir a array de marcadores con coordenadas
+  marcadores.value = Object.values(ubicacionesMap)
+    .map(item => ({
+      ...item,
+      tipos: Array.from(item.tipos),
+      posicion: obtenerCoordenadas(item.ubicacion)
+    }))
+    .filter(item => item.posicion) // Solo incluir ubicaciones con coordenadas válidas
+}
+
+// Función para obtener coordenadas de una ubicación
+function obtenerCoordenadas(ubicacion) {
+  // Buscar coincidencia exacta primero
+  if (coordenadasElSalvador[ubicacion]) {
+    return coordenadasElSalvador[ubicacion]
+  }
+  
+  // Buscar coincidencia parcial
+  const ubicacionLower = ubicacion.toLowerCase()
+  for (const [lugar, coords] of Object.entries(coordenadasElSalvador)) {
+    if (ubicacionLower.includes(lugar.toLowerCase()) || lugar.toLowerCase().includes(ubicacionLower)) {
+      return coords
+    }
+  }
+  
+  // Si no se encuentra, usar coordenadas aleatorias dentro de El Salvador
+  const lat = 13.5 + Math.random() * 1.0 // Entre 13.5 y 14.5
+  const lng = -90.0 + Math.random() * 1.5 // Entre -90.0 y -88.5
+  return [lat, lng]
+}
+
+// Función para obtener clase CSS del marcador según estado
+function getMarkerClass(estado) {
+  switch (estado) {
+    case 'verificado':
+      return 'marker-verified'
+    case 'borrador':
+      return 'marker-draft'
+    default:
+      return 'marker-undefined'
+  }
+}
+
 // Funciones para interacción con el mapa
 function cambiarTipoVista() {
   console.log('Cambiando vista a:', tipoVista.value)
-  // Aquí se implementaría la lógica para cambiar la vista del mapa
+  if (!mapaInstance.value) return
+  
+  // Limpiar capas existentes
+  if (clusterGroup.value) {
+    mapaInstance.value.removeLayer(clusterGroup.value)
+  }
+  if (heatmapLayer.value) {
+    mapaInstance.value.removeLayer(heatmapLayer.value)
+  }
+  if (markersLayer.value) {
+    mapaInstance.value.removeLayer(markersLayer.value)
+  }
+  
+  // Aplicar nueva vista
+  switch (tipoVista.value) {
+    case 'clustered':
+      agregarCluster()
+      break
+    case 'individual':
+      agregarMarcadoresIndividuales()
+      break
+    case 'heatmap':
+      agregarHeatmap()
+      break
+  }
+}
+
+function agregarCluster() {
+  if (!mapaInstance.value || marcadores.value.length === 0) return
+  
+  clusterGroup.value = L.markerClusterGroup({
+    maxClusterRadius: 50,
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    zoomToBoundsOnClick: true
+  })
+  
+  marcadores.value.forEach(marcador => {
+    const marker = L.marker(marcador.posicion)
+      .bindPopup(`
+        <div class="p-2">
+          <h4 class="font-semibold text-sm">${marcador.ubicacion}</h4>
+          <p class="text-xs text-gray-600">${marcador.cantidad} archivo(s)</p>
+          <p class="text-xs text-gray-500">${marcador.tipos.join(', ')}</p>
+        </div>
+      `)
+      .on('click', () => seleccionarUbicacionMapa(marcador))
+    
+    clusterGroup.value.addLayer(marker)
+  })
+  
+  mapaInstance.value.addLayer(clusterGroup.value)
+}
+
+function agregarMarcadoresIndividuales() {
+  if (!mapaInstance.value || marcadores.value.length === 0) return
+  
+  markersLayer.value = L.layerGroup()
+  
+  marcadores.value.forEach(marcador => {
+    const iconClass = getMarkerClass(marcador.estado)
+    const marker = L.marker(marcador.posicion)
+      .bindPopup(`
+        <div class="p-2">
+          <h4 class="font-semibold text-sm">${marcador.ubicacion}</h4>
+          <p class="text-xs text-gray-600">${marcador.cantidad} archivo(s)</p>
+          <p class="text-xs text-gray-500">${marcador.tipos.join(', ')}</p>
+        </div>
+      `)
+      .on('click', () => seleccionarUbicacionMapa(marcador))
+    
+    markersLayer.value.addLayer(marker)
+  })
+  
+  mapaInstance.value.addLayer(markersLayer.value)
+}
+
+function agregarHeatmap() {
+  if (!mapaInstance.value || marcadores.value.length === 0) return
+  
+  const heatData = marcadores.value.map(marcador => [
+    marcador.posicion[0],
+    marcador.posicion[1],
+    marcador.cantidad / 10
+  ])
+  
+  heatmapLayer.value = L.heatLayer(heatData, {
+    radius: 20,
+    blur: 15,
+    maxZoom: 17,
+    gradient: {
+      0.4: 'blue',
+      0.6: 'cyan',
+      0.7: 'lime',
+      0.8: 'yellow',
+      1.0: 'red'
+    }
+  })
+  
+  mapaInstance.value.addLayer(heatmapLayer.value)
 }
 
 function centrarMapa() {
-  console.log('Centrando mapa')
-  // Aquí se implementaría la lógica para centrar el mapa
+  if (mapaInstance.value) {
+    // Centrar en El Salvador
+    mapaInstance.value.setView([13.7942, -88.8965], 7)
+  }
+}
+
+function onMapReady() {
+  console.log('Mapa listo')
+  mapaInstance.value = mapaRef.value.leafletObject
+  
+  // Configurar íconos personalizados para Leaflet
+  delete L.Icon.Default.prototype._getIconUrl
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  })
+  
+  // Aplicar vista inicial
+  nextTick(() => {
+    cambiarTipoVista()
+  })
+}
+
+function seleccionarUbicacionMapa(marcador) {
+  ubicacionSeleccionada.value = {
+    nombre: marcador.ubicacion,
+    cantidad: marcador.cantidad,
+    tipos: marcador.tipos,
+    archivos: marcador.archivos
+  }
+  
+  // Centrar mapa en la ubicación seleccionada
+  if (mapaInstance.value) {
+    mapaInstance.value.setView(marcador.posicion, 10)
+  }
 }
 
 function seleccionarUbicacion(ubicacion) {
-  ubicacionSeleccionada.value = {
-    nombre: ubicacion.ubicacion,
-    cantidad: ubicacion.cantidad,
-    tipos: ubicacion.tipos
+  // Buscar el marcador correspondiente
+  const marcador = marcadores.value.find(m => m.ubicacion === ubicacion.ubicacion)
+  if (marcador) {
+    seleccionarUbicacionMapa(marcador)
   }
-  console.log('Ubicación seleccionada:', ubicacion)
-  // Aquí se implementaría la lógica para centrar el mapa en la ubicación seleccionada
 }
 
 // Cargar datos al montar el componente
@@ -398,5 +672,71 @@ onMounted(async () => {
 
 .shadow-xl {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Estilos para marcadores personalizados */
+:deep(.marker-verified) {
+  filter: hue-rotate(120deg) saturate(1.5) brightness(1.1);
+}
+
+:deep(.marker-draft) {
+  filter: hue-rotate(40deg) saturate(1.2) brightness(1.1);
+}
+
+:deep(.marker-undefined) {
+  filter: grayscale(0.7) brightness(0.8);
+}
+
+/* Estilos para el cluster */
+:deep(.marker-cluster-small) {
+  background-color: rgba(147, 51, 234, 0.6);
+}
+
+:deep(.marker-cluster-small div) {
+  background-color: rgba(147, 51, 234, 0.8);
+  color: white;
+  font-weight: bold;
+}
+
+:deep(.marker-cluster-medium) {
+  background-color: rgba(147, 51, 234, 0.6);
+}
+
+:deep(.marker-cluster-medium div) {
+  background-color: rgba(147, 51, 234, 0.8);
+  color: white;
+  font-weight: bold;
+}
+
+:deep(.marker-cluster-large) {
+  background-color: rgba(147, 51, 234, 0.6);
+}
+
+:deep(.marker-cluster-large div) {
+  background-color: rgba(147, 51, 234, 0.8);
+  color: white;
+  font-weight: bold;
+}
+
+/* Personalización del popup */
+:deep(.leaflet-popup-content-wrapper) {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+:deep(.leaflet-popup-content) {
+  margin: 8px 12px;
+  font-family: inherit;
+}
+
+/* Estilos para el control de zoom */
+:deep(.leaflet-control-zoom a) {
+  background-color: white;
+  border: 1px solid #ccc;
+  color: #333;
+}
+
+:deep(.leaflet-control-zoom a:hover) {
+  background-color: #f0f0f0;
 }
 </style>
