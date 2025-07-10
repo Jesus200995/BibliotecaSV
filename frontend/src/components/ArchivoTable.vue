@@ -166,8 +166,8 @@
         class="relative bg-white rounded-xl w-full max-w-[620px] max-h-[80vh] shadow-2xl transform transition-all duration-300 overflow-hidden"
         :class="{ 'scale-100 opacity-100': modalVisible, 'scale-95 opacity-0': !modalVisible }"
       >
-        <!-- Cabecera del modal ultra compacta -->
-        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-xl px-4 py-2 flex items-center justify-between">
+        <!-- Cabecera del modal con tema morado desvanecido -->
+        <div class="bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-t-xl px-4 py-2 flex items-center justify-between">
           <h3 class="text-base font-semibold flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
@@ -176,7 +176,7 @@
           </h3>
           <button 
             @click="modalVisible = false" 
-            class="text-white hover:text-gray-200 transition-colors p-1 rounded-full hover:bg-white/20"
+            class="text-white hover:text-purple-100 transition-colors p-1 rounded-full hover:bg-white/20"
           >
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -191,7 +191,7 @@
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Archivo *</label>
             <div class="flex items-center gap-3">
-              <label for="file-upload" class="cursor-pointer bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-2 rounded-lg border border-blue-200 transition-all flex items-center gap-2 text-sm">
+              <label for="file-upload" class="cursor-pointer bg-purple-50 hover:bg-purple-100 text-purple-600 px-3 py-2 rounded-lg border border-purple-200 transition-all flex items-center gap-2 text-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                 </svg>
@@ -217,7 +217,7 @@
             <textarea 
               v-model="descripcion" 
               rows="2" 
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none" 
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all resize-none" 
               placeholder="Descripción del archivo">
             </textarea>
           </div>
@@ -228,9 +228,9 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Responsable</label>
               <input 
-                v-model="responsable" 
+                v_model="responsable" 
                 type="text" 
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 h-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 h-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all" 
                 placeholder="Responsable" 
               />
             </div>
@@ -241,7 +241,7 @@
               <input 
                 v-model="fuente" 
                 type="text" 
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 h-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 h-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all" 
                 placeholder="Fuente" 
               />
             </div>
@@ -253,7 +253,7 @@
             <!-- Etiquetas con mejor espaciado -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Etiquetas</label>
-              <div class="flex flex-wrap gap-2 p-2 rounded-lg border border-gray-300 bg-white min-h-[32px] focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
+              <div class="flex flex-wrap gap-2 p-2 rounded-lg border border-gray-300 bg-white min-h-[32px] focus-within:ring-2 focus-within:ring-purple-500 focus-within:border-purple-500 transition-all">
                 <!-- Chips de etiquetas con mejor tamaño -->
                 <div 
                   v-for="(tag, index) in etiquetasArray" 
@@ -287,17 +287,17 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Alcance geográfico</label>
               <div class="relative alcance-geografico-container">
-                <div class="flex flex-wrap gap-2 p-2 rounded-lg border border-gray-300 bg-white min-h-[32px] focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
+                <div class="flex flex-wrap gap-2 p-2 rounded-lg border border-gray-300 bg-white min-h-[32px] focus-within:ring-2 focus-within:ring-purple-500 focus-within:border-purple-500 transition-all">
                   <!-- Chips de ubicaciones con mejor tamaño -->
                   <div 
                     v-for="(lugar, index) in alcanceArray" 
                     :key="index"
-                    class="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 animate-pop-in"
+                    class="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 animate-pop-in"
                   >
                     {{ lugar.name }}
                     <button 
                       @click="eliminarLugar(index)" 
-                      class="text-blue-500 hover:text-blue-700 focus:outline-none transition-colors rounded-full hover:bg-blue-200 p-0.5"
+                      class="text-purple-500 hover:text-purple-700 focus:outline-none transition-colors rounded-full hover:bg-purple-200 p-0.5"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -328,9 +328,9 @@
                     v-for="(sugerencia, index) in sugerenciasUbicacion" 
                     :key="index"
                     @click="seleccionarUbicacion(sugerencia)"
-                    class="px-2 py-1 hover:bg-blue-50 cursor-pointer text-xs text-gray-700 border-b border-gray-100 last:border-b-0 flex items-center"
+                    class="px-2 py-1 hover:bg-purple-50 cursor-pointer text-xs text-gray-700 border-b border-gray-100 last:border-b-0 flex items-center"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 mr-1 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 mr-1 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
@@ -350,19 +350,19 @@
                   v-if="cargandoUbicaciones && mostrarSugerencias" 
                   class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-1 text-center text-xs text-gray-600"
                 >
-                  <div class="animate-spin inline-block mr-1 h-2.5 w-2.5 border-t-2 border-blue-500 rounded-full"></div>
+                  <div class="animate-spin inline-block mr-1 h-2.5 w-2.5 border-t-2 border-purple-500 rounded-full"></div>
                   Buscando...
                 </div>
               </div>
             </div>
           </div>
           
-          <!-- Campo de Validación mejorado - Radio buttons horizontales con selección muy visible -->
+          <!-- Campo de Validación COMPACTO - Radio buttons minimalistas y profesionales -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Estado de validación *</label>
             
-            <!-- Radio buttons horizontales con mejor visibilidad de selección -->
-            <div class="flex gap-3">
+            <!-- Radio buttons compactos horizontales -->
+            <div class="flex gap-2">
               
               <!-- Opción 1: Verificado (Verde) -->
               <label class="cursor-pointer flex-1">
@@ -372,26 +372,22 @@
                   value="Verificado" 
                   class="sr-only"
                 />
-                <div class="flex items-center justify-center p-3 rounded-lg border-2 transition-all duration-200 relative"
+                <div class="p-3 rounded-lg border-2 text-center transition-all"
                      :class="validacion === 'Verificado' 
-                       ? 'border-green-500 bg-green-100 shadow-md ring-2 ring-green-200' 
+                       ? 'border-green-500 bg-green-50 shadow-md' 
                        : 'border-gray-200 bg-white hover:border-green-300 hover:bg-green-50'">
-                  <!-- Indicador de radio button más visible -->
-                  <div class="absolute top-2 right-2 flex items-center justify-center w-5 h-5 rounded-full border-2"
-                       :class="validacion === 'Verificado' 
-                         ? 'border-green-600 bg-green-600' 
-                         : 'border-gray-300 bg-white'">
-                    <div v-if="validacion === 'Verificado'" class="w-2 h-2 bg-white rounded-full"></div>
+                  <div class="flex items-center justify-center mb-1">
+                    <div class="w-3 h-3 rounded-full"
+                         :class="validacion === 'Verificado' ? 'bg-green-500' : 'bg-gray-300'"></div>
                   </div>
-                  <div class="flex flex-col items-center gap-2">
-                    <div class="w-4 h-4 bg-green-500 rounded-full"></div>
-                    <span class="text-sm font-semibold text-gray-800">Verificado</span>
-                    <span class="text-xs text-green-700 bg-green-200 px-2 py-1 rounded-full">Aprobado</span>
+                  <div class="text-xs font-medium"
+                       :class="validacion === 'Verificado' ? 'text-green-700' : 'text-gray-600'">
+                    Verificado
                   </div>
                 </div>
               </label>
               
-              <!-- Opción 2: Sin definir (Gris claro) -->
+              <!-- Opción 2: Sin definir (Gris) -->
               <label class="cursor-pointer flex-1">
                 <input 
                   type="radio" 
@@ -399,26 +395,22 @@
                   value="Sin definir" 
                   class="sr-only"
                 />
-                <div class="flex items-center justify-center p-3 rounded-lg border-2 transition-all duration-200 relative"
+                <div class="p-3 rounded-lg border-2 text-center transition-all"
                      :class="validacion === 'Sin definir' 
-                       ? 'border-gray-500 bg-gray-100 shadow-md ring-2 ring-gray-200' 
-                       : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'">
-                  <!-- Indicador de radio button más visible -->
-                  <div class="absolute top-2 right-2 flex items-center justify-center w-5 h-5 rounded-full border-2"
-                       :class="validacion === 'Sin definir' 
-                         ? 'border-gray-600 bg-gray-600' 
-                         : 'border-gray-300 bg-white'">
-                    <div v-if="validacion === 'Sin definir'" class="w-2 h-2 bg-white rounded-full"></div>
+                       ? 'border-gray-500 bg-gray-50 shadow-md' 
+                       : 'border-gray-200 bg-white hover:border-gray-400 hover:bg-gray-50'">
+                  <div class="flex items-center justify-center mb-1">
+                    <div class="w-3 h-3 rounded-full"
+                         :class="validacion === 'Sin definir' ? 'bg-gray-500' : 'bg-gray-300'"></div>
                   </div>
-                  <div class="flex flex-col items-center gap-2">
-                    <div class="w-4 h-4 bg-gray-500 rounded-full"></div>
-                    <span class="text-sm font-semibold text-gray-800">Sin definir</span>
-                    <span class="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded-full">Pendiente</span>
+                  <div class="text-xs font-medium"
+                       :class="validacion === 'Sin definir' ? 'text-gray-700' : 'text-gray-600'">
+                    Sin definir
                   </div>
                 </div>
               </label>
               
-              <!-- Opción 3: Borrador (Amarillo-naranja) -->
+              <!-- Opción 3: Borrador (Naranja) -->
               <label class="cursor-pointer flex-1">
                 <input 
                   type="radio" 
@@ -426,21 +418,17 @@
                   value="Borrador" 
                   class="sr-only"
                 />
-                <div class="flex items-center justify-center p-3 rounded-lg border-2 transition-all duration-200 relative"
+                <div class="p-3 rounded-lg border-2 text-center transition-all"
                      :class="validacion === 'Borrador' 
-                       ? 'border-orange-500 bg-orange-100 shadow-md ring-2 ring-orange-200' 
+                       ? 'border-orange-500 bg-orange-50 shadow-md' 
                        : 'border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50'">
-                  <!-- Indicador de radio button más visible -->
-                  <div class="absolute top-2 right-2 flex items-center justify-center w-5 h-5 rounded-full border-2"
-                       :class="validacion === 'Borrador' 
-                         ? 'border-orange-600 bg-orange-600' 
-                         : 'border-gray-300 bg-white'">
-                    <div v-if="validacion === 'Borrador'" class="w-2 h-2 bg-white rounded-full"></div>
+                  <div class="flex items-center justify-center mb-1">
+                    <div class="w-3 h-3 rounded-full"
+                         :class="validacion === 'Borrador' ? 'bg-orange-500' : 'bg-gray-300'"></div>
                   </div>
-                  <div class="flex flex-col items-center gap-2">
-                    <div class="w-4 h-4 bg-orange-500 rounded-full"></div>
-                    <span class="text-sm font-semibold text-gray-800">Borrador</span>
-                    <span class="text-xs text-orange-700 bg-orange-200 px-2 py-1 rounded-full">En proceso</span>
+                  <div class="text-xs font-medium"
+                       :class="validacion === 'Borrador' ? 'text-orange-700' : 'text-gray-600'">
+                    Borrador
                   </div>
                 </div>
               </label>
@@ -453,7 +441,7 @@
             <input 
               v-model="observaciones" 
               type="text" 
-              class="w-full rounded-lg border border-gray-300 px-3 py-2 h-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 h-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all" 
               placeholder="Observaciones adicionales" 
             />
           </div>
@@ -469,7 +457,7 @@
             </button>
             <button 
               type="submit" 
-              class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-colors text-sm font-medium min-w-[120px]"
+              class="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-colors text-sm font-medium min-w-[120px]"
             >
               Subir archivo
             </button>
