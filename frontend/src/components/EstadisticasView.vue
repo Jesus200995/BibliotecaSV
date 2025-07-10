@@ -165,36 +165,54 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Gráfico de barras horizontales - Actividad mensual -->
-      <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-8">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          Actividad por mes
-        </h3>
-        <div class="chart-container">
-          <div class="bar-chart-horizontal">
-            <div v-for="(mes, index) in estadisticas.actividadMensual" 
-                 :key="mes.mes" 
-                 class="bar-row"
-                 :style="{ '--delay': index * 0.1 + 's' }">
-              <div class="bar-label-left">{{ mes.mes }}</div>
-              <div class="bar-track">
-                <div class="bar-horizontal animate-bar-grow-horizontal" 
-                     :style="{ 
-                       width: getBarWidth(mes.cantidad, estadisticas.maxMesCount) + '%',
-                       backgroundColor: getMonthColor(index)
-                     }">
-                  <span class="bar-value-horizontal">{{ mes.cantidad }}</span>
+      </div>        <!-- Gráfico de barras horizontales - Actividad mensual -->
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-8">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Actividad por mes
+          </h3>
+          <!-- Explicación del cálculo del gráfico -->
+          <div class="text-xs text-gray-500 mb-4 bg-blue-50 p-3 rounded-lg border border-blue-200">
+            <p class="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <strong>Cálculo:</strong> El ancho de cada barra se calcula proporcionalmente al mes con más actividad ({{ estadisticas.maxMesCount }} archivos = 100%). Los demás meses muestran su porcentaje real.
+            </p>
+          </div>
+          <div class="chart-container">
+            <!-- El ancho de cada barra se calcula proporcionalmente al mes con más archivos -->
+            <div class="bar-chart-horizontal-responsive">
+              <div v-for="(mes, index) in estadisticas.actividadMensual" 
+                   :key="mes.mes" 
+                   class="bar-row-responsive"
+                   :style="{ '--delay': index * 0.1 + 's' }">
+                
+                <!-- Etiqueta del mes (lado izquierdo) -->
+                <div class="bar-label-responsive">{{ mes.mes }}</div>
+                
+                <!-- Contenedor de la barra con fondo gris -->
+                <div class="bar-track-responsive">
+                  <!-- Barra con ancho dinámico proporcional al porcentaje real -->
+                  <div class="bar-fill-responsive" 
+                       :style="{ 
+                         width: getBarWidth(mes.cantidad, estadisticas.maxMesCount) + '%',
+                         backgroundColor: getMonthColor(index)
+                       }"
+                       :class="{ 'bar-small': isSmallBar(mes.cantidad, estadisticas.maxMesCount) }">
+                    <!-- Contenido dentro de la barra: cantidad y porcentaje -->
+                    <div class="bar-content-responsive"
+                         :class="{ 'text-outside': isSmallBar(mes.cantidad, estadisticas.maxMesCount) }">
+                      <span class="bar-text-responsive">{{ mes.cantidad }} ({{ getBarPorcentaje(mes.cantidad, estadisticas.maxMesCount) }})</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
       <!-- Ubicaciones más frecuentes con gráfico de burbujas -->
       <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
@@ -501,13 +519,37 @@ function getAlturaEdificio(cantidad) {
   return Math.max(Math.round((porcentaje / 100) * alturaMaxima), alturaMinima)
 }
 
+// El ancho de cada barra se calcula proporcionalmente al mes con más archivos
+// Función para calcular el porcentaje real de cada mes respecto al máximo
 function getBarWidth(cantidad, max) {
-  return max > 0 ? (cantidad / max) * 100 : 0
+  // Si no hay máximo o la cantidad es 0, retornar 0%
+  if (max === 0 || cantidad === 0) return 0
+  
+  // Calcular el porcentaje real: (count / maxCount) * 100
+  // Ejemplo: si hay 8 archivos en julio (máximo) y 4 en mayo, entonces para mayo: (4 / 8) * 100 = 50%
+  const porcentaje = (cantidad / max) * 100
+  
+  // Retornar el porcentaje exacto sin mínimos artificiales
+  return porcentaje
+}
+
+// Función para obtener el porcentaje formateado para mostrar en la barra
+function getBarPorcentaje(cantidad, max) {
+  if (max === 0 || cantidad === 0) return '0%'
+  const porcentaje = (cantidad / max) * 100
+  return Math.round(porcentaje) + '%'
 }
 
 function getMonthColor(index) {
   const colores = ['#3b82f6', '#06b6d4', '#10b981', '#84cc16', '#eab308', '#f59e0b']
   return colores[index % colores.length]
+}
+
+// Función para determinar si una barra es muy pequeña (menos del 20%)
+function isSmallBar(cantidad, max) {
+  if (max === 0) return true
+  const porcentaje = (cantidad / max) * 100
+  return porcentaje < 20
 }
 
 // Funciones para el gráfico de pastel
@@ -789,66 +831,178 @@ onMounted(() => {
   transform-origin: 100px 100px;
 }
 
-/* Estilos para gráfico de barras horizontales */
-.bar-chart-horizontal {
+/* Estilos para gráfico de barras horizontales responsivo */
+.bar-chart-horizontal-responsive {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   padding: 20px 0;
 }
 
-.bar-row {
+.bar-row-responsive {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 16px;
   animation: slideInLeft 0.8s ease-out var(--delay, 0s) both;
 }
 
-.bar-label-left {
-  font-size: 13px;
-  font-weight: 500;
+.bar-label-responsive {
+  font-size: 14px;
+  font-weight: 600;
   color: #374151;
-  min-width: 120px;
+  min-width: 140px;
   text-align: right;
+  flex-shrink: 0;
+  padding-right: 8px;
 }
 
-.bar-track {
+.bar-track-responsive {
   flex: 1;
-  height: 24px;
+  height: 40px;
   background: #f3f4f6;
-  border-radius: 12px;
-  overflow: hidden;
+  border-radius: 20px;
   position: relative;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+  overflow: visible; /* Cambio para permitir que el contenido sea visible fuera si es necesario */
 }
 
-.bar-horizontal {
+.bar-fill-responsive {
   height: 100%;
-  border-radius: 12px;
+  border-radius: 20px;
   position: relative;
-  transition: all 0.3s ease;
-  animation: barGrowHorizontal 1.2s ease-out var(--delay, 0s) both;
-  background: linear-gradient(90deg, var(--color), color-mix(in srgb, var(--color) 80%, white));
+  transition: all 0.7s ease; /* Transición suave de 700ms */
+  background: linear-gradient(90deg, var(--color, #3b82f6), color-mix(in srgb, var(--color, #3b82f6) 85%, white));
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  animation: barGrowWidth 1.2s ease-out var(--delay, 0s) both;
+  /* Ancho mínimo solo para barras con datos */
+  min-width: var(--min-width, 0);
 }
 
-.bar-horizontal:hover {
-  transform: scaleY(1.1);
-  filter: brightness(1.05);
+.bar-fill-responsive:hover {
+  transform: scaleY(1.05);
+  filter: brightness(1.08);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
-.bar-value-horizontal {
+.bar-content-responsive {
   position: absolute;
-  right: 8px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: white;
-  font-size: 11px;
   font-weight: bold;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  white-space: nowrap;
+  z-index: 10;
+  transition: all 0.3s ease;
 }
 
-.animate-bar-grow-horizontal {
-  --final-width: var(--width);
-  animation: barGrowHorizontal 1.2s ease-out var(--delay, 0s) both;
+.bar-text-responsive {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* Estilos para barras pequeñas */
+.bar-small {
+  min-width: 40px; /* Ancho mínimo visual para barras pequeñas */
+}
+
+/* Texto fuera de barras pequeñas */
+.text-outside {
+  right: -80px;
+  color: #374151 !important;
+  text-shadow: none !important;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Animación mejorada para el crecimiento de las barras */
+@keyframes barGrowWidth {
+  0% {
+    width: 0%;
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Responsive para barras horizontales */
+@media (max-width: 768px) {
+  .bar-chart-horizontal-responsive {
+    gap: 14px;
+  }
+  
+  .bar-label-responsive {
+    min-width: 120px;
+    font-size: 13px;
+  }
+  
+  .bar-track-responsive {
+    height: 36px;
+  }
+  
+  .bar-content-responsive {
+    right: 10px;
+  }
+  
+  .bar-text-responsive {
+    font-size: 13px;
+  }
+  
+  .text-outside {
+    right: -70px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bar-row-responsive {
+    gap: 12px;
+  }
+  
+  .bar-label-responsive {
+    min-width: 100px;
+    font-size: 12px;
+  }
+  
+  .bar-track-responsive {
+    height: 32px;
+  }
+  
+  .bar-content-responsive {
+    right: 8px;
+  }
+  
+  .bar-text-responsive {
+    font-size: 12px;
+  }
+  
+  .text-outside {
+    right: -60px;
+    font-size: 11px;
+    padding: 1px 6px;
+  }
 }
 
 /* Estilos para gráfico de burbujas */
