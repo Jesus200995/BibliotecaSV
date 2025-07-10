@@ -92,24 +92,34 @@
             Distribución por tipo de archivo
           </h3>
           <div class="chart-container">
-            <div class="bar-chart-vertical" style="height: 300px;">
-              <div class="chart-grid">
-                <div v-for="i in 5" :key="i" class="grid-line"></div>
-              </div>
-              <div class="bars-container">
-                <div v-for="(tipo, index) in estadisticas.tiposArchivo.slice(0, 6)" 
-                     :key="tipo.tipo" 
-                     class="bar-wrapper"
-                     :style="{ '--delay': index * 0.1 + 's' }">
-                  <div class="building-vertical animate-building-grow" 
-                       :style="{ 
-                         height: getBarHeight(tipo.cantidad, estadisticas.maxTipoCount) + '%',
-                         backgroundColor: getTipoColorHex(tipo.tipo)
-                       }">
-                    <div class="building-value">{{ tipo.cantidad }}</div>
-                    <div class="building-windows"></div>
+            <!-- Leyenda para explicar la visualización -->
+            <div class="text-xs text-gray-500 mb-2 text-center">
+              La altura representa el porcentaje de cada tipo respecto al total de archivos
+            </div>
+            <!-- Contenedor principal para los edificios con grid para mejor alineación -->
+            <div class="edificios-container">
+              <div v-for="(tipo, index) in estadisticas.tiposArchivo.slice(0, 6)" 
+                  :key="tipo.tipo" 
+                  class="edificio-wrapper"
+                  :style="{ '--delay': index * 0.1 + 's' }">
+                <!-- Contenedor con altura fija para mantener alineación -->
+                <div class="edificio-container">
+                  <!-- Etiqueta con cantidad y porcentaje -->
+                  <div class="edificio-stats">
+                    <span class="edificio-cantidad">{{ tipo.cantidad }}</span>
+                    <span class="edificio-porcentaje">{{ Math.round(getTipoPorcentaje(tipo.cantidad)) }}%</span>
                   </div>
-                  <div class="bar-label">{{ tipo.tipo }}</div>
+                  <!-- Edificio con altura proporcional al porcentaje -->
+                  <div class="edificio"
+                      :style="{ 
+                        '--height': getAlturaEdificio(tipo.cantidad) + 'px',
+                        '--color': getTipoColorHex(tipo.tipo)
+                      }">
+                    <!-- Ventanas del edificio (efecto visual) -->
+                    <div class="edificio-ventanas"></div>
+                  </div>
+                  <!-- Etiqueta del tipo de archivo -->
+                  <div class="edificio-label">{{ tipo.tipo }}</div>
                 </div>
               </div>
             </div>
@@ -470,8 +480,25 @@ function getEstadoColorHex(estado) {
   return colores[estado] || '#9ca3af'
 }
 
+// Función para calcular la altura basada en el porcentaje respecto al total
 function getBarHeight(cantidad, max) {
   return max > 0 ? (cantidad / max) * 100 : 0
+}
+
+// Función para calcular el porcentaje que representa un tipo respecto al total de archivos
+function getTipoPorcentaje(cantidad) {
+  const total = estadisticas.value.totalArchivos
+  return total > 0 ? (cantidad / total) * 100 : 0
+}
+
+// Función para calcular la altura en píxeles basada en el porcentaje
+function getAlturaEdificio(cantidad) {
+  const porcentaje = getTipoPorcentaje(cantidad)
+  const alturaMaxima = 180 // altura máxima en píxeles para el 100%
+  const alturaMinima = 30 // altura mínima para tipos con pocos archivos
+  
+  // Calculamos la altura proporcional pero asegurando un mínimo visible
+  return Math.max(Math.round((porcentaje / 100) * alturaMaxima), alturaMinima)
 }
 
 function getBarWidth(cantidad, max) {
@@ -557,8 +584,18 @@ onMounted(() => {
 }
 
 @keyframes buildingGrow {
-  from { height: 0%; transform: translateY(10px); opacity: 0.3; }
-  to { height: var(--final-height); transform: translateY(0); opacity: 1; }
+  from { 
+    height: 0 !important; 
+    opacity: 0.3; 
+    transform: scaleY(0.1);
+  }
+  to { 
+    height: var(--height) !important; 
+    opacity: 1; 
+    transform: scaleY(1);
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
 }
 
 @keyframes barGrowHorizontal {
@@ -636,7 +673,7 @@ onMounted(() => {
   animation: buildingGrow 1.2s ease-out var(--delay, 0s) both;
   box-shadow: 0 5px 15px rgba(0,0,0,0.15);
   position: relative;
-  min-height: 30px;
+  min-height: 30px; /* Altura mínima para tipos con pocos archivos */
 }
 
 .building-vertical:hover {
@@ -659,16 +696,31 @@ onMounted(() => {
 
 .building-value {
   position: absolute;
-  top: -25px;
+  top: -30px; /* Ajustado para dar más espacio */
   left: 50%;
   transform: translateX(-50%);
   font-size: 14px;
   font-weight: bold;
   color: #374151;
   background: white;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.building-value .cantidad {
+  font-size: 14px;
+  color: #374151;
+}
+
+.building-value .porcentaje {
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 2px;
 }
 
 .building-windows {
@@ -700,7 +752,7 @@ onMounted(() => {
 }
 
 .animate-building-grow {
-  --final-height: var(--height);
+  --height: var(--height);
   animation: buildingGrow 1.2s ease-out var(--delay, 0s) both;
 }
 
@@ -854,52 +906,187 @@ onMounted(() => {
   animation: bubbleGrow 0.8s ease-out var(--delay, 0s) both;
 }
 
-/* Animaciones adicionales */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+/* Estilos para el nuevo gráfico de edificios */
+.edificios-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 20px;
+  padding: 20px 0;
+  height: 300px;
+  margin-top: 30px; /* Espacio para las etiquetas de cantidad */
+  position: relative;
 }
 
-@keyframes slideInLeft {
-  from { transform: translateX(-30px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+.edificio-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeIn 0.5s ease-out var(--delay, 0s) both;
+  flex: 1;
+  max-width: 80px;
+  min-width: 50px;
 }
 
-.animate-spin {
-  animation: spin 1s linear infinite;
+.edificio-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  position: relative;
+  width: 100%;
 }
 
-/* Responsive */
+.edificio {
+  width: 50px;
+  height: var(--height) !important; /* Altura explícita basada en el porcentaje */
+  border-radius: 6px 6px 0 0;
+  position: relative;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+  animation: buildingGrow 1s ease-out var(--delay, 0s) both;
+  background: linear-gradient(to top, var(--color), color-mix(in srgb, var(--color) 90%, white));
+  transform-origin: bottom;
+  overflow: hidden;
+}
+
+.edificio:hover {
+  transform: scaleY(1.05);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  z-index: 10;
+}
+
+.edificio-ventanas {
+  position: absolute;
+  top: 10%;
+  left: 10%;
+  right: 10%;
+  bottom: 10%;
+  background-image: 
+    linear-gradient(to right, rgba(255,255,255,0.3) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.3) 1px, transparent 1px);
+  background-size: 8px 8px;
+  border-radius: 2px;
+}
+
+.edificio-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: white;
+  border-radius: 8px;
+  padding: 4px 8px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  z-index: 5;
+  min-width: 60px;
+  text-align: center;
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.edificio-cantidad {
+  font-size: 15px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.edificio-porcentaje {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  margin-top: -2px;
+}
+
+.edificio-label {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+  text-align: center;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @media (max-width: 768px) {
-  .bar-chart-vertical {
+  .edificios-container {
     height: 250px;
+    gap: 12px;
+    margin-top: 40px;
+  }
+
+  .edificio-wrapper {
+    max-width: 60px;
+    min-width: 40px;
   }
   
-  .bar-vertical {
-    width: 30px;
+  .edificio {
+    width: 40px;
   }
   
-  .bar-label-left {
-    min-width: 80px;
+  .edificio-stats {
+    padding: 3px 6px;
+    min-width: 50px;
+    top: -38px;
+  }
+  
+  .edificio-cantidad {
+    font-size: 13px;
+  }
+  
+  .edificio-porcentaje {
+    font-size: 10px;
+  }
+  
+  .edificio-label {
+    font-size: 10px;
+    max-width: 50px;
+    margin-top: 6px;
+  }
+}
+
+/* Para pantallas muy pequeñas */
+@media (max-width: 480px) {
+  .edificios-container {
+    height: 200px;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-top: 35px;
+  }
+
+  .edificio-wrapper {
+    max-width: 45px;
+    min-width: 35px;
+  }
+  
+  .edificio {
+    width: 35px;
+  }
+  
+  .edificio-stats {
+    padding: 2px 4px;
+    min-width: 40px;
+    top: -32px;
+  }
+  
+  .edificio-cantidad {
     font-size: 11px;
   }
   
-  .bubble-chart {
-    height: 250px;
+  .edificio-porcentaje {
+    font-size: 9px;
   }
   
-  .pie-chart {
-    width: 150px !important;
-    height: 150px !important;
+  .edificio-label {
+    font-size: 9px;
+    max-width: 40px;
+    margin-top: 4px;
   }
-}
-
-/* Efectos hover para las tarjetas métricas */
-.transform {
-  transition: transform 0.3s ease;
-}
-
-.hover\\:scale-105:hover {
-  transform: scale(1.05);
 }
 </style>
