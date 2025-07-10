@@ -126,41 +126,96 @@
           </div>
         </div>
 
-        <!-- Gráfico de pastel - Estados de validación -->
-        <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-          <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+        <!-- Gráfico de pastel moderno - Estados de validación -->
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-8">
+          <h3 class="text-lg font-semibold text-gray-800 mb-6 flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Estados de validación
           </h3>
-          <div class="chart-container flex items-center">
-            <div class="pie-chart" style="width: 200px; height: 200px; position: relative;">
-              <svg width="200" height="200" viewBox="0 0 200 200">
-                <!-- Círculos de fondo para el pastel -->
-                <g>
-                  <path 
-                    v-for="(estado, index) in estadisticas.estadosValidacion" 
-                    :key="estado.estado"
-                    :fill="getEstadoColorHex(estado.estado)"
-                    :d="getPieSlicePath(index)"
-                    :style="{ '--delay': index * 0.2 + 's' }"
-                    class="pie-slice animate-pie-appear"
-                  />
-                </g>
-                <text x="100" y="85" text-anchor="middle" class="text-2xl font-bold text-gray-800">
-                  {{ estadisticas.totalArchivos }}
-                </text>
-                <text x="100" y="115" text-anchor="middle" class="text-sm text-gray-500">
-                  Total
-                </text>
-              </svg>
+          
+          <!-- Contenedor centrado y responsivo para el gráfico -->
+          <div class="flex flex-col lg:flex-row items-center justify-center gap-8">
+            <!-- Gráfico de pastel con efectos modernos -->
+            <div class="pie-chart-modern-container">
+              <div class="pie-chart-modern" style="width: 280px; height: 280px; position: relative;">
+                <svg width="280" height="280" viewBox="0 0 280 280" class="pie-svg-modern">
+                  <!-- Círculo de fondo sutil -->
+                  <circle cx="140" cy="140" r="120" fill="rgba(248, 250, 252, 0.8)" stroke="rgba(226, 232, 240, 0.6)" stroke-width="2"/>
+                  
+                  <!-- Segmentos del pastel con efectos modernos -->
+                  <g class="pie-segments">
+                    <path 
+                      v-for="(estado, index) in estadisticas.estadosValidacion" 
+                      :key="estado.estado"
+                      :fill="getEstadoColorHex(estado.estado)"
+                      :stroke="getEstadoBorderColor(estado.estado)"
+                      :stroke-width="4"
+                      :d="getPieSlicePathModern(index)"
+                      :style="{ '--delay': index * 0.2 + 's' }"
+                      class="pie-slice-modern animate-pie-appear-modern"
+                      @mouseenter="highlightSlice"
+                      @mouseleave="unhighlightSlice"
+                    />
+                  </g>
+                  
+                  <!-- Círculo central con estadísticas -->
+                  <circle cx="140" cy="140" r="65" fill="rgba(255, 255, 255, 0.95)" stroke="rgba(226, 232, 240, 0.8)" stroke-width="3" class="center-circle"/>
+                  
+                  <!-- Texto central con total de archivos -->
+                  <text x="140" y="125" text-anchor="middle" class="text-4xl font-bold text-gray-800 center-number">
+                    {{ estadisticas.totalArchivos }}
+                  </text>
+                  <text x="140" y="145" text-anchor="middle" class="text-sm font-medium text-gray-500 center-label">
+                    Total de
+                  </text>
+                  <text x="140" y="160" text-anchor="middle" class="text-sm font-medium text-gray-500 center-label">
+                    archivos
+                  </text>
+                </svg>
+              </div>
             </div>
-            <div class="ml-6 space-y-3">
-              <div v-for="estado in estadisticas.estadosValidacion" :key="estado.estado" class="flex items-center">
-                <div class="w-4 h-4 rounded-full mr-3" :style="{ backgroundColor: getEstadoColorHex(estado.estado) }"></div>
-                <span class="text-sm font-medium text-gray-700">{{ estado.estado || 'Sin definir' }}</span>
-                <span class="ml-auto text-sm font-bold text-gray-900">{{ estado.cantidad }}</span>
+            
+            <!-- Leyenda moderna con círculos de colores y porcentajes -->
+            <div class="pie-legend-modern space-y-4 min-w-[200px]">
+              <div v-for="(estado, index) in estadisticas.estadosValidacion" 
+                   :key="estado.estado" 
+                   class="legend-item-modern flex items-center group cursor-pointer"
+                   :style="{ '--delay': (index * 0.1 + 0.5) + 's' }"
+                   @mouseenter="highlightLegendItem(index)"
+                   @mouseleave="unhighlightLegendItem()">
+                <!-- Círculo de color con borde brillante -->
+                <div class="legend-color-circle" 
+                     :style="{ 
+                       backgroundColor: getEstadoColorHex(estado.estado),
+                       borderColor: getEstadoBorderColor(estado.estado)
+                     }"></div>
+                
+                <!-- Información del estado -->
+                <div class="flex-1 ml-4">
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm font-semibold text-gray-700 group-hover:text-gray-900 transition-colors">
+                      {{ estado.estado || 'Sin definir' }}
+                    </span>
+                    <span class="text-lg font-bold text-gray-900">
+                      {{ estado.cantidad }}
+                    </span>
+                  </div>
+                  <div class="flex items-center justify-between mt-1">
+                    <span class="text-xs text-gray-500">
+                      {{ getEstadoPorcentaje(estado.cantidad) }}
+                    </span>
+                    <!-- Barra de progreso mini -->
+                    <div class="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden ml-2">
+                      <div class="h-full rounded-full transition-all duration-700 legend-progress-bar"
+                           :style="{ 
+                             width: getEstadoPorcentaje(estado.cantidad),
+                             backgroundColor: getEstadoBorderColor(estado.estado)
+                           }"></div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -488,14 +543,28 @@ function getTipoColorHex(tipo) {
   return colores[tipo] || '#6b7280'
 }
 
+// Colores modernos y suaves con translucidez para el gráfico de pastel
 function getEstadoColorHex(estado) {
   const colores = {
-    'Verificado': '#22c55e',
-    'Preliminar': '#eab308',
-    'Borrador': '#6b7280',
-    'En revisión': '#3b82f6'
+    'Verificado': 'rgba(34, 197, 94, 0.75)',      // Verde suave translúcido
+    'Preliminar': 'rgba(251, 191, 36, 0.70)',     // Amarillo suave translúcido  
+    'Borrador': 'rgba(107, 114, 128, 0.65)',      // Gris suave translúcido
+    'En revisión': 'rgba(59, 130, 246, 0.70)',    // Azul suave translúcido
+    'Sin definir': 'rgba(156, 163, 175, 0.60)'    // Gris claro translúcido
   }
-  return colores[estado] || '#9ca3af'
+  return colores[estado] || 'rgba(156, 163, 175, 0.60)'
+}
+
+// Colores de borde brillantes para el efecto resplandeciente
+function getEstadoBorderColor(estado) {
+  const coloresBorde = {
+    'Verificado': 'rgba(34, 230, 120, 0.95)',     // Verde brillante
+    'Preliminar': 'rgba(255, 220, 80, 0.95)',     // Amarillo brillante
+    'Borrador': 'rgba(140, 150, 180, 0.95)',      // Gris brillante
+    'En revisión': 'rgba(80, 150, 255, 0.95)',    // Azul brillante
+    'Sin definir': 'rgba(180, 190, 200, 0.90)'    // Gris claro brillante
+  }
+  return coloresBorde[estado] || 'rgba(180, 190, 200, 0.90)'
 }
 
 // Función para calcular la altura basada en el porcentaje respecto al total
@@ -552,8 +621,8 @@ function isSmallBar(cantidad, max) {
   return porcentaje < 20
 }
 
-// Funciones para el gráfico de pastel
-function getPieSlicePath(index) {
+// Funciones para el gráfico de pastel moderno
+function getPieSlicePathModern(index) {
   const total = estadisticas.value.totalArchivos
   const estados = estadisticas.value.estadosValidacion
   
@@ -567,10 +636,10 @@ function getPieSlicePath(index) {
   const percentage = estados[index].cantidad / total
   const endAngle = startAngle + percentage * 2 * Math.PI
   
-  // Radio del pastel
-  const radius = 80
-  const centerX = 100
-  const centerY = 100
+  // Radio del pastel más grande para mejor presencia visual
+  const radius = 110
+  const centerX = 140
+  const centerY = 140
   
   // Calcular puntos de inicio y fin para el arco
   const x1 = centerX + radius * Math.cos(startAngle - Math.PI / 2)
@@ -581,8 +650,46 @@ function getPieSlicePath(index) {
   // Bandera para arco grande
   const largeArc = percentage > 0.5 ? 1 : 0
   
-  // Crear el path del slice
+  // Crear el path del slice con radio mayor
   return `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`
+}
+
+// Función para calcular el porcentaje de cada estado
+function getEstadoPorcentaje(cantidad) {
+  const total = estadisticas.value.totalArchivos
+  if (total === 0) return '0%'
+  const porcentaje = (cantidad / total) * 100
+  return Math.round(porcentaje) + '%'
+}
+
+// Funciones para efectos de hover en el gráfico de pastel
+function highlightSlice(event) {
+  event.target.style.filter = 'brightness(1.1) drop-shadow(0 0 15px rgba(0,0,0,0.3))'
+  event.target.style.transform = 'scale(1.02)'
+  event.target.style.transformOrigin = '140px 140px'
+}
+
+function unhighlightSlice(event) {
+  event.target.style.filter = ''
+  event.target.style.transform = ''
+}
+
+function highlightLegendItem(index) {
+  // Efecto visual en el elemento de leyenda correspondiente
+  const slices = document.querySelectorAll('.pie-slice-modern')
+  if (slices[index]) {
+    slices[index].style.filter = 'brightness(1.1) drop-shadow(0 0 15px rgba(0,0,0,0.3))'
+    slices[index].style.transform = 'scale(1.02)'
+    slices[index].style.transformOrigin = '140px 140px'
+  }
+}
+
+function unhighlightLegendItem() {
+  const slices = document.querySelectorAll('.pie-slice-modern')
+  slices.forEach(slice => {
+    slice.style.filter = ''
+    slice.style.transform = ''
+  })
 }
 
 // Funciones para el gráfico de burbujas
@@ -645,9 +752,231 @@ onMounted(() => {
   to { width: var(--final-width); }
 }
 
-@keyframes pieAppear {
-  from { opacity: 0; transform: scale(0); }
-  to { opacity: 1; transform: scale(1); }
+/* Estilos modernos para el gráfico de pastel con efectos premium */
+.pie-chart-modern-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.pie-chart-modern {
+  position: relative;
+  /* Sombra elegante con efecto de elevación */
+  filter: drop-shadow(0 8px 32px rgba(59, 130, 246, 0.15)) 
+          drop-shadow(0 4px 16px rgba(34, 197, 94, 0.1));
+  transition: all 0.3s ease;
+}
+
+.pie-chart-modern:hover {
+  /* Efecto hover con mayor elevación */
+  filter: drop-shadow(0 12px 40px rgba(59, 130, 246, 0.2)) 
+          drop-shadow(0 6px 20px rgba(34, 197, 94, 0.15));
+  transform: translateY(-2px);
+}
+
+.pie-svg-modern {
+  /* Efectos de resplandor sutil en el SVG */
+  border-radius: 50%;
+  background: radial-gradient(circle at center, 
+    rgba(255, 255, 255, 0.95) 0%, 
+    rgba(248, 250, 252, 0.8) 100%);
+  box-shadow: 
+    inset 0 1px 3px rgba(0,0,0,0.05),
+    0 0 20px rgba(59, 130, 246, 0.08);
+}
+
+.pie-slice-modern {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  /* Efectos de brillo en cada segmento */
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.1));
+}
+
+.pie-slice-modern:hover {
+  filter: brightness(1.15) drop-shadow(0 4px 16px rgba(0,0,0,0.2));
+  transform-origin: 140px 140px;
+}
+
+.center-circle {
+  /* Círculo central con sombra interna */
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.08));
+}
+
+.center-number {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 800;
+  fill: #1f2937;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.center-label {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 500;
+  fill: #6b7280;
+}
+
+/* Leyenda moderna con efectos elegantes */
+.pie-legend-modern {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.9) 0%, 
+    rgba(248, 250, 252, 0.8) 100%);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  box-shadow: 
+    0 4px 16px rgba(0,0,0,0.04),
+    0 1px 4px rgba(0,0,0,0.02);
+  backdrop-filter: blur(8px);
+}
+
+.legend-item-modern {
+  padding: 12px 16px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  animation: slideInRight 0.6s ease-out var(--delay, 0s) both;
+  border: 1px solid transparent;
+}
+
+.legend-item-modern:hover {
+  background: rgba(248, 250, 252, 0.8);
+  border-color: rgba(226, 232, 240, 0.8);
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.legend-color-circle {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 3px solid;
+  box-shadow: 
+    0 2px 8px rgba(0,0,0,0.15),
+    inset 0 1px 2px rgba(255,255,255,0.3);
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.legend-item-modern:hover .legend-color-circle {
+  transform: scale(1.2);
+  box-shadow: 
+    0 4px 16px rgba(0,0,0,0.2),
+    inset 0 1px 2px rgba(255,255,255,0.4);
+}
+
+.legend-progress-bar {
+  animation: progressGrow 1s ease-out var(--delay, 0s) both;
+}
+
+/* Animaciones modernas y suaves */
+@keyframes animate-pie-appear-modern {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) rotate(-10deg);
+    filter: blur(2px);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+    filter: blur(0px);
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0px);
+  }
+}
+
+@keyframes progressGrow {
+  0% {
+    width: 0%;
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Responsive para el gráfico de pastel moderno */
+@media (max-width: 1024px) {
+  .pie-chart-modern {
+    width: 240px !important;
+    height: 240px !important;
+  }
+  
+  .pie-svg-modern {
+    width: 240px;
+    height: 240px;
+  }
+  
+  .pie-legend-modern {
+    margin-top: 20px;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pie-chart-modern-container {
+    padding: 10px;
+  }
+  
+  .pie-chart-modern {
+    width: 200px !important;
+    height: 200px !important;
+  }
+  
+  .pie-svg-modern {
+    width: 200px;
+    height: 200px;
+  }
+  
+  .center-number {
+    font-size: 28px;
+  }
+  
+  .pie-legend-modern {
+    padding: 16px;
+    margin-top: 16px;
+  }
+  
+  .legend-item-modern {
+    padding: 8px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pie-chart-modern {
+    width: 180px !important;
+    height: 180px !important;
+  }
+  
+  .pie-svg-modern {
+    width: 180px;
+    height: 180px;
+  }
+  
+  .center-number {
+    font-size: 24px;
+  }
+  
+  .center-label {
+    font-size: 10px;
+  }
 }
 
 @keyframes bubbleGrow {
