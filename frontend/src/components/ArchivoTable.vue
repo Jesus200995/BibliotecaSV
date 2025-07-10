@@ -287,11 +287,12 @@
         </div>
       </div>
 
+      <!-- Componente unificado de tamaño total - Mismo diseño que Estadísticas -->
       <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium text-gray-500">Espacio utilizado</p>
-            <p class="text-2xl font-bold text-gray-800">{{ formatSize(totalSize) }}</p>
+            <p class="text-2xl font-bold text-gray-800">{{ formatFileSize(totalSize) }}</p>
           </div>
           <div class="rounded-full p-3 bg-green-50">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -596,7 +597,7 @@
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {{ formatSize(archivo.tamano) }}
+              {{ formatFileSize(archivo.tamano) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
               <div class="flex items-center space-x-2">
@@ -720,6 +721,8 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import axios from 'axios'
+// Importar funciones utilitarias centralizadas para manejo de archivos
+import { formatFileSize, calculateTotalSize, validateFileSize } from '../utils/fileUtils.js'
 
 // Estilos de animación personalizados
 const style = document.createElement('style')
@@ -931,13 +934,11 @@ const archivosFiltrados = computed(() => {
   })
 })
 
-// Propiedades computadas para estadísticas
+// Propiedades computadas para estadísticas usando funciones utilitarias centralizadas
 const totalSize = computed(() => {
   // Si hay filtros activos, mostrar el tamaño total de los archivos filtrados
   const archivosToSum = hayFiltrosActivos.value ? archivosFiltrados.value : archivos.value
-  return archivosToSum.reduce((total, archivo) => {
-    return total + (archivo.tamano || 0)
-  }, 0)
+  return calculateTotalSize(archivosToSum)
 })
 
 const lastFileName = computed(() => {
@@ -985,8 +986,8 @@ async function cargarArchivos() {
 function seleccionarArchivo(e) {
   const file = e.target.files[0]
   
-  // Validar tamaño de archivo (50MB máximo)
-  if (file && file.size > 50 * 1024 * 1024) {
+  // Validar tamaño de archivo usando función utilitaria centralizada (50MB máximo)
+  if (file && !validateFileSize(file.size, 50)) {
     alert("El archivo es demasiado grande. El tamaño máximo permitido es 50MB.")
     e.target.value = null
     archivoSubir.value = null
@@ -1004,8 +1005,8 @@ async function subirArchivo() {
     return
   }
   
-  // Validar tamaño nuevamente antes de subir
-  if (archivoSubir.value.size > 50 * 1024 * 1024) {
+  // Validar tamaño nuevamente antes de subir usando función utilitaria centralizada
+  if (!validateFileSize(archivoSubir.value.size, 50)) {
     alert("El archivo es demasiado grande. El tamaño máximo permitido es 50MB.")
     return
   }
@@ -1100,15 +1101,6 @@ async function cambiarPagina(nuevaPagina) {
   if (tableEl) {
     tableEl.scrollTop = 0;
   }
-}
-
-function formatSize(bytes) {
-  if (!bytes || bytes === 0) return '0 Bytes'
-  
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
-  const i = Math.floor(Math.log(bytes) / Math.log(1024))
-  
-  return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
 // Función para buscar ubicaciones mediante la API Nominatim

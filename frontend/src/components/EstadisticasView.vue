@@ -326,6 +326,8 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
+// Importar funciones utilitarias centralizadas para manejo de archivos
+import { formatFileSize, calculateTotalSize, bytesToMB } from '../utils/fileUtils.js'
 
 // Variables reactivas
 const cargando = ref(true)
@@ -381,21 +383,8 @@ function calcularEstadisticas(archivos) {
   // Total de archivos
   estadisticas.value.totalArchivos = archivos.length
   
-  // Tamaño total (manejar diferentes formatos de tamaño)
-  estadisticas.value.tamanoTotal = archivos.reduce((total, archivo) => {
-    let tamano = 0
-    if (archivo.tamano) {
-      // Si ya es un número
-      if (typeof archivo.tamano === 'number') {
-        tamano = archivo.tamano
-      } else if (typeof archivo.tamano === 'string') {
-        // Si es string, intentar parsearlo
-        const num = parseInt(archivo.tamano.replace(/[^\d]/g, ''))
-        tamano = isNaN(num) ? 0 : num
-      }
-    }
-    return total + tamano
-  }, 0)
+  // Tamaño total usando función utilitaria centralizada
+  estadisticas.value.tamanoTotal = calculateTotalSize(archivos)
   
   // Tipos de archivo
   const tiposMap = {}
@@ -541,15 +530,7 @@ function calcularEstadisticasEjemplo() {
   }
 }
 
-// Funciones auxiliares para los gráficos
-function formatFileSize(bytes) {
-  if (bytes === 0) return '0 Bytes'
-  const k = 1024
-  const sizes = ['Bytes', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
-
+// Funciones auxiliares para los gráficos específicos de estadísticas
 function getTipoColorHex(tipo) {
   const colores = {
     'PDF': '#ef4444',

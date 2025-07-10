@@ -26,6 +26,7 @@
         </div>
       </div>
 
+      <!-- Componente unificado de tamaño total - Mismo diseño que Estadísticas -->
       <div class="bg-gradient-to-r from-green-600 to-green-500 text-white p-6 rounded-xl shadow-lg">
         <div class="flex items-center justify-between">
           <div>
@@ -723,6 +724,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
+// Importar funciones utilitarias centralizadas para manejo de archivos
+import { formatFileSize, calculateTotalSize, bytesToMB } from '../utils/fileUtils.js'
 
 // Definir emits
 defineEmits(['ver'])
@@ -851,16 +854,6 @@ const uniqueTypes = computed(() => {
 })
 
 // Funciones de formato
-function formatFileSize(bytes) {
-  if (!bytes || bytes === 0) return '0 B'
-  
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
-
 function formatDate(dateString) {
   if (!dateString) return ''
   
