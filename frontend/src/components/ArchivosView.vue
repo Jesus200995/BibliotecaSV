@@ -170,6 +170,7 @@
               <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tipo</th>
               <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tamaño</th>
               <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Responsable</th>
+              <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Alcance geográfico</th>
               <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Fecha</th>
               <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Estado</th>
               <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
@@ -177,7 +178,7 @@
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-if="cargandoPagina" class="animate-pulse">
-              <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+              <td colspan="8" class="px-6 py-8 text-center text-gray-500">
                 <div class="flex items-center justify-center">
                   <svg class="animate-spin h-5 w-5 mr-3 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -189,7 +190,7 @@
             </tr>
             
             <tr v-else-if="archivosFiltrados.length === 0" class="text-center">
-              <td colspan="7" class="px-6 py-8 text-gray-500">
+              <td colspan="8" class="px-6 py-8 text-gray-500">
                 <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
@@ -231,6 +232,20 @@
               
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                 {{ archivo.responsable || 'No especificado' }}
+              </td>
+              
+              <td class="px-6 py-4">
+                <div class="flex flex-wrap gap-1">
+                  <span 
+                    v-for="(lugar, index) in (archivo.alcance_geografico || '').split(',')" 
+                    :key="index" 
+                    v-show="lugar.trim()"
+                    class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-medium"
+                  >
+                    {{ lugar.trim() }}
+                  </span>
+                  <span v-if="!archivo.alcance_geografico" class="text-gray-400 text-xs italic">No especificado</span>
+                </div>
               </td>
               
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
