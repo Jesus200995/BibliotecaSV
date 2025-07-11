@@ -40,51 +40,51 @@
       </div>
 
       <!-- Cards principales de acceso rápido -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
         
         <!-- Card 1: Vista previa de Archivos -->
         <div class="group bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 cursor-pointer border border-gray-100"
              @click="$emit('navigate', 'archivos')">
           
           <!-- Header de la card con gradiente -->
-          <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-t-3xl p-8 text-white relative overflow-hidden">
+          <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-t-3xl p-6 text-white relative overflow-hidden">
             <!-- Efecto decorativo de fondo -->
-            <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-            <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
+            <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-12 translate-x-12"></div>
+            <div class="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full translate-y-8 -translate-x-8"></div>
             
             <div class="relative z-10">
               <!-- Ícono principal -->
-              <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-2xl mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div class="inline-flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6a2 2 0 01-2 2H10a2 2 0 01-2-2V5z" />
                 </svg>
               </div>
               
-              <h3 class="text-2xl font-bold mb-2">Gestión de Archivos</h3>
-              <p class="text-green-100">Explora, busca y administra todos los documentos</p>
+              <h3 class="text-xl font-bold mb-2">Gestión de Archivos</h3>
+              <p class="text-green-100 text-sm">Explora y administra documentos</p>
             </div>
           </div>
           
           <!-- Contenido de la card -->
-          <div class="p-8">
+          <div class="p-6">
             <!-- Estadísticas rápidas -->
-            <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="grid grid-cols-2 gap-3 mb-4">
               <div class="text-center">
-                <div class="text-2xl font-bold text-gray-800">{{ totalArchivos }}</div>
-                <div class="text-sm text-gray-500">Total archivos</div>
+                <div class="text-xl font-bold text-gray-800">{{ totalArchivos }}</div>
+                <div class="text-xs text-gray-500">Total archivos</div>
               </div>
               <div class="text-center">
-                <div class="text-2xl font-bold text-gray-800">{{ formatFileSize(totalSize) }}</div>
-                <div class="text-sm text-gray-500">Espacio usado</div>
+                <div class="text-xl font-bold text-gray-800">{{ formatFileSize(totalSize) }}</div>
+                <div class="text-xs text-gray-500">Espacio usado</div>
               </div>
             </div>
             
             <!-- Botón de acción -->
             <div class="flex items-center justify-between">
-              <span class="text-gray-600">Ver todos los archivos</span>
+              <span class="text-gray-600 text-sm">Ver todos los archivos</span>
               <div class="bg-green-100 text-green-600 p-2 rounded-full group-hover:bg-green-200 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </div>
@@ -97,45 +97,101 @@
              @click="$emit('navigate', 'estadisticas')">
           
           <!-- Header de la card con gradiente -->
-          <div class="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-t-3xl p-8 text-white relative overflow-hidden">
+          <div class="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-t-3xl p-6 text-white relative overflow-hidden">
             <!-- Efecto decorativo de fondo -->
-            <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-            <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
+            <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-12 translate-x-12"></div>
+            <div class="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full translate-y-8 -translate-x-8"></div>
             
             <div class="relative z-10">
               <!-- Ícono principal -->
-              <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-2xl mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div class="inline-flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
               
-              <h3 class="text-2xl font-bold mb-2">Análisis y Reportes</h3>
-              <p class="text-purple-100">Visualiza estadísticas y métricas detalladas</p>
+              <h3 class="text-xl font-bold mb-2">Análisis y Reportes</h3>
+              <p class="text-purple-100 text-sm">Visualiza estadísticas detalladas</p>
             </div>
           </div>
           
           <!-- Contenido de la card -->
-          <div class="p-8">
+          <div class="p-6">
             <!-- Gráfico miniatura/preview -->
-            <div class="mb-6">
-              <div class="flex items-end justify-between h-20 gap-2">
+            <div class="mb-4">
+              <div class="flex items-end justify-between h-16 gap-1">
                 <!-- Barras miniatura representando estadísticas -->
-                <div class="bg-gradient-to-t from-purple-200 to-purple-400 rounded-t w-4 h-12"></div>
-                <div class="bg-gradient-to-t from-purple-200 to-purple-400 rounded-t w-4 h-16"></div>
-                <div class="bg-gradient-to-t from-purple-200 to-purple-400 rounded-t w-4 h-20"></div>
-                <div class="bg-gradient-to-t from-purple-200 to-purple-400 rounded-t w-4 h-14"></div>
-                <div class="bg-gradient-to-t from-purple-200 to-purple-400 rounded-t w-4 h-18"></div>
-                <div class="bg-gradient-to-t from-purple-200 to-purple-400 rounded-t w-4 h-10"></div>
+                <div class="bg-gradient-to-t from-purple-200 to-purple-400 rounded-t w-3 h-8"></div>
+                <div class="bg-gradient-to-t from-purple-200 to-purple-400 rounded-t w-3 h-12"></div>
+                <div class="bg-gradient-to-t from-purple-200 to-purple-400 rounded-t w-3 h-16"></div>
+                <div class="bg-gradient-to-t from-purple-200 to-purple-400 rounded-t w-3 h-10"></div>
+                <div class="bg-gradient-to-t from-purple-200 to-purple-400 rounded-t w-3 h-14"></div>
+                <div class="bg-gradient-to-t from-purple-200 to-purple-400 rounded-t w-3 h-6"></div>
               </div>
               <div class="text-xs text-gray-400 text-center mt-2">Vista previa de análisis</div>
             </div>
             
             <!-- Botón de acción -->
             <div class="flex items-center justify-between">
-              <span class="text-gray-600">Ver estadísticas completas</span>
+              <span class="text-gray-600 text-sm">Ver estadísticas completas</span>
               <div class="bg-purple-100 text-purple-600 p-2 rounded-full group-hover:bg-purple-200 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Vista previa del Mapa Interactivo -->
+        <div class="group bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 cursor-pointer border border-gray-100"
+             @click="$emit('navigate', 'mapa')">
+          
+          <!-- Header de la card con gradiente -->
+          <div class="bg-gradient-to-br from-orange-500 to-red-600 rounded-t-3xl p-6 text-white relative overflow-hidden">
+            <!-- Efecto decorativo de fondo -->
+            <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-12 translate-x-12"></div>
+            <div class="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full translate-y-8 -translate-x-8"></div>
+            
+            <div class="relative z-10">
+              <!-- Ícono principal -->
+              <div class="inline-flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+              </div>
+              
+              <h3 class="text-xl font-bold mb-2">Mapa Interactivo</h3>
+              <p class="text-orange-100 text-sm">Visualización geográfica</p>
+            </div>
+          </div>
+          
+          <!-- Contenido de la card -->
+          <div class="p-6">
+            <!-- Mapa miniatura/preview -->
+            <div class="mb-4">
+              <div class="bg-gradient-to-br from-blue-100 to-green-100 rounded-lg h-16 relative overflow-hidden">
+                <!-- Simulación de un mapa con puntos -->
+                <div class="absolute inset-0 bg-blue-200/30"></div>
+                <!-- Puntos simulando ubicaciones -->
+                <div class="absolute top-2 left-3 w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                <div class="absolute top-4 right-4 w-2 h-2 bg-green-500 rounded-full animate-pulse" style="animation-delay: 0.5s"></div>
+                <div class="absolute bottom-3 left-1/2 w-2 h-2 bg-blue-500 rounded-full animate-pulse" style="animation-delay: 1s"></div>
+                <div class="absolute top-1/2 right-6 w-2 h-2 bg-purple-500 rounded-full animate-pulse" style="animation-delay: 1.5s"></div>
+                <!-- Líneas simulando fronteras -->
+                <svg class="absolute inset-0 w-full h-full opacity-30" viewBox="0 0 100 60">
+                  <path d="M10,20 Q30,10 50,15 T90,25" stroke="#4B5563" stroke-width="1" fill="none"/>
+                  <path d="M5,35 Q25,30 45,40 T85,45" stroke="#4B5563" stroke-width="1" fill="none"/>
+                </svg>
+              </div>
+              <div class="text-xs text-gray-400 text-center mt-2">{{ totalUbicaciones }} ubicaciones registradas</div>
+            </div>
+            
+            <!-- Botón de acción -->
+            <div class="flex items-center justify-between">
+              <span class="text-gray-600 text-sm">Explorar mapa completo</span>
+              <div class="bg-orange-100 text-orange-600 p-2 rounded-full group-hover:bg-orange-200 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </div>
@@ -660,6 +716,16 @@ const totalArchivos = computed(() => archivos.value.length || 0)
 // Propiedades computadas para estadísticas usando funciones utilitarias centralizadas
 const totalSize = computed(() => {
   return calculateTotalSize(archivos.value)
+})
+
+// Computed property para el total de ubicaciones únicas
+const totalUbicaciones = computed(() => {
+  const ubicaciones = archivos.value
+    .filter(archivo => archivo.alcance_geografico)
+    .map(archivo => archivo.alcance_geografico)
+    .filter(ubicacion => ubicacion.trim() !== '')
+  
+  return new Set(ubicaciones).size
 })
 
 onMounted(async () => {
