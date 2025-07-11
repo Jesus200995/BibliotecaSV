@@ -344,7 +344,7 @@ const estadisticas = ref({
   maxUbicacionCount: 0
 })
 
-const BACKEND_URL = 'http://localhost:4000'
+const BACKEND_URL = 'https://api.biblioteca.sembrandodatos.com'
 
 // Función para obtener estadísticas
 async function obtenerEstadisticas() {
@@ -1745,7 +1745,7 @@ onMounted(() => {
   top: 10%;
   left: 10%;
   right: 10%;
-  bottom: 10%;
+  bottom:  10%;
   background-image: 
     linear-gradient(to right, rgba(255,255,255,0.3) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255,255,255,0.3) 1px, transparent 1px);
@@ -1753,7 +1753,7 @@ onMounted(() => {
   border-radius: 2px;
 }
 
-.edificio-stats {
+.building-stats {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1771,20 +1771,20 @@ onMounted(() => {
   transform: translateX(-50%);
 }
 
-.edificio-cantidad {
+.building-cantidad {
   font-size: 15px;
   font-weight: 700;
   color: #374151;
 }
 
-.edificio-porcentaje {
+.building-porcentaje {
   font-size: 12px;
   font-weight: 500;
   color: #6b7280;
   margin-top: -2px;
 }
 
-.edificio-label {
+.building-label {
   margin-top: 8px;
   font-size: 12px;
   font-weight: 600;
@@ -1812,21 +1812,21 @@ onMounted(() => {
     width: 40px;
   }
   
-  .edificio-stats {
+  .building-stats {
     padding: 3px 6px;
     min-width: 50px;
     top: -38px;
   }
   
-  .edificio-cantidad {
+  .building-cantidad {
     font-size: 13px;
   }
   
-  .edificio-porcentaje {
+  .building-porcentaje {
     font-size: 10px;
   }
   
-  .edificio-label {
+  .building-label {
     font-size: 10px;
     max-width: 50px;
     margin-top: 6px;
@@ -1852,21 +1852,21 @@ onMounted(() => {
     width: 35px;
   }
   
-  .edificio-stats {
+  .building-stats {
     padding: 2px 4px;
     min-width: 40px;
     top: -32px;
   }
   
-  .edificio-cantidad {
+  .building-cantidad {
     font-size: 11px;
   }
   
-  .edificio-porcentaje {
+  .building-porcentaje {
     font-size: 9px;
   }
   
-  .edificio-label {
+  .building-label {
     font-size: 9px;
     max-width: 40px;
     margin-top: 4px;

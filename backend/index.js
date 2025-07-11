@@ -49,8 +49,13 @@ const upload = multer({
 const app = express();
 const PORT = 4000;
 
-// Configurar CORS
-app.use(cors());
+// Configurar CORS específico para producción
+app.use(cors({
+  origin: ['https://biblioteca.sembrandodatos.com', 'http://localhost:5173', 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 app.use(express.json());
 // Servir archivos estáticos desde la carpeta public
 app.use(express.static(path.join(__dirname, 'public')));
@@ -620,9 +625,297 @@ app.delete('/archivos/:id', async (req, res) => {
   }
 });
 
-// Endpoint para eliminar un archivo por su ID
-app.delete('/archivos/:id', async (req, res) => {
-  console.log(`=== DELETE /archivos/${req.params.id} ===`);
+// Duplicar todas las rutas con prefijo /api para compatibilidad con proxy
+app.get('/api/db-status', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT NOW()');
+    res.json({ 
+      status: 'ok', 
+      message: 'Conexión exitosa a la base de datos', 
+      time: result.rows[0].now,
+      config: {
+        host: process.env.DB_HOST,
+        database: process.env.DB_NAME,
+        port: process.env.DB_PORT,
+        ssl: process.env.DB_SSL === 'true'
+      }
+    });
+  } catch (error) {
+    console.error('Error al verificar conexión a BD:', error);
+    res.status(500).json({ 
+      status: 'error', 
+      message: 'Error de conexión a la base de datos', 
+      error: error.message 
+    });
+  }
+});
+
+// Duplicar rutas de archivos con prefijo /api
+app.get('/api/archivos', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = (page - 1) * limit;
+    
+    // Excluir el campo archivo_contenido para mejorar el rendimiento
+    const query = `
+      SELECT id, nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, 
+             archivo_url, fuente, responsable, alcance_geografico, validacion, observaciones,
+             latitud, longitud, coordenadas_json
+      FROM catalogo_archivos 
+      ORDER BY fecha_actualizacion DESC
+      LIMIT $1 OFFSET $2
+    `;
+    
+    // Consulta para el conteo total
+    const countQuery = `SELECT COUNT(*) FROM catalogo_archivos`;
+    
+    // Ejecutar ambas consultas en paralelo
+    const [result, countResult] = await Promise.all([
+      pool.query(query, [limit, offset]),
+      pool.query(countQuery)
+    ]);
+    
+    // Construir respuesta con metadatos de paginación
+    const totalItems = parseInt(countResult.rows[0].count);
+    const totalPages = Math.ceil(totalItems / limit);
+    
+    res.json({
+      items: result.rows,
+      metadata: {
+        page,
+        limit,
+        totalItems,
+        totalPages
+      }
+    });
+  } catch (error) {
+    console.error('Error al listar archivos:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/archivos/descargar/:id', async (req, res) => {
+  // Reutilizar la misma lógica que la ruta sin prefijo
+  return app._router.handle(Object.assign(req, { url: req.url.replace('/api', '') }), res);
+});
+
+app.get('/api/archivos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('SELECT * FROM catalogo_archivos WHERE id = $1', [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Archivo no encontrado' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(`Error al obtener archivo con ID ${req.params.id}:`, error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/archivos/upload', upload.single('file'), async (req, res) => {
+  // Reutilizar la misma lógica que la ruta sin prefijo
+  console.log('Recibida solicitud en /api/archivos/upload');
+  console.log('Body:', req.body);
+  console.log('File:', req.file);
+  
+  try {
+    if (!req.file) {
+      console.log('No se recibió ningún archivo');
+      return res.status(400).json({ error: 'No se ha subido ningún archivo' });
+    }
+
+    const archivo = req.file;
+    console.log('Archivo recibido:', archivo);
+
+    // Datos básicos del archivo
+    const nombre = archivo.originalname;
+    const tipo = path.extname(nombre).substring(1).toUpperCase(); // "CSV", "XLSX", "ZIP" etc
+    const fecha_actualizacion = new Date();
+    const tamano = archivo.size;
+    // Ya no usamos archivo_url para guardar la ruta, ahora guardamos un identificador único
+    const archivo_url = Date.now() + '-' + nombre.replace(/[^a-zA-Z0-9\-_.]/g, '_');
+
+    console.log('Datos del archivo:', { nombre, tipo, fecha_actualizacion, tamano, archivo_url });
+
+    // Recibe los nuevos campos desde req.body
+    const descripcion = req.body.descripcion || '';
+    const etiquetas = req.body.etiquetas || '';
+    const responsable = req.body.responsable || '';
+    const fuente = req.body.fuente || '';
+    const alcance_geografico = req.body.alcance || '';
+    const validacion = req.body.validacion || '';
+    const observaciones = req.body.observaciones || '';
+    
+    // Procesar coordenadas si vienen en el alcance
+    let coordenadas_json = null;
+    let latitud = null;
+    let longitud = null;
+    
+    try {
+      const coordenadas = req.body.coordenadas || req.body.alcance_coordenadas;
+      if (coordenadas) {
+        if (typeof coordenadas === 'string') {
+          coordenadas_json = JSON.parse(coordenadas);
+        } else {
+          coordenadas_json = coordenadas;
+        }
+        
+        // Si es un array de ubicaciones, tomar la primera
+        if (Array.isArray(coordenadas_json) && coordenadas_json.length > 0) {
+          const primeraUbicacion = coordenadas_json[0];
+          if (primeraUbicacion.lat && primeraUbicacion.lon) {
+            latitud = parseFloat(primeraUbicacion.lat);
+            longitud = parseFloat(primeraUbicacion.lon);
+          }
+        }
+      }
+    } catch (err) {
+      console.log('Error al procesar coordenadas:', err.message);
+    }
+
+    console.log('Campos adicionales:', {
+      descripcion, etiquetas, responsable, fuente, 
+      alcance_geografico, validacion, observaciones, latitud, longitud
+    });
+
+    // Insertar en PostgreSQL incluyendo el contenido del archivo (que está en memoria)
+    const query = `
+      INSERT INTO catalogo_archivos
+      (nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, archivo_url, fuente, responsable, alcance_geografico, validacion, observaciones, archivo_contenido, latitud, longitud, coordenadas_json)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+      RETURNING id, nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, archivo_url, fuente, responsable, alcance_geografico, validacion, observaciones, latitud, longitud, coordenadas_json
+    `;
+    const values = [
+      nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, archivo_url,
+      fuente, responsable, alcance_geografico, validacion, observaciones, archivo.buffer,
+      latitud, longitud, coordenadas_json ? JSON.stringify(coordenadas_json) : null
+    ];
+
+    const result = await pool.query(query, values);
+    console.log('Archivo guardado en la base de datos con ID:', result.rows[0].id);
+    
+    res.json({ mensaje: 'Archivo subido y registrado', registro: result.rows[0] });
+  } catch (error) {
+    console.error('Error al subir el archivo:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/archivos/:id', async (req, res) => {
+  // Reutilizar la misma lógica que la ruta sin prefijo
+  console.log(`=== PUT /api/archivos/${req.params.id} ===`);
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+  
+  try {
+    const { id } = req.params;
+    const {
+      nombre,
+      descripcion,
+      tipo,
+      responsable,
+      fuente,
+      etiquetas,
+      alcance_geografico,
+      validacion,
+      observaciones,
+      coordenadas,
+      alcance_coordenadas
+    } = req.body;
+
+    console.log('Actualizando archivo ID:', id);
+    console.log('Datos recibidos:', req.body);
+
+    // Procesar coordenadas si vienen en el alcance
+    let coordenadas_json = null;
+    let latitud = null;
+    let longitud = null;
+    
+    try {
+      const coords = coordenadas || alcance_coordenadas;
+      if (coords) {
+        if (typeof coords === 'string') {
+          coordenadas_json = JSON.parse(coords);
+        } else {
+          coordenadas_json = coords;
+        }
+        
+        // Si es un array de ubicaciones, tomar la primera
+        if (Array.isArray(coordenadas_json) && coordenadas_json.length > 0) {
+          const primeraUbicacion = coordenadas_json[0];
+          if (primeraUbicacion.lat && primeraUbicacion.lon) {
+            latitud = parseFloat(primeraUbicacion.lat);
+            longitud = parseFloat(primeraUbicacion.lon);
+          }
+        }
+      }
+    } catch (err) {
+      console.log('Error al procesar coordenadas en actualización:', err.message);
+    }
+
+    // Actualizar el archivo en la base de datos
+    const query = `
+      UPDATE catalogo_archivos 
+      SET 
+        nombre = $1,
+        descripcion = $2,
+        tipo = $3,
+        responsable = $4,
+        fuente = $5,
+        etiquetas = $6,
+        alcance_geografico = $7,
+        validacion = $8,
+        observaciones = $9,
+        fecha_actualizacion = $10,
+        latitud = $11,
+        longitud = $12,
+        coordenadas_json = $13
+      WHERE id = $14
+      RETURNING id, nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, archivo_url, fuente, responsable, alcance_geografico, validacion, observaciones, latitud, longitud, coordenadas_json
+    `;
+
+    const values = [
+      nombre,
+      descripcion,
+      tipo,
+      responsable,
+      fuente,
+      etiquetas,
+      alcance_geografico,
+      validacion,
+      observaciones,
+      new Date(), // fecha_actualizacion
+      latitud,
+      longitud,
+      coordenadas_json ? JSON.stringify(coordenadas_json) : null,
+      id
+    ];
+
+    const result = await pool.query(query, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Archivo no encontrado' });
+    }
+
+    console.log('Archivo actualizado exitosamente:', result.rows[0]);
+    res.json({ 
+      mensaje: 'Archivo actualizado correctamente', 
+      archivo: result.rows[0] 
+    });
+
+  } catch (error) {
+    console.error('Error al actualizar archivo:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/archivos/:id', async (req, res) => {
+  // Reutilizar la misma lógica que la ruta sin prefijo
+  console.log(`=== DELETE /api/archivos/${req.params.id} ===`);
   
   try {
     const { id } = req.params;

@@ -617,7 +617,7 @@ style.innerHTML = `
 `
 document.head.appendChild(style)
 
-const BACKEND_URL = 'http://localhost:4000'
+const BACKEND_URL = 'https://api.biblioteca.sembrandodatos.com/api'
 const archivos = ref([])
 const archivoSubir = ref(null)
 const archivoNombre = ref('')
@@ -890,7 +890,7 @@ function buscarUbicaciones() {
           // Headers requeridos por Nominatim
           'User-Agent': 'BibliotecaSV_App/1.0',
           'Accept-Language': 'es',
-          'Referer': window.location.origin // Añadir Referer para mejor comportamiento con CORS
+          'Referer': 'https://biblioteca.sembrandodatos.com' // Actualizar Referer para producción
         },
         // Aumentar el tiempo máximo de espera para mayor confiabilidad
         timeout: 5000

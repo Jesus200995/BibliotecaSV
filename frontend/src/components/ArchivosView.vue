@@ -371,7 +371,7 @@
             <div class="bg-blue-50 rounded-xl p-6 border border-blue-200">
               <h4 class="text-lg font-semibold text-blue-800 mb-4 flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m-1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Información General
               </h4>
@@ -652,7 +652,7 @@
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
               <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
               <span>{{ eliminandoArchivo ? 'Eliminando...' : 'Eliminar' }}</span>
             </button>
@@ -1056,7 +1056,7 @@
             <!-- Icono de información -->
             <div v-else-if="notificacion.tipo === 'info'" class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
               <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m-1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
             </div>
             <!-- Icono de advertencia -->
@@ -1102,8 +1102,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
+import { API_CONFIG, buildApiUrl } from '../config/api.js'
 // Importar funciones utilitarias centralizadas para manejo de archivos
 import { formatFileSize, calculateTotalSize, bytesToMB } from '../utils/fileUtils.js'
 
@@ -1113,7 +1114,7 @@ defineEmits(['ver'])
 // Variables reactivas
 const archivos = ref([])
 const cargandoPagina = ref(false)
-const BACKEND_URL = 'http://localhost:4000'
+const BACKEND_URL = 'https://api.biblioteca.sembrandodatos.com/api'
 
 // Variables para el modal de edición
 const modalEditarVisible = ref(false)

@@ -238,7 +238,7 @@ const estadisticas = ref({
   maxUbicacionCount: 0
 })
 
-const BACKEND_URL = 'http://localhost:4000'
+const BACKEND_URL = 'https://api.biblioteca.sembrandodatos.com'
 
 // Función para obtener estadísticas
 async function obtenerEstadisticas() {

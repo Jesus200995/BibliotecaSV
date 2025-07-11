@@ -276,7 +276,7 @@ const clusterGroup = ref(null)
 const heatmapLayer = ref(null)
 const markersLayer = ref(null)
 
-const BACKEND_URL = 'http://localhost:4000'
+const BACKEND_URL = 'https://api.biblioteca.sembrandodatos.com'
 
 // Observar cambios en marcadores para actualizar mapa
 watch([marcadores, tipoVista], () => {
