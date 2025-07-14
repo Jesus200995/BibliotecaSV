@@ -2,19 +2,24 @@ import axios from 'axios'
 
 // Configuración de la API
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
+const NODE_ENV = import.meta.env.NODE_ENV || 'development'
 
 console.log('🔧 Configuración de API:', {
+  NODE_ENV: NODE_ENV,
   VITE_API_URL: import.meta.env.VITE_API_URL,
   API_BASE_URL: API_BASE_URL,
-  env: import.meta.env
+  mode: import.meta.env.MODE
 })
 
 // Crear instancia de axios con configuración base
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 30000, // 30 segundos timeout
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  },
+  withCredentials: false // Cambiado a false para evitar problemas CORS
 })
 
 // Log de todas las peticiones para debug
@@ -25,12 +30,34 @@ api.interceptors.request.use(
       url: config.url,
       baseURL: config.baseURL,
       fullURL: `${config.baseURL}${config.url}`,
-      headers: config.headers
+      headers: config.headers,
+      timeout: config.timeout
     })
     return config
   },
   (error) => {
     console.error('❌ Error en interceptor de petición:', error)
+    return Promise.reject(error)
+  }
+)
+
+// Interceptor de respuesta para logging mejorado
+api.interceptors.response.use(
+  (response) => {
+    console.log('✅ Respuesta exitosa:', {
+      status: response.status,
+      url: response.config.url,
+      data: response.data
+    })
+    return response
+  },
+  (error) => {
+    console.error('❌ Error en respuesta:', {
+      status: error.response?.status,
+      message: error.message,
+      url: error.config?.url,
+      data: error.response?.data
+    })
     return Promise.reject(error)
   }
 )
@@ -70,12 +97,14 @@ export const authService = {
     try {
       console.log('🔑 Intentando login con:', { usuario, API_BASE_URL })
       
-      // Crear una nueva instancia de axios para evitar interceptores globales
+      // Crear una nueva instancia de axios para evitar interceptores globales en login
       const freshAxios = axios.create({
-        timeout: 10000,
+        timeout: 30000, // 30 segundos
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        withCredentials: false
       })
       
       // Usar URL completa directamente

@@ -5,6 +5,8 @@ const { Pool } = require('pg');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
+const http = require('http');
 
 // Importar middleware de autenticación
 const { authenticateToken } = require('./middleware/auth');
@@ -16,17 +18,26 @@ try {
     require('dotenv').config({ path: path.join(__dirname, '.env.local') });
     console.log('Cargada configuración local desde .env.local');
   }
+  
+  // Cargar configuración de producción si está en modo producción
+  if (process.env.NODE_ENV === 'production' && fs.existsSync(path.join(__dirname, '.env.production'))) {
+    require('dotenv').config({ path: path.join(__dirname, '.env.production') });
+    console.log('Cargada configuración de producción desde .env.production');
+  }
 } catch (err) {
-  console.error('Error al cargar .env.local:', err);
+  console.error('Error al cargar archivos de configuración:', err);
 }
 
 // Imprimir información de conexión
-console.log('Configuración de conexión a BD:');
+console.log('🔧 Configuración de conexión a BD:');
 console.log(`Host: ${process.env.DB_HOST}`);
 console.log(`Puerto: ${process.env.DB_PORT}`);
 console.log(`Base de datos: ${process.env.DB_NAME}`);
 console.log(`Usuario: ${process.env.DB_USER}`);
 console.log(`Contraseña: ${process.env.DB_PASSWORD ? '******' : 'no configurada'}`);
+console.log(`SSL: ${process.env.DB_SSL}`);
+console.log(`Frontend URL: ${process.env.FRONTEND_URL || 'no configurada'}`);
+console.log(`API URL: ${process.env.API_URL || 'no configurada'}`);
 
 // Configuración de la conexión a PostgreSQL
 const pool = new Pool({
@@ -51,15 +62,43 @@ const upload = multer({
 });
 
 const app = express();
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
+const HTTP_PORT = process.env.HTTP_PORT || 80;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+
+console.log(`Iniciando servidor en modo: ${NODE_ENV}`);
+console.log(`Puerto principal: ${PORT}`);
+console.log(`Puerto HTTP: ${HTTP_PORT}`);
 
 // Configurar CORS específico para producción
-app.use(cors({
-  origin: ['https://biblioteca.sembrandodatos.com', 'http://localhost:5173', 'http://localhost:3000'],
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Lista de dominios permitidos
+    const allowedOrigins = [
+      'https://biblioteca.sembrandodatos.com',
+      'https://api.biblioteca.sembrandodatos.com',
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'http://localhost:4000'
+    ];
+    
+    // Permitir requests sin origin (aplicaciones móviles, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log(`CORS: Origen bloqueado: ${origin}`);
+      callback(new Error('No permitido por CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 // Servir archivos estáticos desde la carpeta public
 app.use(express.static(path.join(__dirname, 'public')));
@@ -1119,7 +1158,86 @@ app.get('/test-upload', (req, res) => {
   `);
 });
 
-// Iniciar el servidor
-app.listen(PORT, () => {
-  console.log(`Servidor backend corriendo en http://localhost:${PORT}`);
+// Función para iniciar el servidor
+function startServer() {
+  if (NODE_ENV === 'production') {
+    // En producción, intentar usar HTTPS
+    try {
+      const sslKeyPath = process.env.SSL_KEY_PATH;
+      const sslCertPath = process.env.SSL_CERT_PATH;
+      
+      if (sslKeyPath && sslCertPath && fs.existsSync(sslKeyPath) && fs.existsSync(sslCertPath)) {
+        const privateKey = fs.readFileSync(sslKeyPath, 'utf8');
+        const certificate = fs.readFileSync(sslCertPath, 'utf8');
+        const credentials = { key: privateKey, cert: certificate };
+        
+        // Crear servidor HTTPS
+        const httpsServer = https.createServer(credentials, app);
+        httpsServer.listen(PORT, '0.0.0.0', () => {
+          console.log(`🚀 Servidor HTTPS corriendo en puerto ${PORT}`);
+          console.log(`🌍 Accesible desde: https://api.biblioteca.sembrandodatos.com`);
+        });
+        
+        // Crear servidor HTTP para redirección a HTTPS
+        const httpApp = express();
+        httpApp.use((req, res) => {
+          res.redirect(301, `https://${req.headers.host}${req.url}`);
+        });
+        
+        const httpServer = http.createServer(httpApp);
+        httpServer.listen(HTTP_PORT, '0.0.0.0', () => {
+          console.log(`🔀 Servidor HTTP (redirección) corriendo en puerto ${HTTP_PORT}`);
+        });
+        
+      } else {
+        console.log('⚠️  Certificados SSL no encontrados, iniciando en modo HTTP');
+        startHttpServer();
+      }
+    } catch (error) {
+      console.error('❌ Error al configurar HTTPS:', error);
+      console.log('🔄 Fallback a servidor HTTP');
+      startHttpServer();
+    }
+  } else {
+    // En desarrollo, usar HTTP
+    console.log('🛠️  Modo desarrollo: usando HTTP');
+    startHttpServer();
+  }
+}
+
+function startHttpServer() {
+  const server = http.createServer(app);
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Servidor HTTP corriendo en puerto ${PORT}`);
+    console.log(`🌐 Modo: ${NODE_ENV}`);
+    console.log(`📡 Accesible desde: http://0.0.0.0:${PORT}`);
+    
+    if (NODE_ENV === 'development') {
+      console.log(`🏠 Local: http://localhost:${PORT}`);
+    }
+  });
+  
+  // Manejar errores del servidor
+  server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+      console.error(`❌ El puerto ${PORT} ya está en uso`);
+      process.exit(1);
+    } else {
+      console.error('❌ Error del servidor:', error);
+    }
+  });
+}
+
+// Manejar cierre graceful del servidor
+process.on('SIGTERM', () => {
+  console.log('🛑 Recibida señal SIGTERM, cerrando servidor...');
+  process.exit(0);
 });
+
+process.on('SIGINT', () => {
+  console.log('🛑 Recibida señal SIGINT, cerrando servidor...');
+  process.exit(0);
+});
+
+// Iniciar el servidor
+startServer();

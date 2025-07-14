@@ -164,14 +164,21 @@ async function handleLogin() {
   }
   
   loading.value = true
+  console.log('🔐 Iniciando proceso de login...', {
+    usuario: formData.usuario,
+    API_URL: import.meta.env.VITE_API_URL,
+    mode: import.meta.env.MODE
+  })
   
   try {
     const result = await authService.login(formData.usuario.trim(), formData.contrasena)
     
     if (result.success) {
+      console.log('✅ Login exitoso:', result.user)
       // Login exitoso
       emit('login-success', result.user)
     } else {
+      console.log('❌ Login fallido:', result)
       // Mostrar mensaje de error específico basado en el tipo de error
       if (result.error === 'usuario_no_encontrado') {
         errorMessage.value = `El usuario "${formData.usuario}" no existe o está inactivo`
@@ -182,8 +189,26 @@ async function handleLogin() {
       }
     }
   } catch (error) {
-    console.error('Error en login:', error)
-    errorMessage.value = 'Error de conexión con el servidor. Verifica tu conexión e inténtalo de nuevo.'
+    console.error('💥 Error en login:', error)
+    
+    // Determinar tipo de error para mostrar mensaje específico
+    if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+      errorMessage.value = `Error de red: No se puede conectar al servidor. 
+        Verifica tu conexión a Internet y que el servidor esté funcionando.`
+    } else if (error.code === 'ECONNREFUSED') {
+      errorMessage.value = 'El servidor no está disponible. Por favor, inténtalo más tarde.'
+    } else if (error.code === 'ERR_CERT_AUTHORITY_INVALID') {
+      errorMessage.value = 'Error de certificado SSL. Contacta al administrador del sistema.'
+    } else if (error.response?.status === 404) {
+      errorMessage.value = 'Endpoint de login no encontrado. Verifica la configuración del servidor.'
+    } else if (error.response?.status === 500) {
+      errorMessage.value = 'Error interno del servidor. Por favor, inténtalo más tarde.'
+    } else if (error.response?.status === 503) {
+      errorMessage.value = 'Servicio no disponible temporalmente. Inténtalo en unos minutos.'
+    } else {
+      errorMessage.value = `Error de conexión: ${error.message || 'Error desconocido'}. 
+        Verifica tu conexión e inténtalo de nuevo.`
+    }
   } finally {
     loading.value = false
   }

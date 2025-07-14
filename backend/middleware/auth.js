@@ -1,7 +1,12 @@
 const jwt = require('jsonwebtoken');
 
-// Clave secreta para JWT (en producción debería estar en variables de entorno)
+// Clave secreta para JWT (usar variable de entorno)
 const JWT_SECRET = process.env.JWT_SECRET || 'biblioteca_secret_key_2025';
+
+// Tiempo de expiración del token según el entorno
+const TOKEN_EXPIRY = process.env.NODE_ENV === 'production' ? '1h' : '24h';
+
+console.log(`🔐 Auth configurado - Entorno: ${process.env.NODE_ENV}, Expiración token: ${TOKEN_EXPIRY}`);
 
 // Middleware para verificar autenticación
 const authenticateToken = (req, res, next) => {
@@ -34,10 +39,11 @@ const generateToken = (user) => {
     { 
       id: user.id, 
       usuario: user.usuario, 
-      rol: user.rol 
+      rol: user.rol,
+      iat: Math.floor(Date.now() / 1000) // timestamp de creación
     },
     JWT_SECRET,
-    { expiresIn: '24h' } // Token válido por 24 horas
+    { expiresIn: TOKEN_EXPIRY }
   );
 };
 
