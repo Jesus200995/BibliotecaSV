@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login - Biblioteca de Datos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #7c3aed;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #6d28d9;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success {
+            background-color: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background-color: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .info {
+            background-color: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Test de Login - Biblioteca de Datos</h1>
+        <p>Esta página te permite probar la conexión con el backend y el sistema de autenticación.</p>
+        
+        <div class="form-group">
+            <label for="baseUrl">URL del Backend:</label>
+            <input type="text" id="baseUrl" value="http://localhost:4000" placeholder="http://localhost:4000">
+        </div>
+        
+        <div class="form-group">
+            <label for="usuario">Usuario:</label>
+            <input type="text" id="usuario" value="admin" placeholder="admin">
+        </div>
+        
+        <div class="form-group">
+            <label for="contrasena">Contraseña:</label>
+            <input type="password" id="contrasena" value="admin123" placeholder="admin123">
+        </div>
+        
+        <button onclick="testConnection()">🔗 Test Conexión</button>
+        <button onclick="testLogin()">🔑 Test Login</button>
+        <button onclick="testRoutes()">📋 Ver Rutas</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            resultDiv.textContent = message;
+        }
+
+        async function testConnection() {
+            const baseUrl = document.getElementById('baseUrl').value;
+            showResult('Probando conexión...', 'info');
+            
+            try {
+                const response = await fetch(`${baseUrl}/test`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`✅ Conexión exitosa!\n\n${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    showResult(`❌ Error en la conexión:\n${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Error de conexión:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testLogin() {
+            const baseUrl = document.getElementById('baseUrl').value;
+            const usuario = document.getElementById('usuario').value;
+            const contrasena = document.getElementById('contrasena').value;
+            
+            showResult('Probando login...', 'info');
+            
+            try {
+                // Probar primero con /api/login (correcto)
+                let response = await fetch(`${baseUrl}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ usuario, contrasena })
+                });
+                
+                let data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`✅ Login exitoso con /api/login!\n\n${JSON.stringify(data, null, 2)}`, 'success');
+                    return;
+                }
+                
+                // Si falla, probar con /login (incorrecto, para debug)
+                response = await fetch(`${baseUrl}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ usuario, contrasena })
+                });
+                
+                data = await response.json();
+                showResult(`❌ Error en login:\n\nCon /api/login: ${response.status}\nCon /login: ${JSON.stringify(data, null, 2)}`, 'error');
+                
+            } catch (error) {
+                showResult(`❌ Error de login:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testRoutes() {
+            const baseUrl = document.getElementById('baseUrl').value;
+            showResult('Obteniendo rutas registradas...', 'info');
+            
+            try {
+                const response = await fetch(`${baseUrl}/debug/routes`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`📋 Rutas registradas:\n\n${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    showResult(`❌ Error al obtener rutas:\n${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Error:\n${error.message}`, 'error');
+            }
+        }
+
+        // Test automático al cargar la página
+        window.onload = function() {
+            showResult('Página cargada. Haz clic en "Test Conexión" para verificar que el backend esté funcionando.', 'info');
+        };
+    </script>
+</body>
+</html>

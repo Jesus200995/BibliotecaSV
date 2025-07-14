@@ -6,6 +6,10 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+// Importar middleware de autenticación
+const { authenticateToken } = require('./middleware/auth');
+const authRoutes = require('./routes/auth');
+
 // Cargar configuración local si existe
 try {
   if (fs.existsSync(path.join(__dirname, '.env.local'))) {
@@ -60,6 +64,62 @@ app.use(express.json());
 // Servir archivos estáticos desde la carpeta public
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Middleware de logging para debug
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
+  console.log('Headers:', req.headers);
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log('Body:', req.body);
+  }
+  next();
+});
+
+// Rutas de autenticación (sin protección)
+app.use('/api', authRoutes);
+
+// Ruta de prueba para verificar que el servidor está funcionando
+app.get('/test', (req, res) => {
+  res.json({ 
+    message: 'Servidor funcionando correctamente',
+    timestamp: new Date().toISOString(),
+    routes: {
+      login: '/api/login',
+      verify: '/api/verify'
+    }
+  });
+});
+
+// Ruta de debug para listar todas las rutas registradas
+app.get('/debug/routes', (req, res) => {
+  const routes = [];
+  
+  app._router.stack.forEach((middleware) => {
+    if (middleware.route) {
+      // Rutas directas
+      routes.push({
+        path: middleware.route.path,
+        methods: Object.keys(middleware.route.methods)
+      });
+    } else if (middleware.name === 'router') {
+      // Rutas de router
+      middleware.handle.stack.forEach((handler) => {
+        if (handler.route) {
+          routes.push({
+            path: '/api' + handler.route.path,
+            methods: Object.keys(handler.route.methods)
+          });
+        }
+      });
+    }
+  });
+  
+  res.json({
+    message: 'Rutas registradas en el servidor',
+    routes: routes,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Endpoint para verificar estado de conexión a la base de datos
 app.get('/db-status', async (req, res) => {
   try {
@@ -85,8 +145,8 @@ app.get('/db-status', async (req, res) => {
   }
 });
 
-// Endpoint para listar archivos (optimizado, con paginación)
-app.get('/archivos', async (req, res) => {
+// Endpoint para listar archivos (optimizado, con paginación) - PROTEGIDO
+app.get('/archivos', authenticateToken, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 50;
@@ -263,8 +323,8 @@ app.get('/archivos/:id/campos', async (req, res) => {
   }
 });
 
-// Endpoint para subir archivos
-app.post('/archivos/upload', upload.single('file'), async (req, res) => {
+// Endpoint para subir archivos - PROTEGIDO
+app.post('/archivos/upload', authenticateToken, upload.single('file'), async (req, res) => {
   console.log('Recibida solicitud en /archivos/upload');
   console.log('Body:', req.body);
   console.log('File:', req.file);
@@ -352,8 +412,8 @@ app.post('/archivos/upload', upload.single('file'), async (req, res) => {
   }
 });
 
-// Endpoint para actualizar un archivo por su ID
-app.put('/archivos/:id', async (req, res) => {
+// Endpoint para actualizar un archivo por su ID - PROTEGIDO
+app.put('/archivos/:id', authenticateToken, async (req, res) => {
   console.log(`=== PUT /archivos/${req.params.id} ===`);
   console.log('Headers:', req.headers);
   console.log('Body:', req.body);
@@ -582,8 +642,8 @@ app.put('/archivos/:id/with-file', upload.single('file'), async (req, res) => {
   }
 });
 
-// Endpoint para eliminar un archivo por su ID
-app.delete('/archivos/:id', async (req, res) => {
+// Endpoint para eliminar un archivo por su ID - PROTEGIDO
+app.delete('/archivos/:id', authenticateToken, async (req, res) => {
   console.log(`=== DELETE /archivos/${req.params.id} ===`);
   
   try {
@@ -650,8 +710,8 @@ app.get('/api/db-status', async (req, res) => {
   }
 });
 
-// Duplicar rutas de archivos con prefijo /api
-app.get('/api/archivos', async (req, res) => {
+// Duplicar rutas de archivos con prefijo /api - PROTEGIDAS
+app.get('/api/archivos', authenticateToken, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 50;
@@ -716,7 +776,7 @@ app.get('/api/archivos/:id', async (req, res) => {
   }
 });
 
-app.post('/api/archivos/upload', upload.single('file'), async (req, res) => {
+app.post('/api/archivos/upload', authenticateToken, upload.single('file'), async (req, res) => {
   // Reutilizar la misma lógica que la ruta sin prefijo
   console.log('Recibida solicitud en /api/archivos/upload');
   console.log('Body:', req.body);
@@ -805,7 +865,7 @@ app.post('/api/archivos/upload', upload.single('file'), async (req, res) => {
   }
 });
 
-app.put('/api/archivos/:id', async (req, res) => {
+app.put('/api/archivos/:id', authenticateToken, async (req, res) => {
   // Reutilizar la misma lógica que la ruta sin prefijo
   console.log(`=== PUT /api/archivos/${req.params.id} ===`);
   console.log('Headers:', req.headers);
@@ -913,7 +973,7 @@ app.put('/api/archivos/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/archivos/:id', async (req, res) => {
+app.delete('/api/archivos/:id', authenticateToken, async (req, res) => {
   // Reutilizar la misma lógica que la ruta sin prefijo
   console.log(`=== DELETE /api/archivos/${req.params.id} ===`);
   
@@ -954,6 +1014,86 @@ app.delete('/api/archivos/:id', async (req, res) => {
   } catch (error) {
     console.error('Error al eliminar archivo:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Ruta de fallback para login sin prefijo /api (para debug)
+app.post('/login', async (req, res) => {
+  console.log('=== FALLBACK: POST /login (sin /api) ===');
+  console.log('Esta ruta no debería ser llamada normalmente, pero la procesaremos');
+  console.log('Body recibido:', req.body);
+  console.log('Headers:', req.headers);
+  
+  try {
+    const { usuario, contrasena } = req.body;
+
+    // Validar que se proporcionen usuario y contraseña
+    if (!usuario || !contrasena) {
+      return res.status(400).json({
+        success: false,
+        error: 'Datos incompletos',
+        message: 'Usuario y contraseña son requeridos'
+      });
+    }
+
+    console.log(`Intentando autenticar usuario: ${usuario} (desde ruta fallback)`);
+
+    // Buscar usuario en la base de datos
+    const query = `
+      SELECT id, usuario, contrasena, rol, activo 
+      FROM usuarios 
+      WHERE usuario = $1 AND activo = true
+    `;
+    
+    const result = await pool.query(query, [usuario]);
+    
+    if (result.rows.length === 0) {
+      console.log(`Usuario no encontrado o inactivo: ${usuario}`);
+      return res.status(401).json({
+        success: false,
+        error: 'Credenciales incorrectas',
+        message: 'Usuario o contraseña incorrectos'
+      });
+    }
+
+    const user = result.rows[0];
+    console.log(`Usuario encontrado: ${user.usuario}, rol: ${user.rol}`);
+
+    // Verificar contraseña (por ahora texto plano)
+    if (user.contrasena !== contrasena) {
+      console.log(`Contraseña incorrecta para usuario: ${usuario}`);
+      return res.status(401).json({
+        success: false,
+        error: 'Credenciales incorrectas',
+        message: 'Usuario o contraseña incorrectos'
+      });
+    }
+
+    // Generar token JWT
+    const { generateToken } = require('./middleware/auth');
+    const token = generateToken(user);
+    
+    console.log(`Login exitoso para usuario: ${usuario} (desde ruta fallback)`);
+    
+    // Respuesta exitosa
+    res.json({
+      success: true,
+      message: 'Login exitoso (ruta fallback)',
+      token: token,
+      user: {
+        id: user.id,
+        usuario: user.usuario,
+        rol: user.rol
+      }
+    });
+
+  } catch (error) {
+    console.error('Error en login fallback:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      message: 'Error al procesar la solicitud de login'
+    });
   }
 });
 
