@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Autenticación - Biblioteca de Datos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #7c3aed;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #6d28d9;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background-color: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background-color: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .info {
+            background-color: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+        .test-section {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Test de Autenticación - Biblioteca de Datos</h1>
+        <p>Esta página te permite probar el sistema de autenticación completo con mensajes de error específicos y persistencia de sesión.</p>
+        
+        <div class="test-section">
+            <h3>🔗 Configuración del Backend</h3>
+            <div class="form-group">
+                <label for="baseUrl">URL del Backend:</label>
+                <input type="text" id="baseUrl" value="http://localhost:4000" placeholder="http://localhost:4000">
+            </div>
+            <button onclick="testConnection()">Test Conexión</button>
+            <button onclick="testRoutes()">Ver Rutas</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🔑 Test de Login con Mensajes Específicos</h3>
+            <div class="form-group">
+                <label for="usuario">Usuario:</label>
+                <input type="text" id="usuario" value="admin" placeholder="admin">
+            </div>
+            
+            <div class="form-group">
+                <label for="contrasena">Contraseña:</label>
+                <input type="password" id="contrasena" value="admin123" placeholder="admin123">
+            </div>
+            
+            <button onclick="testLogin()">🔑 Login Correcto</button>
+            <button onclick="testLoginUsuarioIncorrecto()">❌ Usuario Incorrecto</button>
+            <button onclick="testLoginContrasenaIncorrecta()">❌ Contraseña Incorrecta</button>
+            <button onclick="testLoginCamposVacios()">❌ Campos Vacíos</button>
+        </div>
+
+        <div class="test-section">
+            <h3>💾 Test de Persistencia de Sesión</h3>
+            <button onclick="checkSession()">📋 Verificar Sesión Actual</button>
+            <button onclick="extendSession()">🔄 Extender Sesión</button>
+            <button onclick="clearSession()">🗑️ Limpiar Sesión</button>
+            <button onclick="simulateExpiredSession()">⏰ Simular Sesión Expirada</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🔒 Test de Verificación de Token</h3>
+            <button onclick="verifyToken()">✅ Verificar Token</button>
+            <button onclick="testProtectedRoute()">🛡️ Ruta Protegida</button>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            resultDiv.textContent = message;
+        }
+
+        async function testConnection() {
+            const baseUrl = document.getElementById('baseUrl').value;
+            showResult('Probando conexión...', 'info');
+            
+            try {
+                const response = await fetch(`${baseUrl}/test`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`✅ Conexión exitosa!\n\n${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    showResult(`❌ Error en la conexión:\n${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Error de conexión:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testRoutes() {
+            const baseUrl = document.getElementById('baseUrl').value;
+            showResult('Obteniendo rutas registradas...', 'info');
+            
+            try {
+                const response = await fetch(`${baseUrl}/debug/routes`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`📋 Rutas registradas:\n\n${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    showResult(`❌ Error al obtener rutas:\n${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Error:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testLogin() {
+            const baseUrl = document.getElementById('baseUrl').value;
+            const usuario = document.getElementById('usuario').value;
+            const contrasena = document.getElementById('contrasena').value;
+            
+            await performLogin(baseUrl, usuario, contrasena, '🔑 Login con credenciales correctas');
+        }
+
+        async function testLoginUsuarioIncorrecto() {
+            const baseUrl = document.getElementById('baseUrl').value;
+            const contrasena = document.getElementById('contrasena').value;
+            
+            await performLogin(baseUrl, 'usuario_inexistente', contrasena, '❌ Login con usuario incorrecto');
+        }
+
+        async function testLoginContrasenaIncorrecta() {
+            const baseUrl = document.getElementById('baseUrl').value;
+            const usuario = document.getElementById('usuario').value;
+            
+            await performLogin(baseUrl, usuario, 'contrasena_incorrecta', '❌ Login con contraseña incorrecta');
+        }
+
+        async function testLoginCamposVacios() {
+            const baseUrl = document.getElementById('baseUrl').value;
+            
+            await performLogin(baseUrl, '', '', '❌ Login con campos vacíos');
+        }
+
+        async function performLogin(baseUrl, usuario, contrasena, testName) {
+            showResult(`${testName}...\nUsuario: "${usuario}"\nContraseña: "${contrasena}"`, 'info');
+            
+            try {
+                const response = await fetch(`${baseUrl}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ usuario, contrasena })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    // Guardar token para pruebas posteriores
+                    localStorage.setItem('test_token', data.token);
+                    localStorage.setItem('test_user', JSON.stringify(data.user));
+                    
+                    showResult(`✅ ${testName} - EXITOSO!\n\n${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    const errorType = data.error || 'unknown_error';
+                    const errorMessage = data.message || 'Error desconocido';
+                    
+                    showResult(`❌ ${testName} - ERROR ESPERADO!\n\nTipo de error: ${errorType}\nMensaje: ${errorMessage}\n\nRespuesta completa:\n${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ ${testName} - ERROR DE CONEXIÓN:\n${error.message}`, 'error');
+            }
+        }
+
+        function checkSession() {
+            showResult('📋 Verificando sesión almacenada...', 'info');
+            
+            const token = localStorage.getItem('test_token');
+            const user = localStorage.getItem('test_user');
+            const loginData = localStorage.getItem('login_data');
+            
+            if (token && user) {
+                const userData = JSON.parse(user);
+                let sessionInfo = `✅ Sesión encontrada:\n\nToken: ${token.substring(0, 20)}...\nUsuario: ${userData.usuario}\nRol: ${userData.rol}`;
+                
+                if (loginData) {
+                    const login = JSON.parse(loginData);
+                    const loginTime = new Date(login.loginTime);
+                    const currentTime = new Date();
+                    const sessionAge = currentTime.getTime() - login.loginTime;
+                    const remainingTime = login.expiresIn - sessionAge;
+                    
+                    sessionInfo += `\n\nInformación de sesión:\nLogin: ${loginTime.toLocaleString()}\nEdad de sesión: ${Math.floor(sessionAge / (60 * 1000))} minutos\nTiempo restante: ${Math.floor(remainingTime / (60 * 60 * 1000))} horas`;
+                }
+                
+                showResult(sessionInfo, 'success');
+            } else {
+                showResult('❌ No hay sesión almacenada', 'error');
+            }
+        }
+
+        function extendSession() {
+            showResult('🔄 Extendiendo sesión...', 'info');
+            
+            const loginData = localStorage.getItem('login_data');
+            if (loginData) {
+                const login = JSON.parse(loginData);
+                login.loginTime = new Date().getTime();
+                localStorage.setItem('login_data', JSON.stringify(login));
+                
+                showResult('✅ Sesión extendida exitosamente!\n\nNuevo tiempo de login: ' + new Date().toLocaleString(), 'success');
+            } else {
+                showResult('❌ No hay datos de sesión para extender', 'error');
+            }
+        }
+
+        function clearSession() {
+            showResult('🗑️ Limpiando sesión...', 'info');
+            
+            localStorage.removeItem('test_token');
+            localStorage.removeItem('test_user');
+            localStorage.removeItem('login_data');
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_data');
+            
+            showResult('✅ Sesión limpiada exitosamente', 'success');
+        }
+
+        function simulateExpiredSession() {
+            showResult('⏰ Simulando sesión expirada...', 'info');
+            
+            const expiredLoginData = {
+                token: 'expired_token',
+                user: { usuario: 'test', rol: 'admin' },
+                loginTime: new Date().getTime() - (8 * 24 * 60 * 60 * 1000), // 8 días atrás
+                expiresIn: 7 * 24 * 60 * 60 * 1000 // 7 días
+            };
+            
+            localStorage.setItem('login_data', JSON.stringify(expiredLoginData));
+            localStorage.setItem('test_token', 'expired_token');
+            localStorage.setItem('test_user', JSON.stringify(expiredLoginData.user));
+            
+            showResult('✅ Sesión expirada simulada\n\nAhora verifica la sesión para ver cómo se maneja la expiración', 'success');
+        }
+
+        async function verifyToken() {
+            const baseUrl = document.getElementById('baseUrl').value;
+            const token = localStorage.getItem('test_token');
+            
+            if (!token) {
+                showResult('❌ No hay token para verificar. Haz login primero.', 'error');
+                return;
+            }
+            
+            showResult('✅ Verificando token...', 'info');
+            
+            try {
+                const response = await fetch(`${baseUrl}/api/verify`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showResult(`✅ Token válido!\n\n${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    showResult(`❌ Token inválido!\n\n${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Error al verificar token:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testProtectedRoute() {
+            const baseUrl = document.getElementById('baseUrl').value;
+            const token = localStorage.getItem('test_token');
+            
+            if (!token) {
+                showResult('❌ No hay token para acceder a ruta protegida. Haz login primero.', 'error');
+                return;
+            }
+            
+            showResult('🛡️ Probando ruta protegida...', 'info');
+            
+            try {
+                const response = await fetch(`${baseUrl}/api/archivos?limit=5`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`✅ Acceso a ruta protegida exitoso!\n\nArchivos encontrados: ${data.items?.length || 0}\n\n${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    showResult(`❌ Acceso denegado a ruta protegida!\n\n${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Error al acceder a ruta protegida:\n${error.message}`, 'error');
+            }
+        }
+
+        // Inicialización
+        window.onload = function() {
+            showResult('🚀 Test de autenticación cargado.\n\n1. Primero verifica la conexión\n2. Prueba los diferentes tipos de login\n3. Verifica la persistencia de sesión\n4. Prueba las rutas protegidas', 'info');
+        };
+    </script>
+</body>
+</html>

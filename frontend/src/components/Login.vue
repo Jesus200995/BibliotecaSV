@@ -172,12 +172,18 @@ async function handleLogin() {
       // Login exitoso
       emit('login-success', result.user)
     } else {
-      // Error en el login
-      errorMessage.value = result.message || 'Credenciales incorrectas'
+      // Mostrar mensaje de error específico basado en el tipo de error
+      if (result.error === 'usuario_no_encontrado') {
+        errorMessage.value = `El usuario "${formData.usuario}" no existe o está inactivo`
+      } else if (result.error === 'contrasena_incorrecta') {
+        errorMessage.value = 'La contraseña ingresada es incorrecta'
+      } else {
+        errorMessage.value = result.message || 'Error en las credenciales'
+      }
     }
   } catch (error) {
     console.error('Error en login:', error)
-    errorMessage.value = 'Error de conexión. Inténtalo de nuevo.'
+    errorMessage.value = 'Error de conexión con el servidor. Verifica tu conexión e inténtalo de nuevo.'
   } finally {
     loading.value = false
   }

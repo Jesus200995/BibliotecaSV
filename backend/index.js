@@ -1051,8 +1051,8 @@ app.post('/login', async (req, res) => {
       console.log(`Usuario no encontrado o inactivo: ${usuario}`);
       return res.status(401).json({
         success: false,
-        error: 'Credenciales incorrectas',
-        message: 'Usuario o contraseña incorrectos'
+        error: 'usuario_no_encontrado',
+        message: 'El usuario ingresado no existe o está inactivo'
       });
     }
 
@@ -1064,8 +1064,8 @@ app.post('/login', async (req, res) => {
       console.log(`Contraseña incorrecta para usuario: ${usuario}`);
       return res.status(401).json({
         success: false,
-        error: 'Credenciales incorrectas',
-        message: 'Usuario o contraseña incorrectos'
+        error: 'contrasena_incorrecta',
+        message: 'La contraseña ingresada es incorrecta'
       });
     }
 
