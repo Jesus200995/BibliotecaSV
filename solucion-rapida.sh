@@ -17,19 +17,64 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-echo "1. VERIFICANDO Y ARREGLANDO SERVICIOS..."
+echo "1. INSTALANDO DEPENDENCIAS NECESARIAS..."
 
-# Asegurar que los servicios estén corriendo
-systemctl start nginx
-systemctl enable nginx
+# Actualizar sistema
+apt update
 
-# Verificar PM2 para el usuario www-data
-if ! sudo -u www-data pm2 status | grep -q "biblioteca-backend"; then
-    echo "🔧 Iniciando aplicación con PM2..."
-    cd $APP_DIR/backend
-    sudo -u www-data NODE_ENV=production pm2 start ecosystem.config.js --env production
-    sudo -u www-data pm2 save
+# Instalar Node.js si no está instalado
+if ! command -v node &> /dev/null; then
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+    apt install -y nodejs
 fi
+
+# Instalar PM2 globalmente
+npm install -g pm2
+
+# Instalar nginx
+apt install -y nginx
+
+echo "2. CONFIGURANDO APLICACIÓN..."
+
+# Crear directorio y obtener código
+mkdir -p $APP_DIR
+cd $APP_DIR
+
+# Si existe git, actualizar, sino clonar
+if [ -d ".git" ]; then
+    git pull origin main
+else
+    git clone https://github.com/Jesus200995/BibliotecaSV.git .
+fi
+
+cd backend
+
+# Instalar dependencias del backend
+npm install
+
+# Crear archivo de configuración de producción
+cat > .env.production << 'EOF'
+DB_HOST=31.97.8.51
+DB_PORT=5432
+DB_NAME=sembrandodatos
+DB_USER=jesus
+DB_PASSWORD=2025
+DB_SSL=true
+PORT=3000
+NODE_ENV=production
+JWT_SECRET=biblioteca_secret_key_production_2025_secure
+FRONTEND_URL=https://biblioteca.sembrandodatos.com
+API_URL=https://api.biblioteca.sembrandodatos.com
+EOF
+
+# Configurar base de datos
+node setup_db.js
+
+# Detener cualquier instancia previa y iniciar con PM2
+pm2 delete biblioteca-backend 2>/dev/null || true
+NODE_ENV=production pm2 start index.js --name "biblioteca-backend"
+pm2 save
+pm2 startup
 
 echo "2. CONFIGURANDO FIREWALL..."
 
