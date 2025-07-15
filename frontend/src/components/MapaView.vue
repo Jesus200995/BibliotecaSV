@@ -276,7 +276,13 @@ const clusterGroup = ref(null)
 const heatmapLayer = ref(null)
 const markersLayer = ref(null)
 
-const BACKEND_URL = 'https://api.biblioteca.sembrandodatos.com'
+// Configurar axios y URLs del backend
+axios.defaults.timeout = 10000
+const BACKEND_URL = import.meta.env.DEV 
+  ? 'http://localhost:4000/api' 
+  : 'https://api.biblioteca.sembrandodatos.com/api'
+
+console.log('MapaView - Backend URL:', BACKEND_URL)
 
 // Observar cambios en marcadores para actualizar mapa
 watch([marcadores, tipoVista], () => {
@@ -384,12 +390,51 @@ const maxUbicacionCount = computed(() => {
 // Función para obtener archivos
 async function obtenerArchivos() {
   try {
-    const res = await axios.get(`${BACKEND_URL}/archivos`)
+    cargando.value = true
+    
+    // Agregar headers explícitos y configuración
+    const config = {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      timeout: 15000
+    }
+    
+    console.log('MapaView - Obteniendo archivos desde:', `${BACKEND_URL}/archivos`)
+    
+    const res = await axios.get(`${BACKEND_URL}/archivos?limit=1000`, config)
+    
+    console.log('MapaView - Respuesta recibida:', res.status, res.data)
+    
+    // Extraer archivos de la respuesta
     archivos.value = res.data.items || res.data || []
+    
+    console.log('MapaView - Archivos cargados:', archivos.value.length)
+    console.log('MapaView - Ejemplo de archivo:', archivos.value[0])
+    
     await generarMarcadores()
   } catch (err) {
-    console.error('Error al cargar archivos:', err)
-    archivos.value = []
+    console.error('MapaView - Error al cargar archivos:', err)
+    
+    // Intentar con URL alternativa
+    if (err.response?.status === 404 || err.code === 'ECONNREFUSED') {
+      try {
+        const fallbackUrl = BACKEND_URL.replace('/api', '')
+        console.log('MapaView - Intentando URL fallback:', `${fallbackUrl}/archivos`)
+        
+        const res = await axios.get(`${fallbackUrl}/archivos?limit=1000`)
+        archivos.value = res.data.items || res.data || []
+        
+        console.log('MapaView - Fallback exitoso, archivos:', archivos.value.length)
+        await generarMarcadores()
+      } catch (fallbackErr) {
+        console.error('MapaView - Error en fallback:', fallbackErr)
+        archivos.value = []
+      }
+    } else {
+      archivos.value = []
+    }
   } finally {
     cargando.value = false
   }
@@ -607,10 +652,11 @@ function agregarHeatmap() {
     blur: 15,
     maxZoom: 17,
     gradient: {
-      0.4: 'blue',
-      0.6: 'cyan',
-      0.7: 'lime',
-      0.8: 'yellow',
+      0.0: 'blue',
+      0.2: 'cyan', 
+      0.4: 'lime',
+      0.6: 'yellow',
+      0.8: 'orange',
       1.0: 'red'
     }
   })
@@ -647,13 +693,12 @@ function seleccionarUbicacionMapa(marcador) {
   ubicacionSeleccionada.value = {
     nombre: marcador.ubicacion,
     cantidad: marcador.cantidad,
-    tipos: marcador.tipos,
-    archivos: marcador.archivos
+    tipos: marcador.tipos
   }
   
   // Centrar mapa en la ubicación seleccionada
   if (mapaInstance.value) {
-    mapaInstance.value.setView(marcador.posicion, 10)
+    mapaInstance.value.setView(marcador.posicion, 8)
   }
 }
 

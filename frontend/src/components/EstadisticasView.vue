@@ -344,29 +344,66 @@ const estadisticas = ref({
   maxUbicacionCount: 0
 })
 
-const BACKEND_URL = 'https://api.biblioteca.sembrandodatos.com'
+// Configurar axios y URLs del backend
+axios.defaults.timeout = 10000
+const BACKEND_URL = import.meta.env.DEV 
+  ? 'http://localhost:4000/api' 
+  : 'https://api.biblioteca.sembrandodatos.com/api'
+
+console.log('EstadisticasView - Backend URL:', BACKEND_URL)
 
 // Función para obtener estadísticas
 async function obtenerEstadisticas() {
   try {
     cargando.value = true
     
+    // Agregar headers explícitos y configuración
+    const config = {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      timeout: 15000
+    }
+    
+    console.log('EstadisticasView - Obteniendo datos desde:', `${BACKEND_URL}/archivos`)
+    
     // Obtener todos los archivos (sin paginación para estadísticas completas)
-    const response = await axios.get(`${BACKEND_URL}/archivos?limit=1000`)
+    const response = await axios.get(`${BACKEND_URL}/archivos?limit=1000`, config)
+    
+    console.log('EstadisticasView - Respuesta recibida:', response.status, response.data)
     
     // Extraer los archivos del objeto de respuesta
     const archivos = response.data.items || response.data || []
     
-    console.log('Archivos obtenidos:', archivos.length)
-    console.log('Ejemplo de archivo:', archivos[0])
+    console.log('EstadisticasView - Archivos obtenidos para estadísticas:', archivos.length)
+    console.log('EstadisticasView - Ejemplo de archivo:', archivos[0])
 
     // Calcular estadísticas
     calcularEstadisticas(archivos)
     
   } catch (error) {
-    console.error('Error al obtener estadísticas:', error)
-    // Datos de ejemplo en caso de error
-    calcularEstadisticasEjemplo()
+    console.error('EstadisticasView - Error al obtener estadísticas:', error)
+    
+    // Intentar con URL alternativa
+    if (error.response?.status === 404 || error.code === 'ECONNREFUSED') {
+      try {
+        const fallbackUrl = BACKEND_URL.replace('/api', '')
+        console.log('EstadisticasView - Intentando URL fallback:', `${fallbackUrl}/archivos`)
+        
+        const response = await axios.get(`${fallbackUrl}/archivos?limit=1000`)
+        const archivos = response.data.items || response.data || []
+        
+        console.log('EstadisticasView - Fallback exitoso, archivos:', archivos.length)
+        calcularEstadisticas(archivos)
+      } catch (fallbackError) {
+        console.error('EstadisticasView - Error en fallback:', fallbackError)
+        calcularEstadisticasEjemplo()
+      }
+    } else {
+      // Datos de ejemplo en caso de error
+      calcularEstadisticasEjemplo()
+    }
   } finally {
     cargando.value = false
   }

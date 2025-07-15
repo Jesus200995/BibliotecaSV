@@ -238,24 +238,63 @@ const estadisticas = ref({
   maxUbicacionCount: 0
 })
 
-const BACKEND_URL = 'https://api.biblioteca.sembrandodatos.com'
+// Configurar axios y URLs del backend
+axios.defaults.timeout = 10000
+const BACKEND_URL = import.meta.env.DEV 
+  ? 'http://localhost:4000/api' 
+  : 'https://api.biblioteca.sembrandodatos.com/api'
+
+console.log('EstadisticasViewNew - Backend URL:', BACKEND_URL)
 
 // Función para obtener estadísticas
 async function obtenerEstadisticas() {
   try {
     cargando.value = true
     
+    // Agregar headers explícitos y configuración
+    const config = {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      timeout: 15000
+    }
+    
+    console.log('EstadisticasViewNew - Obteniendo datos desde:', `${BACKEND_URL}/archivos`)
+    
     // Obtener todos los archivos
-    const response = await axios.get(`${BACKEND_URL}/archivos`)
-    const archivos = response.data
+    const response = await axios.get(`${BACKEND_URL}/archivos?limit=1000`, config)
+    
+    console.log('EstadisticasViewNew - Respuesta recibida:', response.status, response.data)
+    
+    // Extraer los archivos del objeto de respuesta
+    const archivos = response.data.items || response.data || []
+    
+    console.log('EstadisticasViewNew - Archivos obtenidos:', archivos.length)
 
     // Calcular estadísticas
     calcularEstadisticas(archivos)
     
   } catch (error) {
-    console.error('Error al obtener estadísticas:', error)
-    // Datos de ejemplo en caso de error
-    calcularEstadisticasEjemplo()
+    console.error('EstadisticasViewNew - Error al obtener estadísticas:', error)
+    
+    // Intentar con URL alternativa
+    if (error.response?.status === 404 || error.code === 'ECONNREFUSED') {
+      try {
+        const fallbackUrl = BACKEND_URL.replace('/api', '')
+        console.log('EstadisticasViewNew - Intentando URL fallback:', fallbackUrl)
+        
+        const response = await axios.get(`${fallbackUrl}/archivos?limit=1000`)
+        const archivos = response.data.items || response.data || []
+        calcularEstadisticas(archivos)
+      } catch (fallbackError) {
+        console.error('EstadisticasViewNew - Error en fallback:', fallbackError)
+        calcularEstadisticasEjemplo()
+      }
+    } else {
+      // Datos de ejemplo en caso de error
+      calcularEstadisticasEjemplo()
+    }
   } finally {
     cargando.value = false
   }

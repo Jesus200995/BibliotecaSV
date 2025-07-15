@@ -1,74 +1,168 @@
 /**
- * Utilidades para manejo de archivos y tamaños
- * Funciones centralizadas para evitar duplicación de código
+ * Funciones utilitarias centralizadas para manejo de archivos
  */
 
 /**
- * Convierte bytes a formato legible (MB, GB, etc.)
- * Función unificada para Dashboard, Archivos y Estadísticas
+ * Formatea el tamaño de archivo en bytes a una representación legible
  * @param {number} bytes - Tamaño en bytes
- * @returns {string} - Tamaño formateado (ej: "18.62 MB")
+ * @returns {string} - Tamaño formateado (ej: "1.5 MB")
  */
 export function formatFileSize(bytes) {
-  // Si no hay bytes o es 0, mostrar "0.00 MB" consistentemente
-  if (!bytes || bytes === 0) return '0.00 MB'
+  if (bytes === 0 || !bytes) return '0 Bytes'
   
+  const k = 1024
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
-  const i = Math.floor(Math.log(bytes) / Math.log(1024))
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
   
-  // Asegurar que siempre muestre 2 decimales para MB y superior
-  const formattedSize = (bytes / Math.pow(1024, i)).toFixed(2)
-  
-  return parseFloat(formattedSize) + ' ' + sizes[i]
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
 /**
- * Calcula el tamaño total de un array de archivos
- * Suma segura que maneja diferentes formatos de datos
- * @param {Array} archivos - Array de archivos con propiedad 'tamano'
- * @returns {number} - Total en bytes
+ * Calcula el tamaño total de una lista de archivos
+ * @param {Array} archivos - Array de objetos archivo con propiedad 'tamano'
+ * @returns {number} - Tamaño total en bytes
  */
 export function calculateTotalSize(archivos) {
   if (!Array.isArray(archivos)) return 0
   
   return archivos.reduce((total, archivo) => {
-    let tamano = 0
-    
-    if (archivo.tamano) {
-      // Si ya es un número
-      if (typeof archivo.tamano === 'number') {
-        tamano = archivo.tamano
-      } else if (typeof archivo.tamano === 'string') {
-        // Si es string, intentar parsearlo (remover caracteres no numéricos)
-        const num = parseInt(archivo.tamano.replace(/[^\d]/g, ''))
-        tamano = isNaN(num) ? 0 : num
-      }
-    }
-    
-    return total + tamano
+    const tamano = archivo.tamano || archivo.size || 0
+    return total + (typeof tamano === 'number' ? tamano : 0)
   }, 0)
 }
 
 /**
- * Convierte bytes específicamente a MB con formato consistente
- * Usado para mostrar siempre en MB en las estadísticas principales
+ * Convierte bytes a megabytes
  * @param {number} bytes - Tamaño en bytes
- * @returns {string} - Formato "XX.XX MB"
+ * @returns {number} - Tamaño en MB
  */
 export function bytesToMB(bytes) {
-  if (!bytes || bytes === 0) return '0.00 MB'
-  
-  const totalMB = bytes / (1024 * 1024)
-  return totalMB.toFixed(2) + ' MB'
+  if (bytes === 0 || !bytes) return 0
+  return bytes / (1024 * 1024)
 }
 
 /**
- * Valida el tamaño máximo permitido para subida de archivos
- * @param {number} bytes - Tamaño del archivo en bytes
- * @param {number} maxMB - Tamaño máximo permitido en MB (default: 50)
+ * Valida si el tamaño de archivo está dentro del límite permitido
+ * @param {number} fileSize - Tamaño del archivo en bytes
+ * @param {number} maxSizeMB - Tamaño máximo permitido en MB
  * @returns {boolean} - true si el archivo es válido
  */
-export function validateFileSize(bytes, maxMB = 50) {
-  const maxBytes = maxMB * 1024 * 1024
-  return bytes <= maxBytes
+export function validateFileSize(fileSize, maxSizeMB = 50) {
+  if (!fileSize || typeof fileSize !== 'number') return false
+  
+  const maxSizeBytes = maxSizeMB * 1024 * 1024
+  return fileSize <= maxSizeBytes
+}
+
+/**
+ * Obtiene la extensión de un archivo
+ * @param {string} filename - Nombre del archivo
+ * @returns {string} - Extensión del archivo (sin punto)
+ */
+export function getFileExtension(filename) {
+  if (!filename || typeof filename !== 'string') return ''
+  
+  const lastDot = filename.lastIndexOf('.')
+  if (lastDot === -1 || lastDot === filename.length - 1) return ''
+  
+  return filename.substring(lastDot + 1).toUpperCase()
+}
+
+/**
+ * Determina el tipo MIME basado en la extensión del archivo
+ * @param {string} extension - Extensión del archivo
+ * @returns {string} - Tipo MIME
+ */
+export function getMimeType(extension) {
+  if (!extension) return 'application/octet-stream'
+  
+  const mimeTypes = {
+    'PDF': 'application/pdf',
+    'JPG': 'image/jpeg',
+    'JPEG': 'image/jpeg',
+    'PNG': 'image/png',
+    'GIF': 'image/gif',
+    'DOC': 'application/msword',
+    'DOCX': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'XLS': 'application/vnd.ms-excel',
+    'XLSX': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'PPT': 'application/vnd.ms-powerpoint',
+    'PPTX': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'TXT': 'text/plain',
+    'CSV': 'text/csv',
+    'ZIP': 'application/zip'
+  }
+  
+  return mimeTypes[extension.toUpperCase()] || 'application/octet-stream'
+}
+
+/**
+ * Valida si un archivo es de imagen
+ * @param {string} filename - Nombre del archivo
+ * @returns {boolean} - true si es imagen
+ */
+export function isImageFile(filename) {
+  const extension = getFileExtension(filename)
+  const imageExtensions = ['JPG', 'JPEG', 'PNG', 'GIF', 'BMP', 'WEBP', 'SVG']
+  return imageExtensions.includes(extension)
+}
+
+/**
+ * Valida si un archivo es de documento
+ * @param {string} filename - Nombre del archivo
+ * @returns {boolean} - true si es documento
+ */
+export function isDocumentFile(filename) {
+  const extension = getFileExtension(filename)
+  const documentExtensions = ['PDF', 'DOC', 'DOCX', 'XLS', 'XLSX', 'PPT', 'PPTX', 'TXT', 'CSV']
+  return documentExtensions.includes(extension)
+}
+
+/**
+ * Calcula estadísticas básicas de una lista de archivos
+ * @param {Array} archivos - Array de archivos
+ * @returns {Object} - Objeto con estadísticas
+ */
+export function calculateFileStats(archivos) {
+  if (!Array.isArray(archivos)) {
+    return {
+      totalFiles: 0,
+      totalSize: 0,
+      averageSize: 0,
+      fileTypes: {},
+      largestFile: null,
+      smallestFile: null
+    }
+  }
+  
+  const stats = {
+    totalFiles: archivos.length,
+    totalSize: calculateTotalSize(archivos),
+    averageSize: 0,
+    fileTypes: {},
+    largestFile: null,
+    smallestFile: null
+  }
+  
+  if (archivos.length === 0) return stats
+  
+  // Calcular tamaño promedio
+  stats.averageSize = stats.totalSize / archivos.length
+  
+  // Contar tipos de archivo
+  archivos.forEach(archivo => {
+    const tipo = archivo.tipo || getFileExtension(archivo.nombre) || 'Sin tipo'
+    stats.fileTypes[tipo] = (stats.fileTypes[tipo] || 0) + 1
+    
+    // Encontrar archivo más grande y más pequeño
+    const tamano = archivo.tamano || 0
+    if (!stats.largestFile || tamano > (stats.largestFile.tamano || 0)) {
+      stats.largestFile = archivo
+    }
+    if (!stats.smallestFile || tamano < (stats.smallestFile.tamano || Infinity)) {
+      stats.smallestFile = archivo
+    }
+  })
+  
+  return stats
 }
