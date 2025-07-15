@@ -49,8 +49,8 @@ router.post('/login', async (req, res) => {
       console.log(`Usuario no encontrado o inactivo: ${usuario}`);
       return res.status(401).json({
         success: false,
-        error: 'usuario_no_encontrado',
-        message: 'El usuario ingresado no existe o está inactivo'
+        error: 'Credenciales incorrectas',
+        message: 'Usuario o contraseña incorrectos'
       });
     }
 
@@ -63,8 +63,8 @@ router.post('/login', async (req, res) => {
       console.log(`Contraseña incorrecta para usuario: ${usuario}`);
       return res.status(401).json({
         success: false,
-        error: 'contrasena_incorrecta',
-        message: 'La contraseña ingresada es incorrecta'
+        error: 'Credenciales incorrectas',
+        message: 'Usuario o contraseña incorrectos'
       });
     }
 
