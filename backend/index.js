@@ -25,6 +25,7 @@ console.log(`Puerto: ${process.env.DB_PORT}`);
 console.log(`Base de datos: ${process.env.DB_NAME}`);
 console.log(`Usuario: ${process.env.DB_USER}`);
 console.log(`Contraseña: ${process.env.DB_PASSWORD ? '******' : 'no configurada'}`);
+console.log(`JWT_SECRET: ${process.env.JWT_SECRET ? '******' : 'NO CONFIGURADO'}`);
 
 // Configuración de la conexión a PostgreSQL
 const pool = new Pool({
