@@ -141,16 +141,54 @@ import MapaView from './components/MapaView.vue'
 
 const archivoSeleccionado = ref(null)
 const vistaActual = ref('dashboard') // Estado para controlar la vista actual
-const BACKEND_URL = 'https://api.biblioteca.sembrandodatos.com/api'
+
+// Configurar URL del backend
+const BACKEND_URL = import.meta.env.DEV 
+  ? 'http://localhost:4000/api' 
+  : 'https://api.biblioteca.sembrandodatos.com/api'
+
+console.log('App - Backend URL configurada:', BACKEND_URL)
 
 async function verFicha(id) {
+  console.log('App - Obteniendo ficha para archivo ID:', id)
+  
   try {
+    // Agregar headers y timeout
+    const config = {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      timeout: 10000
+    }
+    
+    console.log('App - Petición a:', `${BACKEND_URL}/archivos/${id}`)
+    
     // Obtener los datos del archivo desde el backend
-    const response = await axios.get(`${BACKEND_URL}/archivos/${id}`)
+    const response = await axios.get(`${BACKEND_URL}/archivos/${id}`, config)
+    
+    console.log('App - Datos del archivo recibidos:', response.data)
     archivoSeleccionado.value = response.data
+    
   } catch (error) {
-    console.error('Error al obtener datos del archivo:', error)
-    alert('No se pudo cargar la información del archivo')
+    console.error('App - Error al obtener datos del archivo:', error)
+    
+    // Intentar con URL alternativa
+    if (error.response?.status === 404 || error.code === 'ECONNREFUSED') {
+      try {
+        const fallbackUrl = BACKEND_URL.replace('/api', '')
+        console.log('App - Intentando fallback:', `${fallbackUrl}/archivos/${id}`)
+        
+        const response = await axios.get(`${fallbackUrl}/archivos/${id}`)
+        archivoSeleccionado.value = response.data
+        console.log('App - Fallback exitoso')
+      } catch (fallbackError) {
+        console.error('App - Error en fallback:', fallbackError)
+        alert('No se pudo cargar la información del archivo')
+      }
+    } else {
+      alert('No se pudo cargar la información del archivo: ' + error.message)
+    }
   }
 }
 

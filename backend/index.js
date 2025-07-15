@@ -49,14 +49,46 @@ const upload = multer({
 const app = express();
 const PORT = 4000;
 
-// Configurar CORS específico para producción
+// Configurar CORS específico y más permisivo
 app.use(cors({
-  origin: ['https://biblioteca.sembrandodatos.com', 'http://localhost:5173', 'http://localhost:3000'],
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (como aplicaciones móviles o curl)
+    if (!origin) return callback(null, true);
+    
+    // Lista de orígenes permitidos
+    const allowedOrigins = [
+      'https://biblioteca.sembrandodatos.com',
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'http://localhost:4173',
+      'https://api.biblioteca.sembrandodatos.com'
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // En desarrollo, permitir cualquier localhost
+    if (origin && origin.includes('localhost')) {
+      return callback(null, true);
+    }
+    
+    return callback(null, true); // Para desarrollo, permitir todo temporalmente
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
-app.use(express.json());
+
+// Middleware para parsear JSON y manejar OPTIONS
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Manejar preflight requests
+app.options('*', cors());
+
 // Servir archivos estáticos desde la carpeta public
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -85,14 +117,17 @@ app.get('/db-status', async (req, res) => {
   }
 });
 
-// Endpoint para listar archivos (optimizado, con paginación)
+// Endpoint para listar archivos (simplificado y corregido)
 app.get('/archivos', async (req, res) => {
+  console.log('=== GET /archivos ===');
+  console.log('Headers:', req.headers);
+  
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
+    const limit = parseInt(req.query.limit) || 100; // Aumentar límite por defecto
     const offset = (page - 1) * limit;
     
-    // Excluir el campo archivo_contenido para mejorar el rendimiento
+    // Consulta simplificada sin excluir archivo_contenido para debug
     const query = `
       SELECT id, nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, 
              archivo_url, fuente, responsable, alcance_geografico, validacion, observaciones,
@@ -102,20 +137,20 @@ app.get('/archivos', async (req, res) => {
       LIMIT $1 OFFSET $2
     `;
     
+    console.log('Ejecutando consulta con límite:', limit, 'offset:', offset);
+    
+    const result = await pool.query(query, [limit, offset]);
+    console.log('Resultados encontrados:', result.rows.length);
+    
     // Consulta para el conteo total
-    const countQuery = `SELECT COUNT(*) FROM catalogo_archivos`;
-    
-    // Ejecutar ambas consultas en paralelo
-    const [result, countResult] = await Promise.all([
-      pool.query(query, [limit, offset]),
-      pool.query(countQuery)
-    ]);
-    
-    // Construir respuesta con metadatos de paginación
+    const countResult = await pool.query('SELECT COUNT(*) FROM catalogo_archivos');
     const totalItems = parseInt(countResult.rows[0].count);
     const totalPages = Math.ceil(totalItems / limit);
     
-    res.json({
+    console.log('Total de archivos en BD:', totalItems);
+    
+    // Respuesta en formato que espera el frontend
+    const response = {
       items: result.rows,
       metadata: {
         page,
@@ -123,10 +158,16 @@ app.get('/archivos', async (req, res) => {
         totalItems,
         totalPages
       }
-    });
+    };
+    
+    // Asegurar headers CORS en la respuesta
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
+    res.json(response);
   } catch (error) {
     console.error('Error al listar archivos:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
 });
 
@@ -652,12 +693,13 @@ app.get('/api/db-status', async (req, res) => {
 
 // Duplicar rutas de archivos con prefijo /api
 app.get('/api/archivos', async (req, res) => {
+  console.log('=== GET /api/archivos ===');
+  
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
+    const limit = parseInt(req.query.limit) || 100;
     const offset = (page - 1) * limit;
     
-    // Excluir el campo archivo_contenido para mejorar el rendimiento
     const query = `
       SELECT id, nombre, descripcion, tipo, fecha_actualizacion, tamano, etiquetas, 
              archivo_url, fuente, responsable, alcance_geografico, validacion, observaciones,
@@ -667,18 +709,18 @@ app.get('/api/archivos', async (req, res) => {
       LIMIT $1 OFFSET $2
     `;
     
-    // Consulta para el conteo total
-    const countQuery = `SELECT COUNT(*) FROM catalogo_archivos`;
-    
-    // Ejecutar ambas consultas en paralelo
     const [result, countResult] = await Promise.all([
       pool.query(query, [limit, offset]),
-      pool.query(countQuery)
+      pool.query('SELECT COUNT(*) FROM catalogo_archivos')
     ]);
     
-    // Construir respuesta con metadatos de paginación
     const totalItems = parseInt(countResult.rows[0].count);
     const totalPages = Math.ceil(totalItems / limit);
+    
+    console.log('API: Resultados encontrados:', result.rows.length, 'de', totalItems);
+    
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Credentials', 'true');
     
     res.json({
       items: result.rows,
@@ -690,7 +732,7 @@ app.get('/api/archivos', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error al listar archivos:', error);
+    console.error('Error en API /archivos:', error);
     res.status(500).json({ error: error.message });
   }
 });

@@ -617,7 +617,17 @@ style.innerHTML = `
 `
 document.head.appendChild(style)
 
-const BACKEND_URL = 'https://api.biblioteca.sembrandodatos.com/api'
+// Configurar axios por defecto
+axios.defaults.timeout = 10000 // 10 segundos
+axios.defaults.headers.common['Content-Type'] = 'application/json'
+
+// URLs del backend - usar la URL correcta según el entorno
+const BACKEND_URL = import.meta.env.DEV 
+  ? 'http://localhost:4000/api' 
+  : 'https://api.biblioteca.sembrandodatos.com/api'
+
+console.log('Backend URL configurada:', BACKEND_URL)
+
 const archivos = ref([])
 const archivoSubir = ref(null)
 const archivoNombre = ref('')
@@ -729,16 +739,70 @@ const totalUbicaciones = computed(() => {
 })
 
 onMounted(async () => {
+  console.log('ArchivoTable montado, cargando archivos...')
   await cargarArchivos()
 })
 
 async function cargarArchivos() {
+  console.log('Iniciando carga de archivos desde:', BACKEND_URL)
+  
   try {
-    const res = await axios.get(`${BACKEND_URL}/archivos`)
-    archivos.value = res.data.items || res.data || []
+    // Agregar headers explícitos
+    const config = {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      timeout: 15000 // 15 segundos de timeout
+    }
+    
+    console.log('Realizando petición GET a:', `${BACKEND_URL}/archivos`)
+    
+    const res = await axios.get(`${BACKEND_URL}/archivos`, config)
+    
+    console.log('Respuesta recibida:', res.status, res.data)
+    
+    // Manejar diferentes formatos de respuesta
+    if (res.data && res.data.items) {
+      archivos.value = res.data.items
+      console.log('Archivos cargados desde items:', archivos.value.length)
+    } else if (Array.isArray(res.data)) {
+      archivos.value = res.data
+      console.log('Archivos cargados directamente:', archivos.value.length)
+    } else {
+      console.warn('Formato de respuesta inesperado:', res.data)
+      archivos.value = []
+    }
+    
   } catch (err) {
-    console.error('Error al cargar archivos:', err)
-    archivos.value = []
+    console.error('Error detallado al cargar archivos:', {
+      message: err.message,
+      status: err.response?.status,
+      statusText: err.response?.statusText,
+      data: err.response?.data,
+      config: err.config
+    })
+    
+    // Intentar con la URL sin /api como fallback
+    if (err.response?.status === 404 || err.code === 'ECONNREFUSED') {
+      console.log('Intentando URL alternativa...')
+      try {
+        const fallbackUrl = BACKEND_URL.replace('/api', '')
+        console.log('URL fallback:', fallbackUrl)
+        
+        const res = await axios.get(`${fallbackUrl}/archivos`)
+        console.log('Respuesta fallback:', res.data)
+        
+        archivos.value = res.data.items || res.data || []
+      } catch (fallbackErr) {
+        console.error('Error en fallback:', fallbackErr)
+        archivos.value = []
+        alert('Error de conexión con el servidor. Verifica que el backend esté funcionando.')
+      }
+    } else {
+      archivos.value = []
+      alert('Error al cargar archivos: ' + err.message)
+    }
   }
 }
 
@@ -783,18 +847,24 @@ async function subirArchivo() {
     const formData = new FormData()
     formData.append("file", archivoSubir.value)
     formData.append("descripcion", descripcion.value)
-    // Las etiquetas se envían como string gracias a la computed property
     formData.append("etiquetas", etiquetas.value)
     formData.append("responsable", responsable.value)
     formData.append("fuente", fuente.value)
-    // Enviamos solo los nombres de los lugares como una cadena separada por comas
     formData.append("alcance", alcanceArray.value.map(lugar => lugar.name).join(", "))
     formData.append("validacion", validacion.value)
     formData.append("observaciones", observaciones.value)
     
+    console.log('Subiendo archivo a:', `${BACKEND_URL}/archivos/upload`)
+    
     const response = await axios.post(`${BACKEND_URL}/archivos/upload`, formData, {
-      headers: { "Content-Type": "multipart/form-data" }
+      headers: { 
+        "Content-Type": "multipart/form-data",
+        "Accept": "application/json"
+      },
+      timeout: 30000 // 30 segundos para uploads
     })
+    
+    console.log('Archivo subido exitosamente:', response.data)
     
     // Cerrar modal de subida
     modalVisible.value = false
@@ -824,9 +894,17 @@ async function subirArchivo() {
     await cargarArchivos()
   } catch (err) {
     console.error('Error al subir el archivo:', err)
-    alert("Error al subir el archivo: " + (err.response?.data?.error || err.message))
+    
+    // Mensaje de error más descriptivo
+    let errorMsg = "Error al subir el archivo"
+    if (err.response?.data?.error) {
+      errorMsg += ": " + err.response.data.error
+    } else if (err.message) {
+      errorMsg += ": " + err.message
+    }
+    
+    alert(errorMsg)
   } finally {
-    // Desactivar indicador de carga
     cargando.value = false
   }
 }

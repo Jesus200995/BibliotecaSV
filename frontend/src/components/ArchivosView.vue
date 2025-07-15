@@ -685,7 +685,7 @@
           </h3>
           <button 
             @click="modalSubidaVisible = false" 
-            class="text-white hover:text-purple-100 transition-colors p-1 rounded-full hover:bg-white/20"
+            class="text-white hover:text-purple-100 transition-colores p-1 rounded-full hover:bg-white/20"
           >
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -810,7 +810,7 @@
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
+                    </svg>
                     </button>
                   </div>
                   
@@ -960,14 +960,14 @@
             <button 
               type="button" 
               @click="modalSubidaVisible = false" 
-              class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 transition-colors min-w-[100px]"
+              class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 transition-colores min-w-[100px]"
             >
               Cancelar
             </button>
             <button 
               type="submit" 
               :disabled="subiendo"
-              class="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-colors text-sm font-medium min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              class="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-colores text-sm font-medium min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               <svg v-if="subiendo" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -1114,7 +1114,14 @@ defineEmits(['ver'])
 // Variables reactivas
 const archivos = ref([])
 const cargandoPagina = ref(false)
-const BACKEND_URL = 'https://api.biblioteca.sembrandodatos.com/api'
+
+// Configurar axios y URLs
+axios.defaults.timeout = 10000
+const BACKEND_URL = import.meta.env.DEV 
+  ? 'http://localhost:4000/api' 
+  : 'https://api.biblioteca.sembrandodatos.com/api'
+
+console.log('ArchivosView - Backend URL:', BACKEND_URL)
 
 // Variables para el modal de edición
 const modalEditarVisible = ref(false)
@@ -1316,19 +1323,56 @@ function getValidationText(validacion) {
 
 // Cargar archivos al montar el componente
 onMounted(async () => {
+  console.log('ArchivosView montado')
   await cargarArchivos()
 })
 
 async function cargarArchivos() {
+  console.log('ArchivosView - Cargando archivos...')
+  
   try {
     cargandoPagina.value = true
     
-    const res = await axios.get(`${BACKEND_URL}/archivos`)
+    const config = {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      timeout: 15000
+    }
+    
+    console.log('ArchivosView - Petición a:', `${BACKEND_URL}/archivos`)
+    
+    const res = await axios.get(`${BACKEND_URL}/archivos`, config)
+    
+    console.log('ArchivosView - Respuesta:', res.status, res.data)
     
     // Obtener todos los archivos sin paginación para el sidebar
     archivos.value = res.data.items || res.data || []
+    
+    console.log('ArchivosView - Archivos cargados:', archivos.value.length)
+    
   } catch (err) {
-    console.error('Error al cargar archivos:', err)
+    console.error('ArchivosView - Error al cargar archivos:', err)
+    
+    // Intentar URL alternativa
+    if (err.response?.status === 404 || err.code === 'ECONNREFUSED') {
+      try {
+        const fallbackUrl = BACKEND_URL.replace('/api', '')
+        console.log('ArchivosView - Intentando fallback:', fallbackUrl)
+        
+        const res = await axios.get(`${fallbackUrl}/archivos`)
+        archivos.value = res.data.items || res.data || []
+        console.log('ArchivosView - Fallback exitoso:', archivos.value.length)
+      } catch (fallbackErr) {
+        console.error('ArchivosView - Error en fallback:', fallbackErr)
+        archivos.value = []
+        mostrarNotificacion('Error de conexión con el servidor', 'error')
+      }
+    } else {
+      archivos.value = []
+      mostrarNotificacion('Error al cargar archivos: ' + err.message, 'error')
+    }
   } finally {
     cargandoPagina.value = false
   }
