@@ -1,7 +1,7 @@
 // Configuración centralizada del API
 export const API_CONFIG = {
   // USAR VPS DIRECTAMENTE - Backend corriendo en el VPS
-  BASE_URL: 'http://srv824686',
+  BASE_URL: 'http://31.97.8.51',
   APP_URL: import.meta.env.VITE_APP_URL || 'http://localhost:5173',
   
   // Configuración de timeouts
