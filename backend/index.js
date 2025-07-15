@@ -69,6 +69,16 @@ const PORT = process.env.PORT || 4000;
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// Middleware para limpiar headers CORS duplicados (NGINX maneja CORS)
+app.use((req, res, next) => {
+  // Eliminar cualquier header CORS que pueda estar duplicado
+  res.removeHeader('Access-Control-Allow-Origin');
+  res.removeHeader('Access-Control-Allow-Methods');
+  res.removeHeader('Access-Control-Allow-Headers');
+  res.removeHeader('Access-Control-Allow-Credentials');
+  next();
+});
+
 // Servir archivos estáticos desde la carpeta public
 app.use(express.static(path.join(__dirname, 'public')));
 
