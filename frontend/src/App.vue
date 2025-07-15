@@ -5,9 +5,9 @@
   <!-- Mostrar aplicación principal si está autenticado -->
   <div v-else class="flex h-screen w-full bg-gray-50 overflow-hidden">
     <!-- Sidebar -->
-    <aside class="w-64 bg-purple-700 text-white shadow-lg flex-shrink-0 flex flex-col h-screen">
+    <aside class="w-64 bg-purple-700 text-white shadow-lg flex-shrink-0">
       <!-- Logo y título -->
-      <div class="p-5 border-b border-purple-600 flex flex-col items-center flex-shrink-0">
+      <div class="p-5 border-b border-purple-600 flex flex-col items-center">
         <div class="mb-3 book-container">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <!-- Libro base -->
@@ -31,101 +31,61 @@
         <div class="text-xs mt-2 font-extrabold biblioteca-gradient uppercase">BIBLIOTECA DE DATOS</div>
       </div>
       
-      <!-- Menú de navegación - Área expandible -->
-      <div class="flex-1 flex flex-col overflow-hidden">
-        <!-- Contenido superior del menú -->
-        <div class="flex-1 overflow-y-auto px-0 py-5">
-          <!-- Botón Geoportal -->
-          <div class="flex justify-center mb-4 px-4">
-            <a href="https://sembrandodatos.com/" target="_blank" 
-               class="flex items-center px-4 py-2 rounded-full shadow-lg w-full geoportal-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
-              </svg>
-              <span class="text-sm text-white font-medium">Ir a Inicio Geoportal</span>
-            </a>
-          </div>
-          
-          <div class="px-4 py-3 text-xs uppercase font-semibold text-purple-200">
-            Principal
-          </div>
-          
-          <a href="#" @click="vistaActual = 'dashboard'" 
-             class="flex items-center px-6 py-3 text-purple-100 transition-colors"
-             :class="vistaActual === 'dashboard' ? 'bg-purple-800 border-l-4 border-white' : 'hover:bg-purple-800'">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z" />
+      <!-- Menú de navegación -->
+      <nav class="mt-5 overflow-y-auto" style="height: calc(100vh - 80px);">
+        <!-- Botón Geoportal -->
+        <div class="flex justify-center mb-4 px-4">
+          <a href="https://sembrandodatos.com/" target="_blank" 
+             class="flex items-center px-4 py-2 rounded-full shadow-lg w-full geoportal-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
             </svg>
-            Dashboard
-          </a>
-          
-          <a href="#" @click="vistaActual = 'archivos'" 
-             class="flex items-center px-6 py-3 text-purple-100 transition-colors"
-             :class="vistaActual === 'archivos' ? 'bg-purple-800 border-l-4 border-white' : 'hover:bg-purple-800'">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Archivos
-          </a>
-
-          <a href="#" @click="vistaActual = 'estadisticas'" 
-             class="flex items-center px-6 py-3 text-purple-100 transition-colors"
-             :class="vistaActual === 'estadisticas' ? 'bg-purple-800 border-l-4 border-white' : 'hover:bg-purple-800'">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            Estadísticas
-          </a>
-
-          <a href="#" @click="vistaActual = 'mapa'" 
-             class="flex items-center px-6 py-3 text-purple-100 transition-colors"
-             :class="vistaActual === 'mapa' ? 'bg-purple-800 border-l-4 border-white' : 'hover:bg-purple-800'">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-            </svg>
-            Mapa
+            <span class="text-sm text-white font-medium">Ir a Inicio Geoportal</span>
           </a>
         </div>
-
-        <!-- SECCIÓN INFERIOR FIJA - Información del usuario y botón de logout ROJO -->
-        <div class="flex-shrink-0 border-t border-purple-600 bg-purple-800/30">
-          <!-- Información del usuario -->
-          <div class="p-3 border-b border-purple-600/50">
-            <div class="flex items-center space-x-3 px-2 py-2 bg-purple-800/50 rounded-lg">
-              <div class="flex-shrink-0">
-                <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-white truncate">
-                  {{ currentUser?.usuario || 'Usuario' }}
-                </p>
-                <p class="text-xs text-purple-200 truncate">
-                  {{ currentUser?.rol || 'Administrador' }}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <!-- BOTÓN DE CERRAR SESIÓN ROJO - PARTE MÁS INFERIOR -->
-          <div class="p-3">
-            <button
-              @click="handleLogout"
-              class="w-full flex items-center justify-center px-3 py-2.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 group border border-red-400/30 hover:border-red-300"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 group-hover:rotate-12 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              <span class="text-sm font-semibold tracking-wide">CERRAR SESIÓN</span>
-            </button>
-          </div>
+        
+        <div class="px-4 py-3 text-xs uppercase font-semibold text-purple-200">
+          Principal
         </div>
-      </div>
+        
+        <a href="#" @click="vistaActual = 'dashboard'" 
+           class="flex items-center px-6 py-3 text-purple-100 transition-colors"
+           :class="vistaActual === 'dashboard' ? 'bg-purple-800 border-l-4 border-white' : 'hover:bg-purple-800'">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z" />
+          </svg>
+          Dashboard
+        </a>
+        
+        <a href="#" @click="vistaActual = 'archivos'" 
+           class="flex items-center px-6 py-3 text-purple-100 transition-colors"
+           :class="vistaActual === 'archivos' ? 'bg-purple-800 border-l-4 border-white' : 'hover:bg-purple-800'">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Archivos
+        </a>
+
+        <a href="#" @click="vistaActual = 'estadisticas'" 
+           class="flex items-center px-6 py-3 text-purple-100 transition-colors"
+           :class="vistaActual === 'estadisticas' ? 'bg-purple-800 border-l-4 border-white' : 'hover:bg-purple-800'">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          Estadísticas
+        </a>
+
+        <a href="#" @click="vistaActual = 'mapa'" 
+           class="flex items-center px-6 py-3 text-purple-100 transition-colors"
+           :class="vistaActual === 'mapa' ? 'bg-purple-800 border-l-4 border-white' : 'hover:bg-purple-800'">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg>
+          Mapa
+        </a>
+      </nav>
     </aside>
 
     <!-- Contenido principal -->
