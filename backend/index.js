@@ -51,9 +51,14 @@ const upload = multer({
 const app = express();
 const PORT = 4000;
 
-// Configurar CORS simplificado
+// Configurar CORS con orígenes específicos
 app.use(cors({
-  origin: '*',
+  origin: [
+    'https://biblioteca.sembrandodatos.com', // dominio de producción
+    'http://localhost:5173',                 // desarrollo con Vite
+    'http://localhost:3000',                 // desarrollo alternativo
+    'http://127.0.0.1:5173'                  // desarrollo con IP local
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
