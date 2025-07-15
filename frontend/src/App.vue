@@ -1,5 +1,12 @@
 <template>
-  <div class="flex h-screen w-full bg-gray-50 overflow-hidden">
+  <!-- Vista de Login -->
+  <LoginView 
+    v-if="!estaAutenticado" 
+    @login-success="manejarLoginExitoso"
+  />
+  
+  <!-- Vista Principal (cuando está autenticado) -->
+  <div v-else class="flex h-screen w-full bg-gray-50 overflow-hidden">
     <!-- Sidebar -->
     <aside class="w-64 bg-purple-700 text-white shadow-lg flex-shrink-0">
       <!-- Logo y título -->
@@ -27,8 +34,32 @@
         <div class="text-xs mt-2 font-extrabold biblioteca-gradient uppercase">BIBLIOTECA DE DATOS</div>
       </div>
       
+      <!-- Información del usuario -->
+      <div class="px-4 py-3 bg-purple-800 border-b border-purple-600">
+        <div class="flex items-center">
+          <div class="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-white">{{ usuarioActual?.usuario || 'Usuario' }}</p>
+            <p class="text-xs text-purple-200">{{ usuarioActual?.rol || 'admin' }}</p>
+          </div>
+          <button 
+            @click="cerrarSesion"
+            class="text-purple-200 hover:text-white transition-colors"
+            title="Cerrar sesión"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      
       <!-- Menú de navegación -->
-      <nav class="mt-5 overflow-y-auto" style="height: calc(100vh - 80px);">
+      <nav class="mt-5 overflow-y-auto" style="height: calc(100vh - 160px);">
         <!-- Botón Geoportal -->
         <div class="flex justify-center mb-4 px-4">
           <a href="https://sembrandodatos.com/" target="_blank" 
@@ -131,14 +162,20 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import LoginView from './components/LoginView.vue'
 import ArchivoTable from './components/ArchivoTable.vue'
 import ArchivoFicha from './components/ArchivoFicha.vue'
 import ArchivosView from './components/ArchivosView.vue'
 import EstadisticasView from './components/EstadisticasView.vue'
 import MapaView from './components/MapaView.vue'
 
+// Estado de autenticación
+const estaAutenticado = ref(false)
+const usuarioActual = ref(null)
+
+// Estado de la aplicación
 const archivoSeleccionado = ref(null)
 const vistaActual = ref('dashboard') // Estado para controlar la vista actual
 
@@ -148,6 +185,62 @@ const BACKEND_URL = import.meta.env.DEV
   : 'https://api.biblioteca.sembrandodatos.com/api'
 
 console.log('App - Backend URL configurada:', BACKEND_URL)
+
+// Verificar autenticación al cargar la aplicación
+onMounted(() => {
+  verificarAutenticacion()
+})
+
+// Función para verificar si el usuario está autenticado
+function verificarAutenticacion() {
+  const token = localStorage.getItem('authToken')
+  const userData = localStorage.getItem('userData')
+  
+  if (token && userData) {
+    try {
+      // Configurar axios con el token
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      
+      // Establecer estado de autenticación
+      estaAutenticado.value = true
+      usuarioActual.value = JSON.parse(userData)
+      
+      console.log('Usuario autenticado:', usuarioActual.value)
+    } catch (error) {
+      console.error('Error al verificar autenticación:', error)
+      cerrarSesion()
+    }
+  }
+}
+
+// Manejar login exitoso
+function manejarLoginExitoso(loginData) {
+  console.log('Login exitoso en App:', loginData)
+  
+  estaAutenticado.value = true
+  usuarioActual.value = loginData.usuario
+  
+  // Configurar axios con el token
+  axios.defaults.headers.common['Authorization'] = `Bearer ${loginData.token}`
+}
+
+// Cerrar sesión
+function cerrarSesion() {
+  console.log('Cerrando sesión...')
+  
+  // Limpiar localStorage
+  localStorage.removeItem('authToken')
+  localStorage.removeItem('userData')
+  
+  // Limpiar headers de axios
+  delete axios.defaults.headers.common['Authorization']
+  
+  // Resetear estado
+  estaAutenticado.value = false
+  usuarioActual.value = null
+  vistaActual.value = 'dashboard'
+  archivoSeleccionado.value = null
+}
 
 async function verFicha(id) {
   console.log('App - Obteniendo ficha para archivo ID:', id)

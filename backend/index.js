@@ -5,6 +5,8 @@ const { Pool } = require('pg');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 // Cargar configuración local si existe
 try {
@@ -63,6 +65,119 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Servir archivos estáticos desde la carpeta public
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ============ MIDDLEWARE DE AUTENTICACIÓN ============
+
+// Middleware para verificar token JWT
+function verificarToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+  if (!token) {
+    return res.status(401).json({ error: 'Token de acceso requerido' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, usuario) => {
+    if (err) {
+      return res.status(403).json({ error: 'Token inválido' });
+    }
+    req.usuario = usuario;
+    next();
+  });
+}
+
+// ============ ENDPOINT DE LOGIN ============
+
+// Endpoint de login
+app.post('/api/login', async (req, res) => {
+  console.log('=== POST /api/login ===');
+  
+  try {
+    const { usuario, contrasena } = req.body;
+    
+    if (!usuario || !contrasena) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Usuario y contraseña son requeridos' 
+      });
+    }
+
+    // Consultar usuario en la base de datos
+    const query = `
+      SELECT id, usuario, contrasena, rol, activo 
+      FROM usuarios 
+      WHERE usuario = $1 AND activo = true
+    `;
+    
+    const result = await pool.query(query, [usuario]);
+    
+    if (result.rows.length === 0) {
+      console.log(`Intento de login fallido para usuario: ${usuario} (usuario no encontrado)`);
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Usuario o contraseña incorrectos' 
+      });
+    }
+    
+    const usuarioData = result.rows[0];
+    
+    // Verificar contraseña
+    let contraseñaValida = false;
+    
+    // Intentar primero con bcrypt (contraseñas encriptadas)
+    try {
+      contraseñaValida = await bcrypt.compare(contrasena, usuarioData.contrasena);
+    } catch (bcryptError) {
+      // Si falla bcrypt, comparar como texto plano (backward compatibility)
+      contraseñaValida = contrasena === usuarioData.contrasena;
+    }
+    
+    if (!contraseñaValida) {
+      console.log(`Intento de login fallido para usuario: ${usuario} (contraseña incorrecta)`);
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Usuario o contraseña incorrectos' 
+      });
+    }
+    console.log(`Login exitoso para usuario: ${usuarioData.usuario}`);
+    
+    // Generar token JWT
+    const token = jwt.sign(
+      { 
+        id: usuarioData.id, 
+        usuario: usuarioData.usuario, 
+        rol: usuarioData.rol 
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    
+    res.json({
+      success: true,
+      token,
+      usuario: {
+        id: usuarioData.id,
+        usuario: usuarioData.usuario,
+        rol: usuarioData.rol
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error en login:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error interno del servidor' 
+    });
+  }
+});
+
+// Endpoint para verificar token
+app.get('/api/verify-token', verificarToken, (req, res) => {
+  res.json({
+    success: true,
+    usuario: req.usuario
+  });
+});
 
 // Función para determinar el tipo MIME basado en la extensión
 function determinarContentType(tipo) {
@@ -148,7 +263,7 @@ app.get('/archivos/descargar/:id', async (req, res) => {
 });
 
 // Endpoint para upload de archivos - DEBE IR ANTES DE LA RUTA GENÉRICA
-app.post('/archivos/upload', upload.single('file'), async (req, res) => {
+app.post('/archivos/upload', verificarToken, upload.single('file'), async (req, res) => {
   console.log('Recibida solicitud en /archivos/upload');
   
   try {
@@ -275,7 +390,7 @@ app.get('/archivos/:id', async (req, res) => {
 });
 
 // Endpoint para actualizar un archivo por su ID
-app.put('/archivos/:id', async (req, res) => {
+app.put('/archivos/:id', verificarToken, async (req, res) => {
   console.log(`=== PUT /archivos/${req.params.id} ===`);
   
   try {
@@ -336,7 +451,7 @@ app.put('/archivos/:id', async (req, res) => {
 });
 
 // Endpoint para eliminar un archivo por su ID
-app.delete('/archivos/:id', async (req, res) => {
+app.delete('/archivos/:id', verificarToken, async (req, res) => {
   console.log(`=== DELETE /archivos/${req.params.id} ===`);
   
   try {
@@ -415,7 +530,7 @@ app.get('/api/archivos/descargar/:id', async (req, res) => {
   }
 });
 
-app.post('/api/archivos/upload', upload.single('file'), async (req, res) => {
+app.post('/api/archivos/upload', verificarToken, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No se ha subido ningún archivo' });
@@ -524,7 +639,7 @@ app.get('/api/archivos/:id', async (req, res) => {
   }
 });
 
-app.put('/api/archivos/:id', async (req, res) => {
+app.put('/api/archivos/:id', verificarToken, async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -580,7 +695,7 @@ app.put('/api/archivos/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/archivos/:id', async (req, res) => {
+app.delete('/api/archivos/:id', verificarToken, async (req, res) => {
   try {
     const { id } = req.params;
     

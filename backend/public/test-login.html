@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Login - Biblioteca SV</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .test-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        .test-button {
+            background-color: #28a745;
+            margin: 5px;
+            width: auto;
+            display: inline-block;
+        }
+        .test-button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Prueba de Login - Biblioteca SV</h1>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="usuario">Usuario:</label>
+                <input type="text" id="usuario" name="usuario" value="admin" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="contrasena">Contraseña:</label>
+                <input type="password" id="contrasena" name="contrasena" value="admin123" required>
+            </div>
+            
+            <button type="submit">Iniciar Sesión</button>
+        </form>
+        
+        <div id="result"></div>
+        
+        <div class="test-section">
+            <h3>Pruebas Adicionales:</h3>
+            <button class="test-button" onclick="testVerifyToken()">Verificar Token</button>
+            <button class="test-button" onclick="testProtectedRoute()">Ruta Protegida</button>
+            <button class="test-button" onclick="testDbStatus()">Estado BD</button>
+            <button class="test-button" onclick="logout()">Cerrar Sesión</button>
+        </div>
+        
+        <div class="info" style="margin-top: 20px;">
+            <strong>Información:</strong><br>
+            • Usuario de prueba: <code>admin</code><br>
+            • Contraseña: <code>admin123</code><br>
+            • API Base: <code>http://localhost:4000/api</code><br>
+            • El token se guarda automáticamente en localStorage
+        </div>
+    </div>
+
+    <script>
+        let currentToken = localStorage.getItem('authToken');
+        
+        // Manejar el formulario de login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const usuario = document.getElementById('usuario').value;
+            const contrasena = document.getElementById('contrasena').value;
+            
+            try {
+                showResult('Enviando solicitud de login...', 'info');
+                
+                const response = await fetch('http://localhost:4000/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ usuario, contrasena })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentToken = data.token;
+                    localStorage.setItem('authToken', currentToken);
+                    showResult(`¡Login exitoso! ✅
+Token: ${data.token.substring(0, 50)}...
+Usuario: ${data.usuario.usuario}
+Rol: ${data.usuario.rol}
+ID: ${data.usuario.id}`, 'success');
+                } else {
+                    showResult(`Error en login: ${data.error}`, 'error');
+                }
+                
+            } catch (error) {
+                showResult(`Error de conexión: ${error.message}`, 'error');
+            }
+        });
+        
+        // Función para verificar token
+        async function testVerifyToken() {
+            if (!currentToken) {
+                showResult('No hay token disponible. Haz login primero.', 'error');
+                return;
+            }
+            
+            try {
+                showResult('Verificando token...', 'info');
+                
+                const response = await fetch('http://localhost:4000/api/verify-token', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResult(`Token válido ✅
+Usuario: ${data.usuario.usuario}
+Rol: ${data.usuario.rol}
+Expira: ${new Date(data.usuario.exp * 1000).toLocaleString()}`, 'success');
+                } else {
+                    showResult(`Token inválido: ${data.error}`, 'error');
+                }
+                
+            } catch (error) {
+                showResult(`Error al verificar token: ${error.message}`, 'error');
+            }
+        }
+        
+        // Función para probar ruta protegida
+        async function testProtectedRoute() {
+            if (!currentToken) {
+                showResult('No hay token disponible. Haz login primero.', 'error');
+                return;
+            }
+            
+            try {
+                showResult('Probando acceso a ruta protegida...', 'info');
+                
+                const response = await fetch('http://localhost:4000/api/archivos', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`Acceso autorizado a ruta protegida ✅
+Archivos encontrados: ${data.items ? data.items.length : 0}
+Total: ${data.metadata ? data.metadata.totalItems : 'N/A'}`, 'success');
+                } else {
+                    showResult(`Acceso denegado: ${data.error}`, 'error');
+                }
+                
+            } catch (error) {
+                showResult(`Error en ruta protegida: ${error.message}`, 'error');
+            }
+        }
+        
+        // Función para probar estado de BD
+        async function testDbStatus() {
+            try {
+                showResult('Verificando estado de la base de datos...', 'info');
+                
+                const response = await fetch('http://localhost:4000/api/db-status');
+                const data = await response.json();
+                
+                if (data.status === 'ok') {
+                    showResult(`Base de datos conectada ✅
+Host: ${data.config.host}
+Base: ${data.config.database}
+Puerto: ${data.config.port}
+Tiempo: ${new Date(data.time).toLocaleString()}`, 'success');
+                } else {
+                    showResult(`Error en BD: ${data.message}`, 'error');
+                }
+                
+            } catch (error) {
+                showResult(`Error al verificar BD: ${error.message}`, 'error');
+            }
+        }
+        
+        // Función para cerrar sesión
+        function logout() {
+            currentToken = null;
+            localStorage.removeItem('authToken');
+            showResult('Sesión cerrada. Token eliminado.', 'info');
+        }
+        
+        // Función para mostrar resultados
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = message;
+            resultDiv.className = `result ${type}`;
+        }
+        
+        // Cargar token guardado al cargar la página
+        if (currentToken) {
+            showResult(`Token cargado desde localStorage:
+${currentToken.substring(0, 50)}...`, 'info');
+        }
+    </script>
+</body>
+</html>

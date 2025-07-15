@@ -8,6 +8,14 @@
 			"isBackground": true,
 			"problemMatcher": [],
 			"group": "test"
+		},
+		{
+			"label": "Run Backend",
+			"type": "shell",
+			"command": "cd c:/Users/Admin_1/Pictures/Biblioteca/BibliotecaSV/backend && node index.js",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
 		}
 	]
 }
