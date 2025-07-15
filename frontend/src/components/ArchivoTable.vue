@@ -284,7 +284,7 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Responsable</label>
               <input 
-                v_model="responsable" 
+                v-model="responsable" 
                 type="text" 
                 class="w-full rounded-lg border border-gray-300 px-3 py-2 h-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all" 
                 placeholder="Responsable" 
@@ -970,7 +970,7 @@ function buscarUbicaciones() {
       console.log("Buscando:", terminoBusqueda)
       
       // Parámetros mejorados para la búsqueda:
-      // - countrycodes=MX: Limitar a México
+      // - countrycodes=SV: Limitar a El Salvador
       // - q: Término de búsqueda
       // - format=json: Formato de respuesta
       // - addressdetails=1: Incluir detalles de dirección
@@ -979,7 +979,7 @@ function buscarUbicaciones() {
       // - accept-language=es: Preferir resultados en español
       // - dedupe=1: Eliminar duplicados
       const url = `https://nominatim.openstreetmap.org/search?` + 
-                 `countrycodes=MX&` +
+                 `countrycodes=SV&` +
                  `q=${encodeURIComponent(terminoBusqueda)}&` +
                  `format=json&` + 
                  `addressdetails=1&` +
@@ -995,7 +995,7 @@ function buscarUbicaciones() {
           // Headers requeridos por Nominatim
           'User-Agent': 'BibliotecaSV_App/1.0',
           'Accept-Language': 'es',
-          'Referer': 'https://biblioteca.sembrandodatos.com' // Actualizar Referer para producción
+          'Referer': 'https://biblioteca.sembrandodatos.com'
         },
         // Aumentar el tiempo máximo de espera para mayor confiabilidad
         timeout: 5000
@@ -1062,7 +1062,7 @@ function activarBusquedaUbicaciones() {
 function seleccionarUbicacion(lugar) {
   console.log("Seleccionando ubicación:", lugar)
   
-  // Extraer el nombre más significativo con lógica mejorada
+  // Extraer el nombre más significativo with lógica mejorada
   let nombrePrincipal;
   
   // Si tiene namedetails con nombre en español, usar ese prioritariamente
