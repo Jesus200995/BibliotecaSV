@@ -8,13 +8,24 @@
  * @returns {string} - Tamaño formateado (ej: "1.5 MB")
  */
 export function formatFileSize(bytes) {
-  if (bytes === 0 || !bytes) return '0 Bytes'
+  // Debug: log del valor recibido
+  console.log('formatFileSize recibió:', bytes, typeof bytes)
+  
+  // Convertir a número si es string
+  const numBytes = Number(bytes)
+  
+  if (!numBytes || numBytes === 0 || isNaN(numBytes)) {
+    console.log('formatFileSize: valor inválido, retornando "0 Bytes"')
+    return '0 Bytes'
+  }
   
   const k = 1024
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  const i = Math.floor(Math.log(numBytes) / Math.log(k))
   
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  const result = parseFloat((numBytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  console.log('formatFileSize resultado:', result)
+  return result
 }
 
 /**
@@ -23,12 +34,25 @@ export function formatFileSize(bytes) {
  * @returns {number} - Tamaño total en bytes
  */
 export function calculateTotalSize(archivos) {
-  if (!Array.isArray(archivos)) return 0
+  console.log('calculateTotalSize recibió:', archivos?.length, 'archivos')
   
-  return archivos.reduce((total, archivo) => {
-    const tamano = archivo.tamano || archivo.size || 0
-    return total + (typeof tamano === 'number' ? tamano : 0)
+  if (!Array.isArray(archivos)) {
+    console.log('calculateTotalSize: no es array, retornando 0')
+    return 0
+  }
+  
+  const total = archivos.reduce((total, archivo) => {
+    // Buscar el tamaño en diferentes propiedades posibles
+    const tamano = archivo.tamano || archivo.size || archivo.fileSize || 0
+    const tamanoNum = Number(tamano)
+    
+    console.log(`Archivo ${archivo.nombre || 'sin_nombre'}: tamano=${tamano}, convertido=${tamanoNum}`)
+    
+    return total + (isNaN(tamanoNum) ? 0 : tamanoNum)
   }, 0)
+  
+  console.log('calculateTotalSize resultado:', total)
+  return total
 }
 
 /**

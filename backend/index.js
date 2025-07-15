@@ -142,6 +142,15 @@ app.get('/archivos', async (req, res) => {
     const result = await pool.query(query, [limit, offset]);
     console.log('Resultados encontrados:', result.rows.length);
     
+    // DEBUG: Mostrar información de tamaños de los primeros archivos
+    result.rows.slice(0, 3).forEach((archivo, index) => {
+      console.log(`Backend - Archivo ${index + 1} tamaño:`, {
+        nombre: archivo.nombre,
+        tamano: archivo.tamano,
+        tipo_tamano: typeof archivo.tamano
+      });
+    });
+    
     // Consulta para el conteo total
     const countResult = await pool.query('SELECT COUNT(*) FROM catalogo_archivos');
     const totalItems = parseInt(countResult.rows[0].count);
@@ -713,6 +722,15 @@ app.get('/api/archivos', async (req, res) => {
       pool.query(query, [limit, offset]),
       pool.query('SELECT COUNT(*) FROM catalogo_archivos')
     ]);
+    
+    // DEBUG: Mostrar información de tamaños de los primeros archivos
+    result.rows.slice(0, 3).forEach((archivo, index) => {
+      console.log(`Backend API - Archivo ${index + 1} tamaño:`, {
+        nombre: archivo.nombre,
+        tamano: archivo.tamano,
+        tipo_tamano: typeof archivo.tamano
+      });
+    });
     
     const totalItems = parseInt(countResult.rows[0].count);
     const totalPages = Math.ceil(totalItems / limit);

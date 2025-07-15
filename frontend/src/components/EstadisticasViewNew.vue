@@ -246,12 +246,31 @@ const BACKEND_URL = import.meta.env.DEV
 
 console.log('EstadisticasViewNew - Backend URL:', BACKEND_URL)
 
+// Función para formatear tamaño de archivo
+function formatFileSize(bytes) {
+  console.log('EstadisticasViewNew formatFileSize recibió:', bytes, typeof bytes)
+  
+  const numBytes = Number(bytes)
+  
+  if (!numBytes || numBytes === 0 || isNaN(numBytes)) {
+    console.log('EstadisticasViewNew: valor inválido, retornando "0 Bytes"')
+    return '0 Bytes'
+  }
+  
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(numBytes) / Math.log(k))
+  
+  const result = parseFloat((numBytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  console.log('EstadisticasViewNew formatFileSize resultado:', result)
+  return result
+}
+
 // Función para obtener estadísticas
 async function obtenerEstadisticas() {
   try {
     cargando.value = true
     
-    // Agregar headers explícitos y configuración
     const config = {
       headers: {
         'Accept': 'application/json',
@@ -262,15 +281,14 @@ async function obtenerEstadisticas() {
     
     console.log('EstadisticasViewNew - Obteniendo datos desde:', `${BACKEND_URL}/archivos`)
     
-    // Obtener todos los archivos
     const response = await axios.get(`${BACKEND_URL}/archivos?limit=1000`, config)
     
     console.log('EstadisticasViewNew - Respuesta recibida:', response.status, response.data)
     
-    // Extraer los archivos del objeto de respuesta
     const archivos = response.data.items || response.data || []
     
     console.log('EstadisticasViewNew - Archivos obtenidos:', archivos.length)
+    console.log('EstadisticasViewNew - Ejemplo de archivo con tamaño:', archivos[0])
 
     // Calcular estadísticas
     calcularEstadisticas(archivos)
@@ -292,7 +310,6 @@ async function obtenerEstadisticas() {
         calcularEstadisticasEjemplo()
       }
     } else {
-      // Datos de ejemplo en caso de error
       calcularEstadisticasEjemplo()
     }
   } finally {
@@ -302,6 +319,8 @@ async function obtenerEstadisticas() {
 
 // Función para calcular estadísticas
 function calcularEstadisticas(archivos) {
+  console.log('EstadisticasViewNew - Calculando estadísticas para', archivos.length, 'archivos')
+  
   const ahora = new Date()
   const mesActual = ahora.getMonth() + 1
   const anioActual = ahora.getFullYear()
@@ -309,8 +328,29 @@ function calcularEstadisticas(archivos) {
   // Total de archivos
   estadisticas.value.totalArchivos = archivos.length
   
-  // Tamaño total
-  estadisticas.value.tamanoTotal = archivos.reduce((total, archivo) => total + (archivo.tamano || 0), 0)
+  // Tamaño total con debug detallado
+  let tamanoTotal = 0
+  archivos.forEach((archivo, index) => {
+    const tamano = archivo.tamano || archivo.size || 0
+    const tamanoNum = Number(tamano)
+    
+    if (index < 5) { // Log de los primeros 5 archivos para debug
+      console.log(`EstadisticasViewNew - Archivo ${index + 1}:`, {
+        nombre: archivo.nombre,
+        tamano_original: tamano,
+        tamano_convertido: tamanoNum,
+        tipo: typeof tamano
+      })
+    }
+    
+    if (!isNaN(tamanoNum) && tamanoNum > 0) {
+      tamanoTotal += tamanoNum
+    }
+  })
+  
+  estadisticas.value.tamanoTotal = tamanoTotal
+  console.log('EstadisticasViewNew - Tamaño total calculado:', tamanoTotal, 'bytes')
+  console.log('EstadisticasViewNew - Tamaño total formateado:', formatFileSize(tamanoTotal))
   
   // Tipos de archivo
   const tiposMap = {}
@@ -385,6 +425,8 @@ function calcularEstadisticas(archivos) {
     .slice(0, 12)
   
   estadisticas.value.maxUbicacionCount = Math.max(...estadisticas.value.ubicacionesFrecuentes.map(u => u.cantidad))
+  
+  console.log('EstadisticasViewNew - Estadísticas finales:', estadisticas.value)
 }
 
 // Función de datos de ejemplo en caso de error

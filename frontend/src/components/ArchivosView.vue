@@ -1239,10 +1239,39 @@ const archivosFiltrados = computed(() => {
 
 // Propiedades computadas para estadísticas usando funciones utilitarias centralizadas
 const totalSize = computed(() => {
+  console.log('ArchivosView totalSize - calculando...')
+  
   // Si hay filtros activos, mostrar el tamaño total de los archivos filtrados
   const archivosToSum = hayFiltrosActivos.value ? archivosFiltrados.value : archivos.value
-  // Usar función utilitaria centralizada para cálculo consistente
-  return calculateTotalSize(archivosToSum)
+  
+  console.log('ArchivosView totalSize - archivos a sumar:', archivosToSum.length)
+  
+  if (!archivosToSum || archivosToSum.length === 0) {
+    console.log('ArchivosView totalSize - no hay archivos, retornando 0')
+    return 0
+  }
+  
+  let total = 0
+  archivosToSum.forEach((archivo, index) => {
+    const tamano = archivo.tamano || archivo.size || 0
+    const tamanoNum = Number(tamano)
+    
+    if (index < 3) { // Debug de los primeros 3 archivos
+      console.log(`ArchivosView - Archivo ${index + 1}:`, {
+        nombre: archivo.nombre,
+        tamano_original: tamano,
+        tamano_convertido: tamanoNum
+      })
+    }
+    
+    if (!isNaN(tamanoNum) && tamanoNum > 0) {
+      total += tamanoNum
+    }
+  })
+  
+  console.log('ArchivosView totalSize resultado:', total, 'bytes')
+  console.log('ArchivosView totalSize formateado:', formatFileSize(total))
+  return total
 })
 
 const lastFileName = computed(() => {

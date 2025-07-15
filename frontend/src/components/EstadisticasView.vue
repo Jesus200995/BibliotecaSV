@@ -411,7 +411,7 @@ async function obtenerEstadisticas() {
 
 // Función para calcular estadísticas
 function calcularEstadisticas(archivos) {
-  console.log('Calculando estadísticas para', archivos.length, 'archivos')
+  console.log('EstadisticasView - Calculando estadísticas para', archivos.length, 'archivos')
   
   const ahora = new Date()
   const mesActual = ahora.getMonth() + 1
@@ -420,8 +420,29 @@ function calcularEstadisticas(archivos) {
   // Total de archivos
   estadisticas.value.totalArchivos = archivos.length
   
-  // Tamaño total usando función utilitaria centralizada
-  estadisticas.value.tamanoTotal = calculateTotalSize(archivos)
+  // Tamaño total con debug detallado
+  let tamanoTotal = 0
+  archivos.forEach((archivo, index) => {
+    const tamano = archivo.tamano || archivo.size || 0
+    const tamanoNum = Number(tamano)
+    
+    if (index < 3) { // Log de los primeros 3 archivos para debug
+      console.log(`EstadisticasView - Archivo ${index + 1}:`, {
+        nombre: archivo.nombre,
+        tamano_original: tamano,
+        tamano_convertido: tamanoNum,
+        tipo: typeof tamano
+      })
+    }
+    
+    if (!isNaN(tamanoNum) && tamanoNum > 0) {
+      tamanoTotal += tamanoNum
+    }
+  })
+  
+  estadisticas.value.tamanoTotal = tamanoTotal
+  console.log('EstadisticasView - Tamaño total calculado:', tamanoTotal, 'bytes')
+  console.log('EstadisticasView - Tamaño total formateado:', formatFileSize(tamanoTotal))
   
   // Tipos de archivo
   const tiposMap = {}
@@ -1705,7 +1726,7 @@ onMounted(() => {
 }
 
 .bubble-content {
-  text-align: center;
+   text-align: center;
   color: white;
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }

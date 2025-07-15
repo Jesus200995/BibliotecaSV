@@ -106,7 +106,7 @@
               <!-- Ícono principal -->
               <div class="inline-flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl mb-3">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V4a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
               
@@ -725,7 +725,34 @@ const totalArchivos = computed(() => archivos.value.length || 0)
 
 // Propiedades computadas para estadísticas usando funciones utilitarias centralizadas
 const totalSize = computed(() => {
-  return calculateTotalSize(archivos.value)
+  console.log('ArchivoTable totalSize - archivos.value:', archivos.value.length)
+  
+  if (!archivos.value || archivos.value.length === 0) {
+    console.log('ArchivoTable totalSize - no hay archivos, retornando 0')
+    return 0
+  }
+  
+  let total = 0
+  archivos.value.forEach((archivo, index) => {
+    const tamano = archivo.tamano || archivo.size || 0
+    const tamanoNum = Number(tamano)
+    
+    if (index < 3) { // Debug de los primeros 3 archivos
+      console.log(`ArchivoTable - Archivo ${index + 1}:`, {
+        nombre: archivo.nombre,
+        tamano_original: tamano,
+        tamano_convertido: tamanoNum
+      })
+    }
+    
+    if (!isNaN(tamanoNum) && tamanoNum > 0) {
+      total += tamanoNum
+    }
+  })
+  
+  console.log('ArchivoTable totalSize resultado:', total, 'bytes')
+  console.log('ArchivoTable totalSize formateado:', formatFileSize(total))
+  return total
 })
 
 // Computed property para el total de ubicaciones únicas
