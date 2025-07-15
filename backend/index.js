@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
+// const cors = require('cors'); // Comentado - NGINX maneja CORS
 const { Pool } = require('pg');
 const multer = require('multer');
 const path = require('path');
@@ -49,20 +49,20 @@ const upload = multer({
 });
 
 const app = express();
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 
-// Configurar CORS con orígenes específicos
-app.use(cors({
-  origin: [
-    'https://biblioteca.sembrandodatos.com', // dominio de producción
-    'http://localhost:5173',                 // desarrollo con Vite
-    'http://localhost:3000',                 // desarrollo alternativo
-    'http://127.0.0.1:5173'                  // desarrollo con IP local
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+// CORS deshabilitado - NGINX maneja CORS
+// app.use(cors({
+//   origin: [
+//     'https://biblioteca.sembrandodatos.com', // dominio de producción
+//     'http://localhost:5173',                 // desarrollo con Vite
+//     'http://localhost:3000',                 // desarrollo alternativo
+//     'http://127.0.0.1:5173'                  // desarrollo con IP local
+//   ],
+//   credentials: true,
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+// }));
 
 // Middleware para parsear JSON
 app.use(express.json({ limit: '50mb' }));
