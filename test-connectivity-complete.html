@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Conectividad - Biblioteca SV</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .content {
+            padding: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .test-section:hover {
+            border-color: #4CAF50;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        button {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #4CAF50;
+        }
+        .result.error {
+            border-left-color: #f44336;
+            background-color: #ffebee;
+        }
+        .result.success {
+            border-left-color: #4CAF50;
+            background-color: #e8f5e8;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-online { background-color: #4CAF50; }
+        .status-offline { background-color: #f44336; }
+        .status-unknown { background-color: #ff9800; }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .info-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔗 Prueba de Conectividad</h1>
+            <p>Biblioteca SV - Sistema de Autenticación</p>
+        </div>
+        
+        <div class="content">
+            <!-- Información del dispositivo -->
+            <div class="test-section">
+                <h3>📱 Información del Dispositivo</h3>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <strong>IP del Cliente:</strong><br>
+                        <span id="clientIP">Detectando...</span>
+                    </div>
+                    <div class="info-card">
+                        <strong>User Agent:</strong><br>
+                        <span id="userAgent"></span>
+                    </div>
+                    <div class="info-card">
+                        <strong>Resolución:</strong><br>
+                        <span id="resolution"></span>
+                    </div>
+                    <div class="info-card">
+                        <strong>Hora Local:</strong><br>
+                        <span id="localTime"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuración de URLs -->
+            <div class="test-section">
+                <h3>⚙️ Configuración de Pruebas</h3>
+                <div class="form-group">
+                    <label for="apiEnvironment">Entorno de la API:</label>
+                    <select id="apiEnvironment">
+                        <option value="production">Producción (VPS)</option>
+                        <option value="local">Desarrollo Local</option>
+                        <option value="custom">URL Personalizada</option>
+                    </select>
+                </div>
+                <div class="form-group" id="customUrlGroup" style="display: none;">
+                    <label for="customApiUrl">URL Personalizada:</label>
+                    <input type="text" id="customApiUrl" placeholder="https://tu-dominio.com/api">
+                </div>
+                <div class="form-group">
+                    <label>URL Actual de la API:</label>
+                    <input type="text" id="currentApiUrl" readonly style="background-color: #f0f0f0;">
+                </div>
+            </div>
+
+            <!-- Pruebas de conectividad -->
+            <div class="test-section">
+                <h3>🌐 Pruebas de Conectividad</h3>
+                <button onclick="testConnectivity()">Probar Conectividad Básica</button>
+                <button onclick="testCORS()">Probar CORS</button>
+                <button onclick="testDNS()">Verificar DNS</button>
+                <div id="connectivityResult"></div>
+            </div>
+
+            <!-- Prueba de autenticación -->
+            <div class="test-section">
+                <h3>🔐 Prueba de Autenticación</h3>
+                <div class="form-group">
+                    <label for="username">Usuario:</label>
+                    <input type="text" id="username" value="admin">
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña:</label>
+                    <input type="password" id="password" value="admin123">
+                </div>
+                <button onclick="testLogin()">Probar Login</button>
+                <button onclick="testVerifyToken()" id="verifyBtn" disabled>Verificar Token</button>
+                <div id="authResult"></div>
+            </div>
+
+            <!-- Estado de servicios -->
+            <div class="test-section">
+                <h3>📊 Estado de Servicios</h3>
+                <div id="serviceStatus">
+                    <p><span class="status-indicator status-unknown"></span>API Backend: <span id="apiStatus">Verificando...</span></p>
+                    <p><span class="status-indicator status-unknown"></span>Base de Datos: <span id="dbStatus">Verificando...</span></p>
+                    <p><span class="status-indicator status-unknown"></span>Autenticación: <span id="authStatus">Verificando...</span></p>
+                </div>
+                <button onclick="checkAllServices()">Verificar Todos los Servicios</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentToken = null;
+        
+        // URLs de configuración
+        const API_URLS = {
+            production: 'https://api.biblioteca.sembrandodatos.com/api',
+            local: 'http://localhost:4000/api',
+            custom: ''
+        };
+
+        // Inicializar página
+        window.addEventListener('DOMContentLoaded', function() {
+            updateDeviceInfo();
+            updateApiUrl();
+            checkAllServices();
+        });
+
+        // Actualizar información del dispositivo
+        function updateDeviceInfo() {
+            document.getElementById('userAgent').textContent = navigator.userAgent;
+            document.getElementById('resolution').textContent = `${screen.width}x${screen.height}`;
+            document.getElementById('localTime').textContent = new Date().toLocaleString();
+            
+            // Obtener IP pública
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('clientIP').textContent = data.ip;
+                })
+                .catch(() => {
+                    document.getElementById('clientIP').textContent = 'No disponible';
+                });
+        }
+
+        // Manejar cambio de entorno
+        document.getElementById('apiEnvironment').addEventListener('change', function() {
+            const customGroup = document.getElementById('customUrlGroup');
+            if (this.value === 'custom') {
+                customGroup.style.display = 'block';
+            } else {
+                customGroup.style.display = 'none';
+            }
+            updateApiUrl();
+        });
+
+        document.getElementById('customApiUrl').addEventListener('input', updateApiUrl);
+
+        function updateApiUrl() {
+            const environment = document.getElementById('apiEnvironment').value;
+            let url;
+            
+            if (environment === 'custom') {
+                url = document.getElementById('customApiUrl').value || '';
+            } else {
+                url = API_URLS[environment];
+            }
+            
+            document.getElementById('currentApiUrl').value = url;
+        }
+
+        function getCurrentApiUrl() {
+            return document.getElementById('currentApiUrl').value;
+        }
+
+        // Pruebas de conectividad
+        async function testConnectivity() {
+            const resultDiv = document.getElementById('connectivityResult');
+            const apiUrl = getCurrentApiUrl();
+            
+            showResult(resultDiv, 'Probando conectividad básica...', 'info');
+            
+            try {
+                const response = await fetch(`${apiUrl.replace('/api', '')}/test`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult(resultDiv, `✅ Conectividad exitosa!\n\n${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    showResult(resultDiv, `❌ Error HTTP ${response.status}: ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                showResult(resultDiv, `❌ Error de conectividad: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCORS() {
+            const resultDiv = document.getElementById('connectivityResult');
+            const apiUrl = getCurrentApiUrl();
+            
+            showResult(resultDiv, 'Probando configuración CORS...', 'info');
+            
+            try {
+                const response = await fetch(`${apiUrl}/login`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': window.location.origin,
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'Content-Type'
+                    }
+                });
+                
+                const corsHeaders = {
+                    'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                    'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                    'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers')
+                };
+                
+                showResult(resultDiv, `✅ CORS configurado correctamente!\n\n${JSON.stringify(corsHeaders, null, 2)}`, 'success');
+            } catch (error) {
+                showResult(resultDiv, `❌ Error CORS: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDNS() {
+            const resultDiv = document.getElementById('connectivityResult');
+            const apiUrl = getCurrentApiUrl();
+            
+            showResult(resultDiv, 'Verificando resolución DNS...', 'info');
+            
+            try {
+                const hostname = new URL(apiUrl).hostname;
+                const startTime = performance.now();
+                
+                await fetch(`https://${hostname}`, { method: 'HEAD', mode: 'no-cors' });
+                
+                const endTime = performance.now();
+                const responseTime = Math.round(endTime - startTime);
+                
+                showResult(resultDiv, `✅ DNS resuelto correctamente!\nHostname: ${hostname}\nTiempo de respuesta: ${responseTime}ms`, 'success');
+            } catch (error) {
+                showResult(resultDiv, `❌ Error DNS: ${error.message}`, 'error');
+            }
+        }
+
+        // Prueba de autenticación
+        async function testLogin() {
+            const resultDiv = document.getElementById('authResult');
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const apiUrl = getCurrentApiUrl();
+            
+            if (!username || !password) {
+                showResult(resultDiv, '❌ Usuario y contraseña son requeridos', 'error');
+                return;
+            }
+            
+            showResult(resultDiv, 'Probando autenticación...', 'info');
+            
+            try {
+                const response = await fetch(`${apiUrl}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        usuario: username,
+                        contrasena: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    currentToken = data.token;
+                    document.getElementById('verifyBtn').disabled = false;
+                    showResult(resultDiv, `✅ Login exitoso!\n\n${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    showResult(resultDiv, `❌ Login fallido:\n\n${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showResult(resultDiv, `❌ Error de autenticación: ${error.message}`, 'error');
+            }
+        }
+
+        async function testVerifyToken() {
+            if (!currentToken) {
+                showResult(document.getElementById('authResult'), '❌ No hay token disponible. Haz login primero.', 'error');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('authResult');
+            const apiUrl = getCurrentApiUrl();
+            
+            showResult(resultDiv, 'Verificando token...', 'info');
+            
+            try {
+                const response = await fetch(`${apiUrl}/verify`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(resultDiv, `✅ Token válido!\n\n${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    showResult(resultDiv, `❌ Token inválido:\n\n${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showResult(resultDiv, `❌ Error al verificar token: ${error.message}`, 'error');
+            }
+        }
+
+        // Verificar estado de servicios
+        async function checkAllServices() {
+            updateServiceStatus('apiStatus', 'Verificando...', 'unknown');
+            updateServiceStatus('dbStatus', 'Verificando...', 'unknown');
+            updateServiceStatus('authStatus', 'Verificando...', 'unknown');
+            
+            const apiUrl = getCurrentApiUrl();
+            
+            // Verificar API
+            try {
+                const response = await fetch(`${apiUrl.replace('/api', '')}/test`);
+                if (response.ok) {
+                    updateServiceStatus('apiStatus', 'Online', 'online');
+                } else {
+                    updateServiceStatus('apiStatus', `Error ${response.status}`, 'offline');
+                }
+            } catch (error) {
+                updateServiceStatus('apiStatus', 'Offline', 'offline');
+            }
+            
+            // Verificar base de datos (a través de login)
+            try {
+                const response = await fetch(`${apiUrl}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario: 'test', contrasena: 'test' })
+                });
+                
+                if (response.status === 401) {
+                    // Si recibimos 401, significa que la API puede conectarse a la BD
+                    updateServiceStatus('dbStatus', 'Online', 'online');
+                    updateServiceStatus('authStatus', 'Online', 'online');
+                } else {
+                    updateServiceStatus('dbStatus', 'Error de conexión', 'offline');
+                    updateServiceStatus('authStatus', 'Error', 'offline');
+                }
+            } catch (error) {
+                updateServiceStatus('dbStatus', 'Offline', 'offline');
+                updateServiceStatus('authStatus', 'Offline', 'offline');
+            }
+        }
+
+        function updateServiceStatus(elementId, text, status) {
+            document.getElementById(elementId).textContent = text;
+            const indicator = document.getElementById(elementId).parentElement.querySelector('.status-indicator');
+            indicator.className = `status-indicator status-${status}`;
+        }
+
+        function showResult(element, content, type) {
+            element.style.display = 'block';
+            element.className = `result ${type}`;
+            element.innerHTML = `<pre>${content}</pre>`;
+        }
+    </script>
+</body>
+</html>

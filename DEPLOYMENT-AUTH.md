@@ -50,7 +50,7 @@ DB_HOST=31.97.8.51
 DB_PORT=5432
 DB_NAME=sembrandodatos
 DB_USER=jesus
-DB_PASSWORD=TU_CONTRASEÑA_AQUÍ
+DB_PASSWORD=2025
 DB_SSL=true
 
 # Configuración del servidor
@@ -58,7 +58,7 @@ PORT=3000
 NODE_ENV=production
 
 # Configuración de seguridad
-JWT_SECRET=TU_CLAVE_SECRETA_AQUÍ_CAMBIALA
+JWT_SECRET=biblioteca_secret_key_production_2025_secure
 CORS_ORIGIN=https://biblioteca.sembrandodatos.com
 
 # URL del frontend para CORS
