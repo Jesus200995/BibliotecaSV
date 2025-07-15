@@ -1,9 +1,5 @@
 <template>
-  <!-- Mostrar login si no está autenticado -->
-  <Login v-if="!isAuthenticated" @login-success="handleLoginSuccess" />
-  
-  <!-- Mostrar aplicación principal si está autenticado -->
-  <div v-else class="flex h-screen w-full bg-gray-50 overflow-hidden">
+  <div class="flex h-screen w-full bg-gray-50 overflow-hidden">
     <!-- Sidebar -->
     <aside class="w-64 bg-purple-700 text-white shadow-lg flex-shrink-0">
       <!-- Logo y título -->
@@ -94,26 +90,8 @@
       <header class="bg-white shadow-sm z-10">
         <div class="w-full px-4 py-4 flex justify-between items-center">
           <h1 class="text-2xl font-semibold text-purple-700">Biblioteca de Datos</h1>
-          <div class="flex items-center space-x-4">
-            <div class="text-gray-600">
-              Plataforma de gestión documental
-            </div>
-            <!-- Información del usuario y logout -->
-            <div class="flex items-center space-x-3">
-              <div class="text-sm text-gray-500">
-                Bienvenido, <span class="font-medium text-purple-700">{{ currentUser?.usuario || 'Usuario' }}</span>
-              </div>
-              <button
-                @click="handleLogout"
-                class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-red-100 hover:text-red-700 transition-colors duration-200"
-                title="Cerrar sesión"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                Cerrar sesión
-              </button>
-            </div>
+          <div class="text-gray-600">
+            Plataforma de gestión documental
           </div>
         </div>
       </header>
@@ -153,68 +131,26 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { api } from './services/auth.js'
-import { authService } from './services/auth.js'
-import Login from './components/Login.vue'
+import { ref } from 'vue'
+import axios from 'axios'
 import ArchivoTable from './components/ArchivoTable.vue'
 import ArchivoFicha from './components/ArchivoFicha.vue'
 import ArchivosView from './components/ArchivosView.vue'
 import EstadisticasView from './components/EstadisticasView.vue'
 import MapaView from './components/MapaView.vue'
 
-// Estado de autenticación
-const isAuthenticated = ref(false)
-const currentUser = ref(null)
-
-// Estado de la aplicación
 const archivoSeleccionado = ref(null)
-const vistaActual = ref('dashboard')
+const vistaActual = ref('dashboard') // Estado para controlar la vista actual
+const BACKEND_URL = 'https://api.biblioteca.sembrandodatos.com/api'
 
-// Verificar autenticación al cargar la aplicación
-onMounted(async () => {
-  if (authService.isAuthenticated()) {
-    // Verificar que el token sigue siendo válido
-    const result = await authService.verifyToken()
-    if (result.success) {
-      isAuthenticated.value = true
-      currentUser.value = result.user
-    } else {
-      // Token inválido, limpiar sesión
-      authService.logout()
-      isAuthenticated.value = false
-    }
-  }
-})
-
-// Manejar login exitoso
-function handleLoginSuccess(user) {
-  isAuthenticated.value = true
-  currentUser.value = user
-  console.log('Login exitoso:', user)
-}
-
-// Manejar logout
-function handleLogout() {
-  authService.logout()
-  isAuthenticated.value = false
-  currentUser.value = null
-  vistaActual.value = 'dashboard' // Resetear vista
-}
-
-// Función para ver ficha de archivo (ahora usa la API autenticada)
 async function verFicha(id) {
   try {
-    const response = await api.get(`/archivos/${id}`)
+    // Obtener los datos del archivo desde el backend
+    const response = await axios.get(`${BACKEND_URL}/archivos/${id}`)
     archivoSeleccionado.value = response.data
   } catch (error) {
     console.error('Error al obtener datos del archivo:', error)
-    if (error.response?.status === 401) {
-      alert('Sesión expirada. Por favor, inicia sesión nuevamente.')
-      handleLogout()
-    } else {
-      alert('No se pudo cargar la información del archivo')
-    }
+    alert('No se pudo cargar la información del archivo')
   }
 }
 

@@ -572,7 +572,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import axios from 'axios'
-import { api } from '../services/auth.js'
 // Importar funciones utilitarias centralizadas para manejo de archivos
 import { formatFileSize, calculateTotalSize, validateFileSize } from '../utils/fileUtils.js'
 
@@ -735,7 +734,7 @@ onMounted(async () => {
 
 async function cargarArchivos() {
   try {
-    const res = await api.get('/archivos')
+    const res = await axios.get(`${BACKEND_URL}/archivos`)
     archivos.value = res.data.items || res.data || []
   } catch (err) {
     console.error('Error al cargar archivos:', err)
@@ -793,7 +792,7 @@ async function subirArchivo() {
     formData.append("validacion", validacion.value)
     formData.append("observaciones", observaciones.value)
     
-    const response = await api.post('/archivos/upload', formData, {
+    const response = await axios.post(`${BACKEND_URL}/archivos/upload`, formData, {
       headers: { "Content-Type": "multipart/form-data" }
     })
     
