@@ -85,45 +85,10 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Gráfico de barras verticales (Edificios) - Distribución por tipo -->
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-          <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            Distribución por tipo de archivo
-          </h3>
-          <div class="chart-container">
-            <!-- Leyenda para explicar la visualización -->
-            <div class="text-xs text-gray-500 mb-2 text-center">
-              La altura representa el porcentaje de cada tipo respecto al total de archivos
-            </div>
-            <!-- Contenedor principal para los edificios con grid para mejor alineación -->
-            <div class="edificios-container">
-              <div v-for="(tipo, index) in estadisticas.tiposArchivo.slice(0, 6)" 
-                  :key="tipo.tipo" 
-                  class="edificio-wrapper"
-                  :style="{ '--delay': index * 0.1 + 's' }">
-                <!-- Contenedor con altura fija para mantener alineación -->
-                <div class="edificio-container">
-                  <!-- Etiqueta con cantidad y porcentaje -->
-                  <div class="edificio-stats">
-                    <span class="edificio-cantidad">{{ tipo.cantidad }}</span>
-                    <span class="edificio-porcentaje">{{ Math.round(getTipoPorcentaje(tipo.cantidad)) }}%</span>
-                  </div>
-                  <!-- Edificio con altura proporcional al porcentaje -->
-                  <div class="edificio"
-                      :style="{ 
-                        '--height': getAlturaEdificio(tipo.cantidad) + 'px',
-                        '--color': getTipoColorHex(tipo.tipo)
-                      }">
-                    <!-- Ventanas del edificio (efecto visual) -->
-                    <div class="edificio-ventanas"></div>
-                  </div>
-                  <!-- Etiqueta del tipo de archivo -->
-                  <div class="edificio-label">{{ tipo.tipo }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <EdificioChart 
+            :tiposArchivo="estadisticas.tiposArchivo" 
+            :totalArchivos="estadisticas.totalArchivos"
+          />
         </div>
 
         <!-- Gráfico de pastel moderno - Estados de validación -->
@@ -328,6 +293,7 @@ import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 // Importar funciones utilitarias centralizadas para manejo de archivos
 import { formatFileSize, calculateTotalSize, bytesToMB } from '../utils/fileUtils.js'
+import EdificioChart from './EdificioChart.vue'
 
 // Variables reactivas
 const cargando = ref(true)
@@ -640,13 +606,19 @@ function getTipoPorcentaje(cantidad) {
   return total > 0 ? (cantidad / total) * 100 : 0
 }
 
+// Función para formatear el porcentaje con un decimal fijo
+function getTipoPorcentajeFormateado(cantidad) {
+  const porcentaje = getTipoPorcentaje(cantidad)
+  return porcentaje.toFixed(1) + '%'
+}
+
 // Función para calcular la altura en píxeles basada en el porcentaje
 function getAlturaEdificio(cantidad) {
   const porcentaje = getTipoPorcentaje(cantidad)
   const alturaMaxima = 180 // altura máxima en píxeles para el 100%
-  const alturaMinima = 30 // altura mínima para tipos con pocos archivos
+  const alturaMinima = 20 // altura mínima para tipos con pocos archivos
   
-  // Calculamos la altura proporcional pero asegurando un mínimo visible
+  // Calculamos la altura proporcional exacta al porcentaje
   return Math.max(Math.round((porcentaje / 100) * alturaMaxima), alturaMinima)
 }
 
