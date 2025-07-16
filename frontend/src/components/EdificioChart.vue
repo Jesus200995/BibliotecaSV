@@ -16,10 +16,10 @@
     <!-- Contenedor principal para los edificios -->
     <div class="edificios-container">
       <div 
-        v-for="(tipo, index) in tiposArchivo.slice(0, 6)" 
+        v-for="(tipo, index) in tiposOrdenados" 
         :key="tipo.tipo" 
         class="edificio-wrapper"
-        :style="{ '--delay': index * 0.1 + 's' }"
+        :style="{ '--delay': Math.min(index * 0.05, 1) + 's' }"
       >
         <!-- Contenedor con altura fija para mantener alineación -->
         <div class="edificio-container">
@@ -64,6 +64,14 @@ const props = defineProps({
   }
 })
 
+// Ordenar los tipos de archivo por cantidad descendente y limitar la cantidad
+const tiposOrdenados = computed(() => {
+  // Tomamos todos los tipos pero limitamos la cantidad máxima a mostrar
+  // Si hay más de 12 tipos, solo mostramos los 12 más frecuentes
+  const tiposOrdenados = [...props.tiposArchivo].sort((a, b) => b.cantidad - a.cantidad)
+  return tiposOrdenados.length > 12 ? tiposOrdenados.slice(0, 12) : tiposOrdenados
+})
+
 // Colores para cada tipo de archivo
 const colores = {
   'PDF': '#ef4444',
@@ -105,11 +113,15 @@ function calcularAltura(cantidad) {
 /* Contenedor principal para los edificios */
 .edificios-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
   gap: 24px;
   justify-content: center;
+  align-items: end;
   padding: 20px 0;
   margin-top: 20px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Wrapper para cada edificio con animación */
@@ -229,18 +241,62 @@ function calcularAltura(cantidad) {
   filter: brightness(1.1);
 }
 
-/* Responsividad para móviles */
-@media (max-width: 640px) {
+/* Responsividad para diferentes tamaños de pantalla */
+@media (max-width: 1280px) {
   .edificios-container {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .edificios-container {
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
     gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .edificios-container {
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+    gap: 12px;
   }
   
   .edificio {
     width: 50px;
   }
+}
+
+@media (max-width: 640px) {
+  .edificios-container {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  
+  .edificio {
+    width: 45px;
+  }
   
   .edificio-label {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .edificios-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  
+  .edificio {
+    width: 40px;
+  }
+  
+  .edificio-cantidad {
+    font-size: 16px;
+  }
+  
+  .edificio-porcentaje {
     font-size: 12px;
   }
 }

@@ -84,11 +84,13 @@
       <!-- Gráficos principales -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Gráfico de barras verticales (Edificios) - Distribución por tipo -->
-        <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-          <EdificioChart 
-            :tiposArchivo="estadisticas.tiposArchivo" 
-            :totalArchivos="estadisticas.totalArchivos"
-          />
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 overflow-x-auto">
+          <div class="min-h-[350px]">
+            <EdificioChart 
+              :tiposArchivo="estadisticas.tiposArchivo" 
+              :totalArchivos="estadisticas.totalArchivos"
+            />
+          </div>
         </div>
 
         <!-- Gráfico de pastel moderno - Estados de validación -->
