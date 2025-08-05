@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Conexión Backend</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background-color: #0056b3; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Test de Conexión Backend - BibliotecaSV</h1>
+    
+    <div class="info">
+        <h3>URLs de Prueba:</h3>
+        <ul>
+            <li><strong>Backend Local:</strong> http://localhost:4000</li>
+            <li><strong>API Local:</strong> http://localhost:4000/api</li>
+            <li><strong>Frontend Local:</strong> http://localhost:5173</li>
+        </ul>
+    </div>
+
+    <button onclick="testBackendHealth()">Test Backend Health</button>
+    <button onclick="testApiHealth()">Test API Health</button>
+    <button onclick="testArchivos()">Test Archivos</button>
+    <button onclick="testDBStatus()">Test DB Status</button>
+    <button onclick="clearResults()">Limpiar Resultados</button>
+
+    <div id="results"></div>
+
+    <script>
+        const resultsDiv = document.getElementById('results');
+
+        function addResult(message, type = 'info', data = null) {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            
+            let content = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            if (data) {
+                content += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            }
+            
+            div.innerHTML = content;
+            resultsDiv.appendChild(div);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+
+        function clearResults() {
+            resultsDiv.innerHTML = '';
+        }
+
+        async function testBackendHealth() {
+            try {
+                addResult('Probando health del backend...', 'info');
+                const response = await fetch('http://localhost:4000/health');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult('✅ Backend Health - OK', 'success', data);
+                } else {
+                    addResult('❌ Backend Health - Error', 'error', data);
+                }
+            } catch (error) {
+                addResult('❌ Backend Health - Error de conexión', 'error', {
+                    error: error.message,
+                    type: error.name
+                });
+            }
+        }
+
+        async function testApiHealth() {
+            try {
+                addResult('Probando health del API...', 'info');
+                const response = await fetch('http://localhost:4000/api/health');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult('✅ API Health - OK', 'success', data);
+                } else {
+                    addResult('❌ API Health - Error', 'error', data);
+                }
+            } catch (error) {
+                addResult('❌ API Health - Error de conexión', 'error', {
+                    error: error.message,
+                    type: error.name
+                });
+            }
+        }
+
+        async function testArchivos() {
+            try {
+                addResult('Probando endpoint de archivos...', 'info');
+                const response = await fetch('http://localhost:4000/api/archivos?limit=3');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult(`✅ Archivos - OK (${data.items?.length || 0} archivos obtenidos)`, 'success', {
+                        totalItems: data.metadata?.totalItems,
+                        items: data.items?.slice(0, 2) // Solo mostrar los primeros 2
+                    });
+                } else {
+                    addResult('❌ Archivos - Error', 'error', data);
+                }
+            } catch (error) {
+                addResult('❌ Archivos - Error de conexión', 'error', {
+                    error: error.message,
+                    type: error.name
+                });
+            }
+        }
+
+        async function testDBStatus() {
+            try {
+                addResult('Probando estado de la base de datos...', 'info');
+                const response = await fetch('http://localhost:4000/api/db-status');
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'ok') {
+                    addResult('✅ Base de Datos - OK', 'success', data);
+                } else {
+                    addResult('❌ Base de Datos - Error', 'error', data);
+                }
+            } catch (error) {
+                addResult('❌ Base de Datos - Error de conexión', 'error', {
+                    error: error.message,
+                    type: error.name
+                });
+            }
+        }
+
+        // Test automático al cargar la página
+        window.onload = function() {
+            addResult('🚀 Iniciando tests automáticos...', 'info');
+            setTimeout(testBackendHealth, 500);
+            setTimeout(testApiHealth, 1000);
+            setTimeout(testDBStatus, 1500);
+            setTimeout(testArchivos, 2000);
+        };
+    </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-// const cors = require('cors'); // Comentado - NGINX maneja CORS
+const cors = require('cors'); // Habilitado para desarrollo local
 const { Pool } = require('pg');
 const multer = require('multer');
 const path = require('path');
@@ -52,30 +52,43 @@ const upload = multer({
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// CORS deshabilitado - NGINX maneja CORS
-// app.use(cors({
-//   origin: [
-//     'https://biblioteca.sembrandodatos.com', // dominio de producción
-//     'http://localhost:5173',                 // desarrollo con Vite
-//     'http://localhost:3000',                 // desarrollo alternativo
-//     'http://127.0.0.1:5173'                  // desarrollo con IP local
-//   ],
-//   credentials: true,
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-// }));
+// Configurar CORS para desarrollo y producción
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (aplicaciones móviles, postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Lista de orígenes permitidos
+    const allowedOrigins = [
+      'http://localhost:5173',                      // Desarrollo local Vite
+      'http://localhost:3000',                      // Desarrollo alternativo
+      'http://127.0.0.1:5173',                      // Desarrollo con IP local
+      'https://biblioteca.sembrandodatos.com',      // Producción frontend
+      'https://api.biblioteca.sembrandodatos.com'   // Producción API
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('CORS: Origen no permitido:', origin);
+      callback(null, true); // Permitir por ahora para desarrollo
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 
 // Middleware para parsear JSON
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Middleware para limpiar headers CORS duplicados (NGINX maneja CORS)
+// Middleware para logging de requests
 app.use((req, res, next) => {
-  // Eliminar cualquier header CORS que pueda estar duplicado
-  res.removeHeader('Access-Control-Allow-Origin');
-  res.removeHeader('Access-Control-Allow-Methods');
-  res.removeHeader('Access-Control-Allow-Headers');
-  res.removeHeader('Access-Control-Allow-Credentials');
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${req.get('Origin') || 'No origin'}`);
   next();
 });
 
@@ -218,6 +231,67 @@ function determinarContentType(tipo) {
 }
 
 // ============ RUTAS PRINCIPALES ============
+
+// Endpoint de salud simple
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    message: 'Servidor backend funcionando correctamente',
+    timestamp: new Date().toISOString(),
+    cors: 'enabled'
+  });
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    message: 'API backend funcionando correctamente',
+    timestamp: new Date().toISOString(),
+    cors: 'enabled'
+  });
+});
+
+// Endpoint de estado completo del sistema
+app.get('/api/status', async (req, res) => {
+  try {
+    // Probar conexión a BD
+    const dbResult = await pool.query('SELECT NOW(), COUNT(*) as total_archivos FROM catalogo_archivos');
+    const dbStatus = {
+      connected: true,
+      timestamp: dbResult.rows[0].now,
+      totalArchivos: parseInt(dbResult.rows[0].total_archivos)
+    };
+
+    res.json({
+      status: 'ok',
+      message: 'Sistema BibliotecaSV funcionando correctamente',
+      timestamp: new Date().toISOString(),
+      services: {
+        api: 'ok',
+        database: dbStatus,
+        cors: 'enabled'
+      },
+      environment: {
+        nodeVersion: process.version,
+        port: PORT,
+        dbHost: process.env.DB_HOST,
+        dbName: process.env.DB_NAME
+      }
+    });
+  } catch (error) {
+    console.error('Error en status check:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Error en verificación del sistema',
+      error: error.message,
+      services: {
+        api: 'ok',
+        database: 'error',
+        cors: 'enabled'
+      }
+    });
+  }
+});
 
 // Endpoint para verificar estado de conexión a la base de datos
 app.get('/db-status', async (req, res) => {
