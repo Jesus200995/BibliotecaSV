@@ -6,6 +6,19 @@
         <h2 class="text-2xl font-bold text-gray-800">Usuarios</h2>
         <p class="mt-1 text-sm text-gray-500">Gestión de usuarios del sistema</p>
       </div>
+      
+      <!-- Botón para agregar nuevo usuario -->
+      <div class="flex items-center gap-3">
+        <button 
+          @click="abrirModalCrearUsuario"
+          class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          <span>Agregar Usuario</span>
+        </button>
+      </div>
     </div>
     
     <!-- Estadísticas rápidas -->
@@ -140,6 +153,191 @@
       </div>
     </div>
 
+    <!-- Modal para crear nuevo usuario -->
+    <div v-if="modalCrearVisible" class="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center p-4">
+      <!-- Fondo oscuro con animación -->
+      <div 
+        class="fixed inset-0 bg-black transition-opacity duration-300"
+        :class="{ 'bg-opacity-70': modalCrearVisible, 'bg-opacity-0': !modalCrearVisible }" 
+        @click="cerrarModalCrear"
+      ></div>
+      
+      <!-- Contenido del modal -->
+      <div 
+        class="relative bg-white rounded-2xl w-full max-w-md mx-4 shadow-2xl transform transition-all duration-300 overflow-hidden"
+        :class="{ 'scale-100 opacity-100': modalCrearVisible, 'scale-95 opacity-0': !modalCrearVisible }"
+      >
+        <!-- Cabecera del modal -->
+        <div class="bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-t-2xl px-6 py-4 flex items-center justify-between">
+          <h3 class="text-xl font-semibold flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+            Crear Nuevo Usuario
+          </h3>
+          <button 
+            @click="cerrarModalCrear" 
+            class="text-white hover:text-gray-200 transition-colors p-1 rounded-full hover:bg-white/20"
+          >
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Formulario -->
+        <form @submit.prevent="crearUsuario" class="p-6 space-y-4">
+          <!-- Nombre de usuario -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Nombre de usuario *
+            </label>
+            <input 
+              v-model="formularioUsuario.usuario" 
+              type="text" 
+              class="w-full rounded-lg border border-gray-300 shadow-sm px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" 
+              placeholder="Ingrese el nombre de usuario"
+              required
+              :disabled="creandoUsuario"
+            />
+          </div>
+          
+          <!-- Contraseña -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Contraseña *
+            </label>
+            <div class="relative">
+              <input 
+                v-model="formularioUsuario.contrasena" 
+                :type="mostrarContrasena ? 'text' : 'password'"
+                class="w-full rounded-lg border border-gray-300 shadow-sm px-3 py-2 pr-10 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" 
+                placeholder="Ingrese la contraseña"
+                required
+                minlength="6"
+                :disabled="creandoUsuario"
+              />
+              <button 
+                type="button"
+                @click="mostrarContrasena = !mostrarContrasena"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              >
+                <svg v-if="mostrarContrasena" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                </svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </button>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Mínimo 6 caracteres</p>
+          </div>
+          
+          <!-- Rol -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Rol *
+            </label>
+            <select 
+              v-model="formularioUsuario.rol" 
+              class="w-full rounded-lg border border-gray-300 shadow-sm px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+              required
+              :disabled="creandoUsuario"
+            >
+              <option value="">Seleccionar rol</option>
+              <option value="admin">Administrador</option>
+              <option value="user">Usuario</option>
+            </select>
+          </div>
+          
+          <!-- Estado activo -->
+          <div class="flex items-center">
+            <input 
+              v-model="formularioUsuario.activo" 
+              type="checkbox" 
+              id="activo"
+              class="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2"
+              :disabled="creandoUsuario"
+            />
+            <label for="activo" class="ml-2 text-sm font-medium text-gray-700">
+              Usuario activo
+            </label>
+          </div>
+          
+          <!-- Botones de acción -->
+          <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+            <button 
+              type="button"
+              @click="cerrarModalCrear"
+              class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all font-medium"
+              :disabled="creandoUsuario"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit"
+              :disabled="creandoUsuario"
+              class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-lg hover:from-indigo-700 hover:to-indigo-800 transition-all font-medium shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg v-if="creandoUsuario" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              {{ creandoUsuario ? 'Creando...' : 'Crear Usuario' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal de confirmación de usuario creado -->
+    <div v-if="confirmacionCrearVisible" class="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
+      <!-- Fondo oscuro con animación -->
+      <div 
+        class="fixed inset-0 bg-black transition-opacity duration-300"
+        :class="{ 'bg-opacity-70': confirmacionCrearVisible, 'bg-opacity-0': !confirmacionCrearVisible }" 
+        @click="cerrarConfirmacionCrear"
+      ></div>
+      
+      <!-- Modal con animación -->
+      <div 
+        class="relative bg-white rounded-2xl max-w-md w-full mx-4 shadow-2xl transform transition-all duration-300 overflow-hidden"
+        :class="{ 'translate-y-0 scale-100 opacity-100': confirmacionCrearVisible, 'translate-y-4 scale-95 opacity-0': !confirmacionCrearVisible }"
+      >
+        <div class="bg-gradient-to-b from-white to-gray-50 flex flex-col items-center p-8 text-center">
+          <!-- Icono de éxito con animación -->
+          <div class="relative">
+            <!-- Círculo exterior pulsante -->
+            <div class="absolute inset-0 rounded-full bg-green-100 animate-ping opacity-25"></div>
+            <!-- Círculo base -->
+            <div class="relative w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+          </div>
+          
+          <!-- Texto de confirmación -->
+          <h3 class="mt-6 text-xl font-bold text-gray-900">¡Usuario creado!</h3>
+          <p class="mt-2 text-gray-600 leading-relaxed">
+            El usuario se ha creado correctamente en el sistema.
+          </p>
+          
+          <!-- Botón de cierre -->
+          <button 
+            @click="cerrarConfirmacionCrear"
+            class="mt-6 px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
+          >
+            Continuar
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Sistema de Notificaciones -->
     <div class="fixed top-4 right-4 z-50 space-y-3 max-w-sm">
       <div 
@@ -219,6 +417,18 @@ const usuarios = ref([])
 const cargandoUsuarios = ref(false)
 const notificaciones = ref([])
 let notificacionId = 0
+
+// Variables para modal de crear usuario
+const modalCrearVisible = ref(false)
+const creandoUsuario = ref(false)
+const confirmacionCrearVisible = ref(false)
+const mostrarContrasena = ref(false)
+const formularioUsuario = ref({
+  usuario: '',
+  contrasena: '',
+  rol: '',
+  activo: true
+})
 
 // Configurar axios y URLs
 const BACKEND_URL = import.meta.env.DEV 
@@ -353,6 +563,132 @@ function ocultarNotificacion(id) {
     setTimeout(() => {
       notificaciones.value.splice(index, 1)
     }, 300)
+  }
+}
+
+// Funciones para el modal de crear usuario
+function abrirModalCrearUsuario() {
+  console.log('Abriendo modal para crear usuario')
+  // Limpiar formulario
+  formularioUsuario.value = {
+    usuario: '',
+    contrasena: '',
+    rol: '',
+    activo: true
+  }
+  mostrarContrasena.value = false
+  modalCrearVisible.value = true
+}
+
+function cerrarModalCrear() {
+  modalCrearVisible.value = false
+  // Limpiar formulario después de cerrar
+  setTimeout(() => {
+    formularioUsuario.value = {
+      usuario: '',
+      contrasena: '',
+      rol: '',
+      activo: true
+    }
+    mostrarContrasena.value = false
+  }, 300)
+}
+
+function cerrarConfirmacionCrear() {
+  confirmacionCrearVisible.value = false
+}
+
+async function crearUsuario() {
+  console.log('Creando usuario:', formularioUsuario.value)
+  
+  try {
+    creandoUsuario.value = true
+    
+    // Validaciones básicas
+    if (!formularioUsuario.value.usuario.trim()) {
+      mostrarNotificacion('El nombre de usuario es requerido', 'error')
+      return
+    }
+    
+    if (!formularioUsuario.value.contrasena.trim()) {
+      mostrarNotificacion('La contraseña es requerida', 'error')
+      return
+    }
+    
+    if (formularioUsuario.value.contrasena.length < 6) {
+      mostrarNotificacion('La contraseña debe tener al menos 6 caracteres', 'error')
+      return
+    }
+    
+    if (!formularioUsuario.value.rol) {
+      mostrarNotificacion('El rol es requerido', 'error')
+      return
+    }
+    
+    // Obtener el token del localStorage
+    const token = localStorage.getItem('authToken')
+    
+    if (!token) {
+      mostrarNotificacion('No hay token de autenticación válido', 'error')
+      return
+    }
+    
+    const config = {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      timeout: 15000
+    }
+    
+    const datosUsuario = {
+      usuario: formularioUsuario.value.usuario.trim(),
+      contrasena: formularioUsuario.value.contrasena,
+      rol: formularioUsuario.value.rol,
+      activo: formularioUsuario.value.activo
+    }
+    
+    console.log('Enviando datos del usuario:', { ...datosUsuario, contrasena: '[OCULTA]' })
+    
+    const response = await axios.post(`${BACKEND_URL}/usuarios`, datosUsuario, config)
+    
+    console.log('Usuario creado - Respuesta:', response.status, response.data)
+    
+    if (response.data.success) {
+      // Cerrar modal de crear
+      modalCrearVisible.value = false
+      
+      // Mostrar modal de confirmación
+      confirmacionCrearVisible.value = true
+      
+      // Recargar la lista de usuarios
+      await cargarUsuarios()
+      
+      mostrarNotificacion('Usuario creado exitosamente', 'success')
+      
+    } else {
+      console.error('Error al crear usuario:', response.data.error)
+      mostrarNotificacion('Error al crear usuario: ' + response.data.error, 'error')
+    }
+    
+  } catch (err) {
+    console.error('Error al crear usuario:', err)
+    
+    if (err.response?.status === 409) {
+      mostrarNotificacion('Ya existe un usuario con ese nombre', 'error')
+    } else if (err.response?.status === 403) {
+      mostrarNotificacion('No tienes permisos para crear usuarios', 'error')
+    } else if (err.response?.status === 401) {
+      mostrarNotificacion('Tu sesión ha expirado. Por favor, inicia sesión nuevamente', 'error')
+    } else if (err.response?.data?.error) {
+      mostrarNotificacion('Error: ' + err.response.data.error, 'error')
+    } else {
+      mostrarNotificacion('Error de conexión con el servidor', 'error')
+    }
+    
+  } finally {
+    creandoUsuario.value = false
   }
 }
 </script>
