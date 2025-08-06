@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-purple-700 flex items-center justify-center p-4">
+  <div class="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-purple-700 flex items-center justify-center">
     <!-- Partículas de fondo -->
     <div class="absolute inset-0 overflow-hidden">
       <div class="particles">
@@ -119,6 +119,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import { API_CONFIG, buildApiUrl } from '../config/api.js'
 
 // Definir eventos
 const emit = defineEmits(['login-success'])
@@ -133,10 +134,10 @@ const mostrarContrasena = ref(false)
 const cargando = ref(false)
 const error = ref('')
 
-// Configurar URL del backend
-const BACKEND_URL = import.meta.env.DEV 
-  ? 'http://localhost:4000/api' 
-  : 'https://api.biblioteca.sembrandodatos.com/api'
+// Configurar URL del backend usando la configuración centralizada
+const BACKEND_URL = API_CONFIG.BASE_URL
+
+console.log('LoginView - Backend URL:', BACKEND_URL)
 
 // Función para manejar el login
 const handleLogin = async () => {
@@ -146,7 +147,7 @@ const handleLogin = async () => {
   try {
     console.log('Intentando login con:', formData.value.usuario)
     
-    const response = await axios.post(`${BACKEND_URL}/login`, {
+    const response = await axios.post(buildApiUrl('/login'), {
       usuario: formData.value.usuario,
       contrasena: formData.value.contrasena
     })
