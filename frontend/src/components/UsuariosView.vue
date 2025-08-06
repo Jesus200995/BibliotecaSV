@@ -76,11 +76,12 @@
               <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Usuario</th>
               <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Rol</th>
               <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Estado</th>
+              <th class="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-if="cargandoUsuarios" class="animate-pulse">
-              <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+              <td colspan="5" class="px-6 py-8 text-center text-gray-500">
                 <div class="flex items-center justify-center">
                   <svg class="animate-spin h-5 w-5 mr-3 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -92,7 +93,7 @@
             </tr>
             
             <tr v-else-if="usuarios.length === 0" class="text-center">
-              <td colspan="4" class="px-6 py-8 text-gray-500">
+              <td colspan="5" class="px-6 py-8 text-gray-500">
                 <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
@@ -145,6 +146,37 @@
                       {{ usuario.activo ? 'Activo' : 'Inactivo' }}
                     </span>
                   </div>
+                </div>
+              </td>
+              
+              <!-- Columna de Acciones -->
+              <td class="px-6 py-4 whitespace-nowrap text-center">
+                <div class="flex items-center justify-center space-x-2">
+                  <!-- Botón Editar -->
+                  <button 
+                    @click="abrirModalEditarUsuario(usuario)"
+                    class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200"
+                    :title="`Editar usuario ${usuario.usuario}`"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Editar
+                  </button>
+                  
+                  <!-- Botón Eliminar -->
+                  <button 
+                    @click="abrirModalEliminarUsuario(usuario)"
+                    class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200"
+                    :title="`Eliminar usuario ${usuario.usuario}`"
+                    :disabled="usuario.id === 1"
+                    :class="{ 'opacity-50 cursor-not-allowed': usuario.id === 1 }"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Eliminar
+                  </button>
                 </div>
               </td>
             </tr>
@@ -338,6 +370,196 @@
       </div>
     </div>
 
+    <!-- Modal para editar usuario -->
+    <div v-if="modalEditarVisible" class="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center p-4">
+      <!-- Fondo oscuro con animación -->
+      <div 
+        class="fixed inset-0 bg-black transition-opacity duration-300"
+        :class="{ 'bg-opacity-70': modalEditarVisible, 'bg-opacity-0': !modalEditarVisible }" 
+        @click="cerrarModalEditar"
+      ></div>
+      
+      <!-- Contenido del modal -->
+      <div 
+        class="relative bg-white rounded-2xl w-full max-w-md mx-4 shadow-2xl transform transition-all duration-300 overflow-hidden"
+        :class="{ 'scale-100 opacity-100': modalEditarVisible, 'scale-95 opacity-0': !modalEditarVisible }"
+      >
+        <!-- Cabecera del modal -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-t-2xl px-6 py-4 flex items-center justify-between">
+          <h3 class="text-xl font-semibold flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Editar Usuario
+          </h3>
+          <button 
+            @click="cerrarModalEditar" 
+            class="text-white hover:text-gray-200 transition-colors p-1 rounded-full hover:bg-white/20"
+          >
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Formulario -->
+        <form @submit.prevent="editarUsuario" class="p-6 space-y-4">
+          <!-- Nombre de usuario -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Nombre de usuario *
+            </label>
+            <input 
+              v-model="formularioEditar.usuario" 
+              type="text" 
+              class="w-full rounded-lg border border-gray-300 shadow-sm px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+              placeholder="Ingrese el nombre de usuario"
+              required
+              :disabled="editandoUsuario"
+            />
+          </div>
+          
+          <!-- Rol -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Rol *
+            </label>
+            <select 
+              v-model="formularioEditar.rol" 
+              class="w-full rounded-lg border border-gray-300 shadow-sm px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              required
+              :disabled="editandoUsuario"
+            >
+              <option value="">Seleccionar rol</option>
+              <option value="admin">Administrador</option>
+              <option value="user">Usuario</option>
+            </select>
+          </div>
+          
+          <!-- Estado activo -->
+          <div class="flex items-center">
+            <input 
+              v-model="formularioEditar.activo" 
+              type="checkbox" 
+              id="activoEditar"
+              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              :disabled="editandoUsuario"
+            />
+            <label for="activoEditar" class="ml-2 text-sm font-medium text-gray-700">
+              Usuario activo
+            </label>
+          </div>
+          
+          <!-- Botones de acción -->
+          <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+            <button 
+              type="button"
+              @click="cerrarModalEditar"
+              class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all font-medium"
+              :disabled="editandoUsuario"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit"
+              :disabled="editandoUsuario"
+              class="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all font-medium shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg v-if="editandoUsuario" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              {{ editandoUsuario ? 'Actualizando...' : 'Actualizar Usuario' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal para eliminar usuario -->
+    <div v-if="modalEliminarVisible" class="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center p-4">
+      <!-- Fondo oscuro con animación -->
+      <div 
+        class="fixed inset-0 bg-black transition-opacity duration-300"
+        :class="{ 'bg-opacity-70': modalEliminarVisible, 'bg-opacity-0': !modalEliminarVisible }" 
+        @click="cerrarModalEliminar"
+      ></div>
+      
+      <!-- Contenido del modal -->
+      <div 
+        class="relative bg-white rounded-2xl w-full max-w-md mx-4 shadow-2xl transform transition-all duration-300 overflow-hidden"
+        :class="{ 'scale-100 opacity-100': modalEliminarVisible, 'scale-95 opacity-0': !modalEliminarVisible }"
+      >
+        <!-- Cabecera del modal -->
+        <div class="bg-gradient-to-r from-red-600 to-red-500 text-white rounded-t-2xl px-6 py-4 flex items-center justify-between">
+          <h3 class="text-xl font-semibold flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            Eliminar Usuario
+          </h3>
+          <button 
+            @click="cerrarModalEliminar" 
+            class="text-white hover:text-gray-200 transition-colors p-1 rounded-full hover:bg-white/20"
+          >
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Contenido -->
+        <div class="p-6">
+          <div class="flex items-center justify-center mb-4">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </div>
+          </div>
+          
+          <div class="text-center mb-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-2">¿Eliminar usuario?</h3>
+            <p class="text-gray-600" v-if="usuarioEliminar">
+              ¿Estás seguro de que quieres eliminar al usuario <strong>{{ usuarioEliminar.usuario }}</strong>?
+            </p>
+            <p class="text-sm text-red-600 mt-2">
+              Esta acción no se puede deshacer.
+            </p>
+          </div>
+          
+          <!-- Botones de acción -->
+          <div class="flex items-center justify-end gap-3">
+            <button 
+              type="button"
+              @click="cerrarModalEliminar"
+              class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all font-medium"
+              :disabled="eliminandoUsuario"
+            >
+              Cancelar
+            </button>
+            <button 
+              @click="eliminarUsuario"
+              :disabled="eliminandoUsuario"
+              class="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all font-medium shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg v-if="eliminandoUsuario" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              {{ eliminandoUsuario ? 'Eliminando...' : 'Eliminar Usuario' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Sistema de Notificaciones -->
     <div class="fixed top-4 right-4 z-50 space-y-3 max-w-sm">
       <div 
@@ -429,6 +651,22 @@ const formularioUsuario = ref({
   rol: '',
   activo: true
 })
+
+// Variables para modal de editar usuario
+const modalEditarVisible = ref(false)
+const editandoUsuario = ref(false)
+const usuarioEditando = ref(null)
+const formularioEditar = ref({
+  id: null,
+  usuario: '',
+  rol: '',
+  activo: true
+})
+
+// Variables para modal de eliminar usuario
+const modalEliminarVisible = ref(false)
+const eliminandoUsuario = ref(false)
+const usuarioEliminar = ref(null)
 
 // Configurar axios y URLs
 const BACKEND_URL = import.meta.env.DEV 
@@ -689,6 +927,196 @@ async function crearUsuario() {
     
   } finally {
     creandoUsuario.value = false
+  }
+}
+
+// Funciones para editar usuario
+function abrirModalEditarUsuario(usuario) {
+  console.log('Abriendo modal para editar usuario:', usuario)
+  usuarioEditando.value = usuario
+  formularioEditar.value = {
+    id: usuario.id,
+    usuario: usuario.usuario,
+    rol: usuario.rol,
+    activo: usuario.activo
+  }
+  modalEditarVisible.value = true
+}
+
+function cerrarModalEditar() {
+  modalEditarVisible.value = false
+  setTimeout(() => {
+    usuarioEditando.value = null
+    formularioEditar.value = {
+      id: null,
+      usuario: '',
+      rol: '',
+      activo: true
+    }
+  }, 300)
+}
+
+async function editarUsuario() {
+  console.log('Editando usuario:', formularioEditar.value)
+  
+  try {
+    editandoUsuario.value = true
+    
+    // Validaciones básicas
+    if (!formularioEditar.value.usuario.trim()) {
+      mostrarNotificacion('El nombre de usuario es requerido', 'error')
+      return
+    }
+    
+    if (!formularioEditar.value.rol) {
+      mostrarNotificacion('El rol es requerido', 'error')
+      return
+    }
+    
+    // Obtener el token del localStorage
+    const token = localStorage.getItem('authToken')
+    
+    if (!token) {
+      mostrarNotificacion('No hay token de autenticación válido', 'error')
+      return
+    }
+    
+    const config = {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      timeout: 15000
+    }
+    
+    const datosUsuario = {
+      usuario: formularioEditar.value.usuario.trim(),
+      rol: formularioEditar.value.rol,
+      activo: formularioEditar.value.activo
+    }
+    
+    console.log('Enviando datos actualizados del usuario:', datosUsuario)
+    
+    const response = await axios.put(`${BACKEND_URL}/usuarios/${formularioEditar.value.id}`, datosUsuario, config)
+    
+    console.log('Usuario editado - Respuesta:', response.status, response.data)
+    
+    if (response.data.success) {
+      // Cerrar modal
+      modalEditarVisible.value = false
+      
+      // Recargar la lista de usuarios
+      await cargarUsuarios()
+      
+      mostrarNotificacion('Usuario actualizado exitosamente', 'success')
+      
+    } else {
+      console.error('Error al editar usuario:', response.data.error)
+      mostrarNotificacion('Error al actualizar usuario: ' + response.data.error, 'error')
+    }
+    
+  } catch (err) {
+    console.error('Error al editar usuario:', err)
+    
+    if (err.response?.status === 409) {
+      mostrarNotificacion('Ya existe un usuario con ese nombre', 'error')
+    } else if (err.response?.status === 403) {
+      mostrarNotificacion('No tienes permisos para editar usuarios', 'error')
+    } else if (err.response?.status === 401) {
+      mostrarNotificacion('Tu sesión ha expirado. Por favor, inicia sesión nuevamente', 'error')
+    } else if (err.response?.data?.error) {
+      mostrarNotificacion('Error: ' + err.response.data.error, 'error')
+    } else {
+      mostrarNotificacion('Error de conexión con el servidor', 'error')
+    }
+    
+  } finally {
+    editandoUsuario.value = false
+  }
+}
+
+// Funciones para eliminar usuario
+function abrirModalEliminarUsuario(usuario) {
+  console.log('Abriendo modal para eliminar usuario:', usuario)
+  
+  // No permitir eliminar al usuario admin principal (ID 1)
+  if (usuario.id === 1) {
+    mostrarNotificacion('No se puede eliminar el usuario administrador principal', 'error')
+    return
+  }
+  
+  usuarioEliminar.value = usuario
+  modalEliminarVisible.value = true
+}
+
+function cerrarModalEliminar() {
+  modalEliminarVisible.value = false
+  setTimeout(() => {
+    usuarioEliminar.value = null
+  }, 300)
+}
+
+async function eliminarUsuario() {
+  console.log('Eliminando usuario:', usuarioEliminar.value)
+  
+  try {
+    eliminandoUsuario.value = true
+    
+    // Obtener el token del localStorage
+    const token = localStorage.getItem('authToken')
+    
+    if (!token) {
+      mostrarNotificacion('No hay token de autenticación válido', 'error')
+      return
+    }
+    
+    const config = {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      timeout: 15000
+    }
+    
+    console.log('Eliminando usuario ID:', usuarioEliminar.value.id)
+    
+    const response = await axios.delete(`${BACKEND_URL}/usuarios/${usuarioEliminar.value.id}`, config)
+    
+    console.log('Usuario eliminado - Respuesta:', response.status, response.data)
+    
+    if (response.data.success) {
+      // Cerrar modal
+      modalEliminarVisible.value = false
+      
+      // Recargar la lista de usuarios
+      await cargarUsuarios()
+      
+      mostrarNotificacion('Usuario eliminado exitosamente', 'success')
+      
+    } else {
+      console.error('Error al eliminar usuario:', response.data.error)
+      mostrarNotificacion('Error al eliminar usuario: ' + response.data.error, 'error')
+    }
+    
+  } catch (err) {
+    console.error('Error al eliminar usuario:', err)
+    
+    if (err.response?.status === 403) {
+      mostrarNotificacion('No tienes permisos para eliminar usuarios', 'error')
+    } else if (err.response?.status === 401) {
+      mostrarNotificacion('Tu sesión ha expirado. Por favor, inicia sesión nuevamente', 'error')
+    } else if (err.response?.status === 404) {
+      mostrarNotificacion('Usuario no encontrado', 'error')
+    } else if (err.response?.data?.error) {
+      mostrarNotificacion('Error: ' + err.response.data.error, 'error')
+    } else {
+      mostrarNotificacion('Error de conexión con el servidor', 'error')
+    }
+    
+  } finally {
+    eliminandoUsuario.value = false
   }
 }
 </script>
