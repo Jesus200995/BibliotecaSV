@@ -99,53 +99,20 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Middleware para verificar token JWT
 function verificarToken(req, res, next) {
-  try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
-    if (!token) {
-      return res.status(401).json({ 
-        success: false,
-        error: 'Token de acceso requerido' 
-      });
-    }
-
-    if (!process.env.JWT_SECRET) {
-      console.error('JWT_SECRET no está configurado');
-      return res.status(500).json({ 
-        success: false,
-        error: 'Error de configuración del servidor' 
-      });
-    }
-
-    jwt.verify(token, process.env.JWT_SECRET, (err, usuario) => {
-      if (err) {
-        console.log('Error al verificar token:', err.message);
-        return res.status(403).json({ 
-          success: false,
-          error: 'Token inválido o expirado' 
-        });
-      }
-      
-      // Asegurar que el usuario tenga los campos necesarios
-      if (!usuario || !usuario.id || !usuario.usuario || !usuario.rol) {
-        console.log('Token válido pero datos de usuario incompletos:', usuario);
-        return res.status(403).json({ 
-          success: false,
-          error: 'Token inválido - datos de usuario incompletos' 
-        });
-      }
-      
-      req.usuario = usuario;
-      next();
-    });
-  } catch (error) {
-    console.error('Error en middleware verificarToken:', error);
-    return res.status(500).json({ 
-      success: false,
-      error: 'Error interno del servidor' 
-    });
+  if (!token) {
+    return res.status(401).json({ error: 'Token de acceso requerido' });
   }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, usuario) => {
+    if (err) {
+      return res.status(403).json({ error: 'Token inválido' });
+    }
+    req.usuario = usuario;
+    next();
+  });
 }
 
 // ============ ENDPOINT DE LOGIN ============
@@ -235,25 +202,10 @@ app.post('/api/login', async (req, res) => {
 
 // Endpoint para verificar token
 app.get('/api/verify-token', verificarToken, (req, res) => {
-  try {
-    console.log('=== GET /api/verify-token ===');
-    console.log('Usuario del token:', req.usuario);
-    
-    res.json({
-      success: true,
-      usuario: {
-        id: req.usuario.id,
-        usuario: req.usuario.usuario,
-        rol: req.usuario.rol
-      }
-    });
-  } catch (error) {
-    console.error('Error en verify-token:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error interno del servidor'
-    });
-  }
+  res.json({
+    success: true,
+    usuario: req.usuario
+  });
 });
 
 // ============ ENDPOINT DE USUARIOS ============
