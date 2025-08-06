@@ -159,6 +159,7 @@
           <MapaView v-if="vistaActual === 'mapa'"/>
           
           <!-- Vista de Usuarios (solo para admin) -->
+                    <!-- Vista de Usuarios (solo para admin) -->
           <UsuariosView v-if="vistaActual === 'usuarios' && esAdmin"/>
         </div>
       </main>
@@ -227,25 +228,78 @@ watch(() => usuarioActual.value?.rol, (nuevoRol, rolAnterior) => {
   }
 })
 
+// Vigilar cambios en el rol del usuario para limpiar vistas restringidas
+watch(() => usuarioActual.value?.rol, (nuevoRol, rolAnterior) => {
+  console.log('Cambio de rol detectado:', rolAnterior, '->', nuevoRol)
+  
+  // Si el usuario ya no es admin y está en la vista de usuarios, redirigir al dashboard
+  if (vistaActual.value === 'usuarios' && nuevoRol !== 'admin') {
+    console.log('Redirigiendo desde vista de usuarios: usuario ya no es admin')
+    vistaActual.value = 'dashboard'
+  }
+})
+
 // Función para verificar si el usuario está autenticado
 function verificarAutenticacion() {
   const token = localStorage.getItem('authToken')
   const userData = localStorage.getItem('userData')
+  
+  console.log('Verificando autenticación...')
+  console.log('Token encontrado:', token ? 'Sí' : 'No')
+  console.log('Datos de usuario encontrados:', userData ? 'Sí' : 'No')
   
   if (token && userData) {
     try {
       // Configurar axios con el token
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       
-      // Establecer estado de autenticación
-      estaAutenticado.value = true
-      usuarioActual.value = JSON.parse(userData)
+      // Parsear datos de usuario de forma segura
+      const datosUsuario = JSON.parse(userData)
       
-      console.log('Usuario autenticado:', usuarioActual.value)
+      // Verificar que los datos del usuario son válidos
+      if (datosUsuario && datosUsuario.usuario && datosUsuario.rol) {
+        // Establecer estado de autenticación
+        estaAutenticado.value = true
+        usuarioActual.value = datosUsuario
+        
+        console.log('Usuario autenticado desde localStorage:', datosUsuario)
+        
+        // Verificar token con el backend de forma opcional
+        verificarTokenConBackend(token, datosUsuario)
+      } else {
+        console.error('Datos de usuario inválidos en localStorage')
+        cerrarSesion()
+      }
     } catch (error) {
-      console.error('Error al verificar autenticación:', error)
+      console.error('Error al parsear datos de usuario:', error)
       cerrarSesion()
     }
+  } else {
+    console.log('No hay token o datos de usuario guardados')
+  }
+}
+
+// Función auxiliar para verificar token con el backend
+async function verificarTokenConBackend(token, datosUsuarioLocal) {
+  try {
+    const response = await axios.get(`${BACKEND_URL}/verify-token`)
+    
+    if (response.data && response.data.success && response.data.usuario) {
+      console.log('Token verificado con el backend:', response.data.usuario)
+      
+      // Actualizar datos del usuario si hay diferencias
+      if (JSON.stringify(usuarioActual.value) !== JSON.stringify(response.data.usuario)) {
+        usuarioActual.value = response.data.usuario
+        localStorage.setItem('userData', JSON.stringify(response.data.usuario))
+        localStorage.setItem('userRole', response.data.usuario.rol)
+      }
+    } else {
+      console.warn('Respuesta inesperada del backend al verificar token')
+      // No cerrar sesión aquí, mantener los datos locales
+    }
+  } catch (error) {
+    console.warn('Error al verificar token con backend (se mantendrá sesión local):', error.message)
+    // No cerrar sesión por errores de red, mantener autenticación local
   }
 }
 
@@ -253,11 +307,28 @@ function verificarAutenticacion() {
 function manejarLoginExitoso(loginData) {
   console.log('Login exitoso en App:', loginData)
   
-  estaAutenticado.value = true
-  usuarioActual.value = loginData.usuario
-  
-  // Configurar axios con el token
-  axios.defaults.headers.common['Authorization'] = `Bearer ${loginData.token}`
+  try {
+    // Verificar que loginData tiene la estructura correcta
+    if (!loginData || !loginData.usuario || !loginData.usuario.usuario || !loginData.usuario.rol) {
+      console.error('Datos de login incompletos:', loginData)
+      alert('Error: Datos de autenticación incompletos. Inténtalo de nuevo.')
+      return
+    }
+    
+    estaAutenticado.value = true
+    usuarioActual.value = loginData.usuario
+    
+    // Configurar axios con el token
+    if (loginData.token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${loginData.token}`
+    }
+    
+    console.log('Usuario autenticado correctamente:', loginData.usuario)
+  } catch (error) {
+    console.error('Error al procesar login exitoso:', error)
+    alert('Error al procesar la autenticación. Inténtalo de nuevo.')
+    cerrarSesion()
+  }
 }
 
 // Cerrar sesión
@@ -331,6 +402,7 @@ function navegarA(vista) {
   // Verificar permisos para vista de usuarios
   if (vista === 'usuarios' && !esAdmin.value) {
     console.warn('Acceso denegado: Se requiere rol de administrador para acceder a la gestión de usuarios')
+    alert('Acceso denegado: Solo los administradores pueden gestionar usuarios.')
     return
   }
   

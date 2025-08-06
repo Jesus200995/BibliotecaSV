@@ -4,7 +4,11 @@
 		{
 			"label": "Run Frontend",
 			"type": "shell",
-			"command": "cd c:/Users/Admin_1/Pictures/Biblioteca/BibliotecaSV/frontend && npm run dev",
+			"command": "npm",
+			"args": ["run", "dev"],
+			"options": {
+				"cwd": "c:/Users/Admin_1/Pictures/Biblioteca/BibliotecaSV/frontend"
+			},
 			"isBackground": true,
 			"problemMatcher": [],
 			"group": "test"
@@ -12,7 +16,11 @@
 		{
 			"label": "Run Backend",
 			"type": "shell",
-			"command": "cd c:/Users/Admin_1/Pictures/Biblioteca/BibliotecaSV/backend && node index.js",
+			"command": "node",
+			"args": ["index.js"],
+			"options": {
+				"cwd": "c:/Users/Admin_1/Pictures/Biblioteca/BibliotecaSV/backend"
+			},
 			"isBackground": true,
 			"problemMatcher": [],
 			"group": "build"
