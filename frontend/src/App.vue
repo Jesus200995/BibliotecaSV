@@ -113,7 +113,14 @@
           Mapa
         </a>
 
-        <a href="#" @click="vistaActual = 'usuarios'" 
+        <!-- Sección Administración (solo para admin) -->
+        <div v-if="usuarioActual?.rol === 'admin'" class="px-4 py-3 text-xs uppercase font-semibold text-purple-200 border-t border-purple-600 mt-4">
+          Administración
+        </div>
+
+        <!-- Apartado Usuarios (solo para admin) -->
+        <a v-if="usuarioActual?.rol === 'admin'" 
+           href="#" @click="vistaActual = 'usuarios'" 
            class="flex items-center px-6 py-3 text-purple-100 transition-colors"
            :class="vistaActual === 'usuarios' ? 'bg-purple-800 border-l-4 border-white' : 'hover:bg-purple-800'">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -121,11 +128,6 @@
           </svg>
           Usuarios
         </a>
-
-        <!-- Sección Administración (solo para admin) -->
-        <div v-if="usuarioActual?.rol === 'admin'" class="px-4 py-3 text-xs uppercase font-semibold text-purple-200 border-t border-purple-600 mt-4">
-          Administración
-        </div>
       </nav>
     </aside>
 
@@ -156,8 +158,8 @@
           <!-- Vista de Mapa -->
           <MapaView v-if="vistaActual === 'mapa'"/>
           
-          <!-- Vista de Usuarios -->
-          <UsuariosView v-if="vistaActual === 'usuarios'"/>
+          <!-- Vista de Usuarios (solo para admin) -->
+          <UsuariosView v-if="vistaActual === 'usuarios' && usuarioActual?.rol === 'admin'"/>
         </div>
       </main>
 
