@@ -1,25 +1,5 @@
 <template>
-  <!-- Verificación de permisos de administrador -->
-  <div v-if="!esAdmin" class="flex items-center justify-center min-h-screen bg-gray-100">
-    <div class="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8 text-center">
-      <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
-        </svg>
-      </div>
-      <h2 class="text-xl font-bold text-gray-900 mb-2">Acceso Restringido</h2>
-      <p class="text-gray-600 mb-6">No tienes permisos para acceder a la gestión de usuarios. Esta sección está disponible solo para administradores.</p>
-      <button 
-        @click="volverInicio"
-        class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
-      >
-        Volver al Inicio
-      </button>
-    </div>
-  </div>
-
-  <!-- Contenido principal (solo se muestra si es admin) -->
-  <div v-else>
+  <div>
     <!-- Título de la página -->
     <div class="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
       <div>
@@ -711,22 +691,6 @@ axios.defaults.timeout = API_CONFIG.TIMEOUT
 // Variable para mostrar/ocultar botón de debug
 const esDesarrollo = computed(() => !import.meta.env.PROD)
 
-// Computed para verificar si el usuario actual es admin
-const esAdmin = computed(() => {
-  // Obtener datos del usuario desde localStorage
-  try {
-    const userData = localStorage.getItem('userData')
-    if (userData) {
-      const usuario = JSON.parse(userData)
-      console.log('UsuariosView - Verificando permisos admin para usuario:', usuario)
-      return usuario && usuario.rol === 'admin'
-    }
-  } catch (error) {
-    console.error('Error al verificar rol de admin:', error)
-  }
-  return false
-})
-
 console.log('UsuariosView - Backend URL:', BACKEND_URL)
 console.log('UsuariosView - Configuración completa:', API_CONFIG)
 console.log('UsuariosView - Hostname actual:', window.location.hostname)
@@ -745,22 +709,8 @@ const usuariosAdmin = computed(() => {
 // Cargar usuarios al montar el componente
 onMounted(async () => {
   console.log('UsuariosView montado')
-  
-  // Verificar permisos antes de cargar datos
-  if (!esAdmin.value) {
-    console.warn('Usuario sin permisos de administrador intentando acceder a UsuariosView')
-    return
-  }
-  
   await cargarUsuarios()
 })
-
-// Función para volver al inicio (emitir evento o usar router si está disponible)
-function volverInicio() {
-  // Aquí podrías emitir un evento al componente padre o usar router
-  // Por ahora, recarga la página para volver al dashboard
-  window.location.reload()
-}
 
 // Función de debug para verificar conectividad
 async function verificarConectividad() {
@@ -793,13 +743,6 @@ async function verificarConectividad() {
 
 async function cargarUsuarios() {
   console.log('UsuariosView - Cargando usuarios...')
-  
-  // Verificar permisos antes de hacer la petición
-  if (!esAdmin.value) {
-    console.error('UsuariosView - Usuario sin permisos de administrador')
-    mostrarNotificacion('No tienes permisos para ver la lista de usuarios', 'error')
-    return
-  }
   
   try {
     cargandoUsuarios.value = true

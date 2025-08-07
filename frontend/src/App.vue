@@ -114,13 +114,13 @@
         </a>
 
         <!-- Sección Administración (solo para admin) -->
-        <div v-if="esAdmin" class="px-4 py-3 text-xs uppercase font-semibold text-purple-200 border-t border-purple-600 mt-4">
+        <div v-if="usuarioActual?.rol === 'admin'" class="px-4 py-3 text-xs uppercase font-semibold text-purple-200 border-t border-purple-600 mt-4">
           Administración
         </div>
 
         <!-- Apartado Usuarios (solo para admin) -->
-        <a v-if="esAdmin" 
-           href="#" @click="cambiarVistaAdmin('usuarios')" 
+        <a v-if="usuarioActual?.rol === 'admin'" 
+           href="#" @click="vistaActual = 'usuarios'" 
            class="flex items-center px-6 py-3 text-purple-100 transition-colors"
            :class="vistaActual === 'usuarios' ? 'bg-purple-800 border-l-4 border-white' : 'hover:bg-purple-800'">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -159,7 +159,7 @@
           <MapaView v-if="vistaActual === 'mapa'"/>
           
           <!-- Vista de Usuarios (solo para admin) -->
-          <UsuariosView v-if="vistaActual === 'usuarios' && esAdmin"/>
+          <UsuariosView v-if="vistaActual === 'usuarios' && usuarioActual?.rol === 'admin'"/>
         </div>
       </main>
 
@@ -181,7 +181,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { API_CONFIG, buildApiUrl } from './config/api.js'
 import LoginView from './components/LoginView.vue'
@@ -206,12 +206,6 @@ const BACKEND_URL = API_CONFIG.BASE_URL
 console.log('App - Backend URL configurada:', BACKEND_URL)
 console.log('App - Configuración completa:', API_CONFIG)
 
-// Computed property para verificar si es admin
-const esAdmin = computed(() => {
-  console.log('Verificando si es admin - Usuario actual:', usuarioActual.value)
-  return usuarioActual.value && usuarioActual.value.rol === 'admin'
-})
-
 // Verificar autenticación al cargar la aplicación
 onMounted(() => {
   verificarAutenticacion()
@@ -219,35 +213,23 @@ onMounted(() => {
 
 // Función para verificar si el usuario está autenticado
 function verificarAutenticacion() {
-  console.log('=== Verificando autenticación ===')
-  
   const token = localStorage.getItem('authToken')
   const userData = localStorage.getItem('userData')
-  
-  console.log('Token encontrado:', token ? 'Sí' : 'No')
-  console.log('Datos de usuario encontrados:', userData ? 'Sí' : 'No')
   
   if (token && userData) {
     try {
       // Configurar axios con el token
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       
-      // Parsear datos del usuario
-      const parsedUserData = JSON.parse(userData)
-      console.log('Datos de usuario parseados:', parsedUserData)
-      
       // Establecer estado de autenticación
       estaAutenticado.value = true
-      usuarioActual.value = parsedUserData
+      usuarioActual.value = JSON.parse(userData)
       
       console.log('Usuario autenticado:', usuarioActual.value)
-      console.log('Es admin:', esAdmin.value)
     } catch (error) {
       console.error('Error al verificar autenticación:', error)
       cerrarSesion()
     }
-  } else {
-    console.log('No hay datos de autenticación, permaneciendo desautenticado')
   }
 }
 
@@ -260,20 +242,6 @@ function manejarLoginExitoso(loginData) {
   
   // Configurar axios con el token
   axios.defaults.headers.common['Authorization'] = `Bearer ${loginData.token}`
-  
-  console.log('Usuario después del login:', usuarioActual.value)
-  console.log('Es admin después del login:', esAdmin.value)
-}
-
-// Función específica para cambiar vista solo para admin
-function cambiarVistaAdmin(vista) {
-  if (esAdmin.value) {
-    console.log('Cambiando a vista de admin:', vista)
-    vistaActual.value = vista
-  } else {
-    console.warn('Intento de acceso no autorizado a vista de admin:', vista)
-    alert('No tienes permisos para acceder a esta sección')
-  }
 }
 
 // Cerrar sesión
@@ -292,8 +260,6 @@ function cerrarSesion() {
   usuarioActual.value = null
   vistaActual.value = 'dashboard'
   archivoSeleccionado.value = null
-  
-  console.log('Sesión cerrada correctamente')
 }
 
 async function verFicha(id) {
