@@ -113,15 +113,21 @@
           Mapa
         </a>
 
-        <a href="#" @click="vistaActual = 'usuarios'" 
-           class="flex items-center px-6 py-3 text-purple-100 transition-colors"
-           :class="vistaActual === 'usuarios' ? 'bg-purple-800 border-l-4 border-white' : 'hover:bg-purple-800'"
-           v-if="usuarioActual?.rol === 'admin'">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-          </svg>
-          Usuarios
-        </a>
+        <!-- Sección de Administración -->
+        <div v-if="usuarioActual?.rol === 'admin'" class="mt-6">
+          <div class="px-4 py-3 text-xs uppercase font-semibold text-purple-200">
+            Administración
+          </div>
+          
+          <a href="#" @click="vistaActual = 'usuarios'" 
+             class="flex items-center px-6 py-3 text-purple-100 transition-colors"
+             :class="vistaActual === 'usuarios' ? 'bg-purple-800 border-l-4 border-white' : 'hover:bg-purple-800'">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+            </svg>
+            Gestión de Usuarios
+          </a>
+        </div>
       </nav>
     </aside>
 
@@ -193,12 +199,42 @@ const usuarioActual = ref(null)
 const archivoSeleccionado = ref(null)
 const vistaActual = ref('dashboard') // Estado para controlar la vista actual
 
-// Configurar URL del backend
-const BACKEND_URL = import.meta.env.DEV 
-  ? 'http://localhost:4000/api' 
-  : 'https://api.biblioteca.sembrandodatos.com/api'
+// Configurar URL del backend - Configuración más robusta
+const BACKEND_URL = (() => {
+  // En desarrollo (localhost o 127.0.0.1)
+  if (import.meta.env.DEV) {
+    return 'http://localhost:4000/api'
+  }
+  
+  // En producción, buscar en el orden de prioridad:
+  // 1. Variable de entorno
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
+  }
+  
+  // 2. Si estamos en el dominio principal de biblioteca
+  if (window.location.hostname.includes('biblioteca.sembrandodatos.com')) {
+    return 'https://api.biblioteca.sembrandodatos.com/api'
+  }
+  
+  // 3. Para cualquier otro dominio o IP, asumir que el backend está en el mismo host
+  const protocol = window.location.protocol
+  const hostname = window.location.hostname
+  const port = window.location.port
+  
+  // Si hay puerto específico, usar puerto 4000 para el backend
+  if (port && port !== '80' && port !== '443') {
+    return `${protocol}//${hostname}:4000/api`
+  }
+  
+  // Si no hay puerto específico, usar el mismo host con /api
+  return `${protocol}//${hostname}/api`
+})()
 
 console.log('App - Backend URL configurada:', BACKEND_URL)
+console.log('App - Entorno:', import.meta.env.MODE)
+console.log('App - Host actual:', window.location.hostname)
+console.log('App - Puerto actual:', window.location.port)
 
 // Verificar autenticación al cargar la aplicación
 onMounted(() => {
@@ -210,6 +246,11 @@ function verificarAutenticacion() {
   const token = localStorage.getItem('authToken')
   const userData = localStorage.getItem('userData')
   
+  console.log('App - Verificando autenticación:', {
+    token: token ? 'presente' : 'ausente',
+    userData: userData ? 'presente' : 'ausente'
+  })
+  
   if (token && userData) {
     try {
       // Configurar axios con el token
@@ -219,11 +260,17 @@ function verificarAutenticacion() {
       estaAutenticado.value = true
       usuarioActual.value = JSON.parse(userData)
       
-      console.log('Usuario autenticado:', usuarioActual.value)
+      console.log('App - Usuario autenticado exitosamente:', {
+        id: usuarioActual.value.id,
+        usuario: usuarioActual.value.usuario,
+        rol: usuarioActual.value.rol
+      })
     } catch (error) {
-      console.error('Error al verificar autenticación:', error)
+      console.error('App - Error al verificar autenticación:', error)
       cerrarSesion()
     }
+  } else {
+    console.log('App - No hay datos de autenticación válidos')
   }
 }
 
