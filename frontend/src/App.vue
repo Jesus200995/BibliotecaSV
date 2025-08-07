@@ -114,12 +114,12 @@
         </a>
 
         <!-- Sección Administración (solo para admin) -->
-        <div v-if="esAdmin" class="px-4 py-3 text-xs uppercase font-semibold text-purple-200 border-t border-purple-600 mt-4">
+        <div v-if="usuarioActual?.rol === 'admin'" class="px-4 py-3 text-xs uppercase font-semibold text-purple-200 border-t border-purple-600 mt-4">
           Administración
         </div>
 
         <!-- Apartado Usuarios (solo para admin) -->
-        <a v-if="esAdmin" 
+        <a v-if="usuarioActual?.rol === 'admin'" 
            href="#" @click="vistaActual = 'usuarios'" 
            class="flex items-center px-6 py-3 text-purple-100 transition-colors"
            :class="vistaActual === 'usuarios' ? 'bg-purple-800 border-l-4 border-white' : 'hover:bg-purple-800'">
@@ -159,7 +159,7 @@
           <MapaView v-if="vistaActual === 'mapa'"/>
           
           <!-- Vista de Usuarios (solo para admin) -->
-          <UsuariosView v-if="vistaActual === 'usuarios' && esAdmin"/>
+          <UsuariosView v-if="vistaActual === 'usuarios' && usuarioActual?.rol === 'admin'"/>
         </div>
       </main>
 
@@ -181,7 +181,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import LoginView from './components/LoginView.vue'
 import ArchivoTable from './components/ArchivoTable.vue'
@@ -199,11 +199,6 @@ const usuarioActual = ref(null)
 const archivoSeleccionado = ref(null)
 const vistaActual = ref('dashboard') // Estado para controlar la vista actual
 
-// Computed property para verificar si el usuario es admin
-const esAdmin = computed(() => {
-  return usuarioActual.value?.rol === 'admin'
-})
-
 // Configurar URL del backend
 const BACKEND_URL = import.meta.env.DEV 
   ? 'http://localhost:4000/api' 
@@ -214,17 +209,6 @@ console.log('App - Backend URL configurada:', BACKEND_URL)
 // Verificar autenticación al cargar la aplicación
 onMounted(() => {
   verificarAutenticacion()
-})
-
-// Vigilar cambios en el rol del usuario para limpiar vistas restringidas
-watch(() => usuarioActual.value?.rol, (nuevoRol, rolAnterior) => {
-  console.log('Cambio de rol detectado:', rolAnterior, '->', nuevoRol)
-  
-  // Si el usuario ya no es admin y está en la vista de usuarios, redirigir al dashboard
-  if (vistaActual.value === 'usuarios' && nuevoRol !== 'admin') {
-    console.log('Redirigiendo desde vista de usuarios: usuario ya no es admin')
-    vistaActual.value = 'dashboard'
-  }
 })
 
 // Función para verificar si el usuario está autenticado
@@ -267,7 +251,6 @@ function cerrarSesion() {
   // Limpiar localStorage
   localStorage.removeItem('authToken')
   localStorage.removeItem('userData')
-  localStorage.removeItem('userRole')
   
   // Limpiar headers de axios
   delete axios.defaults.headers.common['Authorization']
@@ -328,12 +311,6 @@ function cerrarFicha() {
 
 // Función para manejar la navegación desde el Dashboard
 function navegarA(vista) {
-  // Verificar permisos para vista de usuarios
-  if (vista === 'usuarios' && !esAdmin.value) {
-    console.warn('Acceso denegado: Se requiere rol de administrador para acceder a la gestión de usuarios')
-    return
-  }
-  
   vistaActual.value = vista
 }
 </script>
