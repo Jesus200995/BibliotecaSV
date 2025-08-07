@@ -112,16 +112,6 @@
           </svg>
           Mapa
         </a>
-
-        <a href="#" @click="vistaActual = 'usuarios'" 
-           class="flex items-center px-6 py-3 text-purple-100 transition-colors"
-           :class="vistaActual === 'usuarios' ? 'bg-purple-800 border-l-4 border-white' : 'hover:bg-purple-800'"
-           v-if="usuarioActual?.rol === 'admin'">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-          </svg>
-          Usuarios
-        </a>
       </nav>
     </aside>
 
@@ -151,9 +141,6 @@
           
           <!-- Vista de Mapa -->
           <MapaView v-if="vistaActual === 'mapa'"/>
-          
-          <!-- Vista de Usuarios -->
-          <UsuariosView v-if="vistaActual === 'usuarios'"/>
         </div>
       </main>
 
@@ -183,7 +170,6 @@ import ArchivoFicha from './components/ArchivoFicha.vue'
 import ArchivosView from './components/ArchivosView.vue'
 import EstadisticasView from './components/EstadisticasView.vue'
 import MapaView from './components/MapaView.vue'
-import UsuariosView from './components/UsuariosView.vue'
 
 // Estado de autenticación
 const estaAutenticado = ref(false)
