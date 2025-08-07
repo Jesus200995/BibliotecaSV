@@ -131,17 +131,6 @@
           </svg>
           Usuarios
         </a>
-        
-        <!-- Debug info (visible cuando no es admin para diagnosticar) -->
-        <div v-if="!esAdmin && usuarioActual" class="px-4 py-2 text-xs text-purple-300 bg-purple-900 mx-2 rounded">
-          <div>Debug Admin:</div>
-          <div>Rol: {{ usuarioActual?.rol }}</div>
-          <div>Tipo: {{ typeof usuarioActual?.rol }}</div>
-          <div>Es Admin: {{ esAdmin ? 'Sí' : 'No' }}</div>
-          <button @click="forzarVerificacionAdmin" class="text-purple-100 underline text-xs mt-1">
-            Verificar Admin
-          </button>
-        </div>
       </nav>
     </aside>
 
@@ -221,41 +210,10 @@ const BACKEND_URL = API_CONFIG.BASE_URL
 console.log('App - Backend URL configurada:', BACKEND_URL)
 console.log('App - Configuración completa:', API_CONFIG)
 
-// Computed property mejorado para verificar si es admin
+// Computed property para verificar si es admin
 const esAdmin = computed(() => {
-  console.log('App - Verificando si es admin...')
-  console.log('App - Usuario actual:', usuarioActual.value)
-  console.log('App - Tipo de usuarioActual.value:', typeof usuarioActual.value)
-  
-  if (!usuarioActual.value) {
-    console.log('App - No hay usuario actual')
-    return false
-  }
-  
-  const rol = usuarioActual.value.rol
-  console.log('App - Rol del usuario:', rol)
-  console.log('App - Tipo del rol:', typeof rol)
-  
-  const isAdmin = rol === 'admin'
-  console.log('App - Es admin:', isAdmin)
-  
-  // Verificación adicional desde localStorage como respaldo
-  if (!isAdmin) {
-    try {
-      const userDataFromStorage = localStorage.getItem('userData')
-      if (userDataFromStorage) {
-        const userData = JSON.parse(userDataFromStorage)
-        console.log('App - Verificando userData desde localStorage:', userData)
-        const isAdminFromStorage = userData && userData.rol === 'admin'
-        console.log('App - Es admin desde localStorage:', isAdminFromStorage)
-        return isAdminFromStorage
-      }
-    } catch (error) {
-      console.error('App - Error al verificar admin desde localStorage:', error)
-    }
-  }
-  
-  return isAdmin
+  console.log('Verificando si es admin - Usuario actual:', usuarioActual.value)
+  return usuarioActual.value && usuarioActual.value.rol === 'admin'
 })
 
 // Verificar autenticación al cargar la aplicación
@@ -281,20 +239,13 @@ function verificarAutenticacion() {
       // Parsear datos del usuario
       const parsedUserData = JSON.parse(userData)
       console.log('Datos de usuario parseados:', parsedUserData)
-      console.log('Rol del usuario parseado:', parsedUserData?.rol)
       
       // Establecer estado de autenticación
       estaAutenticado.value = true
       usuarioActual.value = parsedUserData
       
-      // Forzar una re-evaluación del computed esAdmin
       console.log('Usuario autenticado:', usuarioActual.value)
-      console.log('Rol asignado:', usuarioActual.value?.rol)
-      
-      // Log para verificar inmediatamente después de asignar
-      setTimeout(() => {
-        console.log('Es admin (después de asignación):', esAdmin.value)
-      }, 100)
+      console.log('Es admin:', esAdmin.value)
     } catch (error) {
       console.error('Error al verificar autenticación:', error)
       cerrarSesion()
@@ -307,8 +258,6 @@ function verificarAutenticacion() {
 // Manejar login exitoso
 function manejarLoginExitoso(loginData) {
   console.log('Login exitoso en App:', loginData)
-  console.log('Datos del usuario en login:', loginData.usuario)
-  console.log('Rol en login data:', loginData.usuario?.rol)
   
   estaAutenticado.value = true
   usuarioActual.value = loginData.usuario
@@ -316,23 +265,8 @@ function manejarLoginExitoso(loginData) {
   // Configurar axios con el token
   axios.defaults.headers.common['Authorization'] = `Bearer ${loginData.token}`
   
-  // Asegurar que los datos se guarden correctamente en localStorage
-  try {
-    localStorage.setItem('userData', JSON.stringify(loginData.usuario))
-    localStorage.setItem('authToken', loginData.token)
-    console.log('Datos guardados en localStorage')
-    console.log('userData guardada:', JSON.stringify(loginData.usuario))
-  } catch (error) {
-    console.error('Error al guardar en localStorage:', error)
-  }
-  
   console.log('Usuario después del login:', usuarioActual.value)
-  console.log('Rol después del login:', usuarioActual.value?.rol)
-  
-  // Verificar admin después de un pequeño delay para asegurar reactivity
-  setTimeout(() => {
-    console.log('Es admin después del login (delayed):', esAdmin.value)
-  }, 100)
+  console.log('Es admin después del login:', esAdmin.value)
 }
 
 // Función específica para cambiar vista solo para admin
@@ -343,40 +277,6 @@ function cambiarVistaAdmin(vista) {
   } else {
     console.warn('Intento de acceso no autorizado a vista de admin:', vista)
     alert('No tienes permisos para acceder a esta sección')
-  }
-}
-
-// Función para forzar verificación de admin (debugging)
-function forzarVerificacionAdmin() {
-  console.log('=== Forzando verificación de admin ===')
-  const userData = localStorage.getItem('userData')
-  const token = localStorage.getItem('authToken')
-  
-  console.log('Token en localStorage:', token ? 'Presente' : 'No presente')
-  console.log('UserData en localStorage:', userData)
-  
-  if (userData) {
-    try {
-      const parsedData = JSON.parse(userData)
-      console.log('Datos parseados:', parsedData)
-      console.log('Rol encontrado:', parsedData?.rol)
-      
-      // Forzar reasignación
-      usuarioActual.value = parsedData
-      console.log('Usuario reasignado:', usuarioActual.value)
-      console.log('Es admin ahora:', esAdmin.value)
-      
-      if (esAdmin.value) {
-        alert('¡Admin verificado! El menú de administración debería aparecer.')
-      } else {
-        alert(`Usuario no es admin. Rol actual: ${parsedData?.rol}`)
-      }
-    } catch (error) {
-      console.error('Error al parsear userData:', error)
-      alert('Error al verificar datos de usuario')
-    }
-  } else {
-    alert('No se encontraron datos de usuario')
   }
 }
 
