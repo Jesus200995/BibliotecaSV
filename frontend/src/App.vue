@@ -112,6 +112,22 @@
           </svg>
           Mapa
         </a>
+
+        <a href="#" @click="vistaActual = 'usuarios'" 
+           class="flex items-center px-6 py-3 text-purple-100 transition-colors"
+           :class="vistaActual === 'usuarios' ? 'bg-purple-800 border-l-4 border-white' : 'hover:bg-purple-800'">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <!-- Usuario principal con detalles -->
+            <circle cx="9" cy="7" r="3" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Usuario secundario con shadow effect -->
+            <circle cx="16" cy="6" r="2.5" stroke-width="1.6" stroke-linecap="round" opacity="0.85"/>
+            <path d="M19.5 18v-1.5a3 3 0 00-2.5-2.95" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+            <!-- Elemento decorativo profesional -->
+            <path d="M21 12a1 1 0 01-1 1h-1a1 1 0 01-1-1v-1a1 1 0 011-1h1a1 1 0 011 1v1z" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+          </svg>
+          Usuarios
+        </a>
       </nav>
     </aside>
 
@@ -141,6 +157,9 @@
           
           <!-- Vista de Mapa -->
           <MapaView v-if="vistaActual === 'mapa'"/>
+          
+          <!-- Vista de Usuarios -->
+          <UsuariosView v-if="vistaActual === 'usuarios'"/>
         </div>
       </main>
 
@@ -170,6 +189,7 @@ import ArchivoFicha from './components/ArchivoFicha.vue'
 import ArchivosView from './components/ArchivosView.vue'
 import EstadisticasView from './components/EstadisticasView.vue'
 import MapaView from './components/MapaView.vue'
+import UsuariosView from './components/UsuariosView.vue'
 
 // Estado de autenticación
 const estaAutenticado = ref(false)
