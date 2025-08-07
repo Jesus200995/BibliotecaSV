@@ -208,55 +208,6 @@ app.get('/api/verify-token', verificarToken, (req, res) => {
   });
 });
 
-// ============ ENDPOINT DE USUARIOS ============
-
-console.log('Registrando endpoint de usuarios...');
-
-// Endpoint para obtener todos los usuarios (solo para admin)
-app.get('/api/usuarios', verificarToken, async (req, res) => {
-  console.log('=== GET /api/usuarios ===');
-  console.log('Usuario autenticado:', req.usuario);
-  
-  try {
-    // Verificar que el usuario sea admin
-    if (req.usuario.rol !== 'admin') {
-      console.log('Acceso denegado - rol:', req.usuario.rol);
-      return res.status(403).json({ 
-        success: false, 
-        error: 'Acceso denegado. Solo administradores pueden ver la lista de usuarios.' 
-      });
-    }
-
-    console.log('Consultando usuarios en la base de datos...');
-    
-    // Consultar todos los usuarios (sin incluir contraseñas)
-    const query = `
-      SELECT id, usuario, rol, activo 
-      FROM usuarios 
-      ORDER BY usuario ASC
-    `;
-    
-    const result = await pool.query(query);
-    
-    console.log('Usuarios encontrados:', result.rows.length);
-    console.log('Usuarios:', result.rows);
-    
-    res.json({
-      success: true,
-      usuarios: result.rows
-    });
-    
-  } catch (error) {
-    console.error('Error al obtener usuarios:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Error interno del servidor' 
-    });
-  }
-});
-
-console.log('Endpoint de usuarios registrado correctamente.');
-
 // Función para determinar el tipo MIME basado en la extensión
 function determinarContentType(tipo) {
   const mimeTypes = {
