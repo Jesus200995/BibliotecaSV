@@ -61,10 +61,15 @@ const corsOptions = {
     // Lista de orígenes permitidos
     const allowedOrigins = [
       'http://localhost:5173',                      // Desarrollo local Vite
+      'http://localhost:5174',                      // Desarrollo local Vite (puerto alternativo)
       'http://localhost:3000',                      // Desarrollo alternativo
       'http://127.0.0.1:5173',                      // Desarrollo con IP local
+      'http://127.0.0.1:5174',                      // Desarrollo con IP local (puerto alternativo)
       'https://biblioteca.sembrandodatos.com',      // Producción frontend
-      'https://api.biblioteca.sembrandodatos.com'   // Producción API
+      'http://biblioteca.sembrandodatos.com',       // Producción frontend (HTTP)
+      'https://api.biblioteca.sembrandodatos.com',  // Producción API (por si acaso)
+      'http://biblioteca.sembrandodatos.com:4000',  // Backend directo (por si se accede)
+      'https://biblioteca.sembrandodatos.com:4000'  // Backend directo HTTPS (por si se accede)
     ];
     
     if (allowedOrigins.indexOf(origin) !== -1) {
