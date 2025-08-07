@@ -7,9 +7,6 @@
   
   <!-- Vista Principal (cuando está autenticado) -->
   <div v-else class="flex h-screen w-full bg-gray-50 overflow-hidden">
-    <!-- Componente de Reloj Cristal -->
-    <RelojCristal />
-    
     <!-- Sidebar -->
     <aside class="w-64 bg-purple-700 text-white shadow-lg flex-shrink-0">
       <!-- Logo y título -->
@@ -194,7 +191,6 @@ import ArchivosView from './components/ArchivosView.vue'
 import EstadisticasView from './components/EstadisticasView.vue'
 import MapaView from './components/MapaView.vue'
 import UsuariosView from './components/UsuariosView.vue'
-import RelojCristal from './components/RelojCristal.vue'
 
 // Estado de autenticación
 const estaAutenticado = ref(false)
