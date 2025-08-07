@@ -827,6 +827,47 @@ app.get('/test-upload', (req, res) => {
   `);
 });
 
+// ============ MIDDLEWARE DE AUTORIZACIÓN ADMIN ============
+
+// Middleware para verificar que el usuario sea administrador
+function verificarAdmin(req, res, next) {
+  if (!req.usuario) {
+    return res.status(401).json({ error: 'Token de acceso requerido' });
+  }
+  
+  if (req.usuario.rol !== 'admin') {
+    return res.status(403).json({ error: 'Acceso denegado. Se requieren permisos de administrador' });
+  }
+  
+  next();
+}
+
+// ============ ENDPOINTS DE GESTIÓN DE USUARIOS ============
+
+// Endpoint para listar todos los usuarios (solo para administradores)
+app.get('/api/usuarios', verificarToken, verificarAdmin, async (req, res) => {
+  console.log('=== GET /api/usuarios ===');
+  console.log('Usuario solicitante:', req.usuario);
+  
+  try {
+    const query = `
+      SELECT id, usuario, rol, activo
+      FROM usuarios 
+      ORDER BY id ASC
+    `;
+    
+    const result = await pool.query(query);
+    
+    console.log(`Usuarios encontrados: ${result.rows.length}`);
+    console.log('Enviando usuarios:', result.rows);
+    
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al listar usuarios:', error);
+    res.status(500).json({ error: 'Error interno del servidor al obtener usuarios' });
+  }
+});
+
 // Iniciar el servidor
 app.listen(PORT, () => {
   console.log(`Servidor backend corriendo en http://localhost:${PORT}`);
