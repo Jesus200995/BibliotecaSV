@@ -183,7 +183,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
-import { API_CONFIG, buildApiUrl } from './config/api.js'
 import LoginView from './components/LoginView.vue'
 import ArchivoTable from './components/ArchivoTable.vue'
 import ArchivoFicha from './components/ArchivoFicha.vue'
@@ -200,11 +199,12 @@ const usuarioActual = ref(null)
 const archivoSeleccionado = ref(null)
 const vistaActual = ref('dashboard') // Estado para controlar la vista actual
 
-// Configurar URL del backend usando configuración centralizada
-const BACKEND_URL = API_CONFIG.BASE_URL
+// Configurar URL del backend
+const BACKEND_URL = import.meta.env.DEV 
+  ? 'http://localhost:4000/api' 
+  : 'https://api.biblioteca.sembrandodatos.com/api'
 
 console.log('App - Backend URL configurada:', BACKEND_URL)
-console.log('App - Configuración completa:', API_CONFIG)
 
 // Verificar autenticación al cargar la aplicación
 onMounted(() => {
@@ -275,11 +275,10 @@ async function verFicha(id) {
       timeout: 10000
     }
     
-    const url = buildApiUrl(`/archivos/${id}`)
-    console.log('App - Petición a:', url)
+    console.log('App - Petición a:', `${BACKEND_URL}/archivos/${id}`)
     
     // Obtener los datos del archivo desde el backend
-    const response = await axios.get(url, config)
+    const response = await axios.get(`${BACKEND_URL}/archivos/${id}`, config)
     
     console.log('App - Datos del archivo recibidos:', response.data)
     archivoSeleccionado.value = response.data

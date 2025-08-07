@@ -64,41 +64,20 @@ const corsOptions = {
       'http://localhost:3000',                      // Desarrollo alternativo
       'http://127.0.0.1:5173',                      // Desarrollo con IP local
       'https://biblioteca.sembrandodatos.com',      // Producción frontend
-      'https://api.biblioteca.sembrandodatos.com',   // Producción API
-      'https://www.biblioteca.sembrandodatos.com'   // Producción con www
+      'https://api.biblioteca.sembrandodatos.com'   // Producción API
     ];
     
-    console.log('CORS Check - Origin:', origin);
-    
     if (allowedOrigins.indexOf(origin) !== -1) {
-      console.log('CORS - Origen permitido:', origin);
       callback(null, true);
     } else {
-      console.log('CORS - Origen NO permitido:', origin);
-      // En desarrollo, permitir todos los orígenes para evitar problemas
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('CORS - Permitiendo origen no listado (modo desarrollo)');
-        callback(null, true);
-      } else {
-        console.log('CORS - Rechazando origen en producción');
-        callback(new Error('No permitido por CORS'));
-      }
+      console.log('CORS: Origen no permitido:', origin);
+      callback(null, true); // Permitir por ahora para desarrollo
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'X-Requested-With',
-    'Accept',
-    'Origin',
-    'Cache-Control',
-    'Pragma'
-  ],
-  exposedHeaders: ['Content-Length', 'X-Total-Count'],
-  optionsSuccessStatus: 200,
-  preflightContinue: false
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));
@@ -120,48 +99,17 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Middleware para verificar token JWT
 function verificarToken(req, res, next) {
-  console.log('=== Verificando token JWT ===');
-  console.log('Headers:', req.headers);
-  
   const authHeader = req.headers['authorization'];
-  console.log('Auth header:', authHeader);
-  
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
   if (!token) {
-    console.log('Token no proporcionado');
-    return res.status(401).json({ 
-      success: false,
-      error: 'Token de acceso requerido',
-      code: 'NO_TOKEN'
-    });
+    return res.status(401).json({ error: 'Token de acceso requerido' });
   }
-
-  console.log('Token recibido:', token.substring(0, 20) + '...');
 
   jwt.verify(token, process.env.JWT_SECRET, (err, usuario) => {
     if (err) {
-      console.log('Error al verificar token:', err.message);
-      
-      let errorMessage = 'Token inválido';
-      let errorCode = 'INVALID_TOKEN';
-      
-      if (err.name === 'TokenExpiredError') {
-        errorMessage = 'El token ha expirado';
-        errorCode = 'TOKEN_EXPIRED';
-      } else if (err.name === 'JsonWebTokenError') {
-        errorMessage = 'Token malformado';
-        errorCode = 'MALFORMED_TOKEN';
-      }
-      
-      return res.status(403).json({ 
-        success: false,
-        error: errorMessage,
-        code: errorCode
-      });
+      return res.status(403).json({ error: 'Token inválido' });
     }
-    
-    console.log('Token válido para usuario:', usuario);
     req.usuario = usuario;
     next();
   });
@@ -308,46 +256,6 @@ app.get('/api/usuarios', verificarToken, async (req, res) => {
 });
 
 console.log('Endpoint de usuarios registrado correctamente.');
-
-// Endpoint de debug para verificar estado de usuarios (solo en desarrollo)
-app.get('/api/usuarios/debug', async (req, res) => {
-  console.log('=== GET /api/usuarios/debug ===');
-  console.log('Headers recibidos:', req.headers);
-  console.log('Origin:', req.get('Origin'));
-  console.log('Authorization:', req.get('Authorization') ? 'Token presente' : 'Sin token');
-  
-  try {
-    // Contar usuarios sin autenticación para debug
-    const countQuery = 'SELECT COUNT(*) as total FROM usuarios';
-    const countResult = await pool.query(countQuery);
-    
-    res.json({
-      success: true,
-      debug: true,
-      message: 'Endpoint de usuarios funcionando',
-      timestamp: new Date().toISOString(),
-      totalUsuarios: parseInt(countResult.rows[0].total),
-      headers: {
-        origin: req.get('Origin'),
-        userAgent: req.get('User-Agent'),
-        authorization: req.get('Authorization') ? 'Token presente' : 'Sin token'
-      },
-      environment: {
-        nodeEnv: process.env.NODE_ENV,
-        dbHost: process.env.DB_HOST,
-        dbName: process.env.DB_NAME
-      }
-    });
-    
-  } catch (error) {
-    console.error('Error en debug de usuarios:', error);
-    res.status(500).json({
-      success: false,
-      debug: true,
-      error: error.message
-    });
-  }
-});
 
 // Endpoint para crear un nuevo usuario (solo para admin)
 app.post('/api/usuarios', verificarToken, async (req, res) => {

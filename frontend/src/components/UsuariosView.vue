@@ -9,19 +9,6 @@
       
       <!-- Botón para agregar nuevo usuario -->
       <div class="flex items-center gap-3">
-        <!-- Botón de debug (solo en desarrollo) -->
-        <button 
-          v-if="esDesarrollo"
-          @click="verificarConectividad"
-          class="inline-flex items-center gap-2 px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-          title="Verificar conectividad con el servidor"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span>Debug</span>
-        </button>
-        
         <button 
           @click="abrirModalCrearUsuario"
           class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
@@ -646,7 +633,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
-import { API_CONFIG, buildApiUrl } from '../config/api.js'
 
 // Variables reactivas
 const usuarios = ref([])
@@ -682,20 +668,12 @@ const modalEliminarVisible = ref(false)
 const eliminandoUsuario = ref(false)
 const usuarioEliminar = ref(null)
 
-// Configurar axios y URLs usando la configuración centralizada
-const BACKEND_URL = API_CONFIG.BASE_URL
-
-// Configurar timeout de axios
-axios.defaults.timeout = API_CONFIG.TIMEOUT
-
-// Variable para mostrar/ocultar botón de debug
-const esDesarrollo = computed(() => !import.meta.env.PROD)
+// Configurar axios y URLs
+const BACKEND_URL = import.meta.env.DEV 
+  ? 'http://localhost:4000/api' 
+  : 'https://api.biblioteca.sembrandodatos.com/api'
 
 console.log('UsuariosView - Backend URL:', BACKEND_URL)
-console.log('UsuariosView - Configuración completa:', API_CONFIG)
-console.log('UsuariosView - Hostname actual:', window.location.hostname)
-console.log('UsuariosView - Environment:', import.meta.env.MODE)
-console.log('UsuariosView - Es desarrollo:', esDesarrollo.value)
 
 // Propiedades computadas para estadísticas
 const usuariosActivos = computed(() => {
@@ -711,35 +689,6 @@ onMounted(async () => {
   console.log('UsuariosView montado')
   await cargarUsuarios()
 })
-
-// Función de debug para verificar conectividad
-async function verificarConectividad() {
-  console.log('=== Verificando conectividad del API ===')
-  
-  try {
-    // Verificar endpoint de salud
-    const healthUrl = buildApiUrl('/health')
-    console.log('Verificando health endpoint:', healthUrl)
-    
-    const healthResponse = await axios.get(healthUrl, { timeout: 5000 })
-    console.log('Health check response:', healthResponse.data)
-    
-    mostrarNotificacion('Conexión al servidor OK', 'success')
-    
-    // Verificar endpoint de debug de usuarios
-    const debugUrl = buildApiUrl('/usuarios/debug')
-    console.log('Verificando debug endpoint:', debugUrl)
-    
-    const debugResponse = await axios.get(debugUrl, { timeout: 5000 })
-    console.log('Debug response:', debugResponse.data)
-    
-    mostrarNotificacion(`Debug OK - ${debugResponse.data.totalUsuarios} usuarios en DB`, 'info')
-    
-  } catch (error) {
-    console.error('Error en verificación de conectividad:', error)
-    mostrarNotificacion(`Error de conectividad: ${error.message}`, 'error')
-  }
-}
 
 async function cargarUsuarios() {
   console.log('UsuariosView - Cargando usuarios...')
@@ -762,71 +711,33 @@ async function cargarUsuarios() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      timeout: API_CONFIG.TIMEOUT
+      timeout: 15000
     }
     
-    const url = buildApiUrl('/usuarios')
-    console.log('UsuariosView - Petición a:', url)
+    console.log('UsuariosView - Petición a:', `${BACKEND_URL}/usuarios`)
     console.log('UsuariosView - Token:', token ? `${token.substring(0, 20)}...` : 'No token')
-    console.log('UsuariosView - Headers:', config.headers)
     
-    const response = await axios.get(url, config)
+    const response = await axios.get(`${BACKEND_URL}/usuarios`, config)
     
-    console.log('UsuariosView - Respuesta completa:', {
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers,
-      data: response.data
-    })
+    console.log('UsuariosView - Respuesta:', response.status, response.data)
     
     if (response.data.success) {
       usuarios.value = response.data.usuarios || []
-      console.log('UsuariosView - Usuarios cargados exitosamente:', usuarios.value.length)
-      
-      if (usuarios.value.length === 0) {
-        console.warn('UsuariosView - No se encontraron usuarios en la respuesta')
-        mostrarNotificacion('No se encontraron usuarios en el sistema', 'info')
-      } else {
-        mostrarNotificacion(`Se cargaron ${usuarios.value.length} usuarios correctamente`, 'success')
-      }
+      console.log('UsuariosView - Usuarios cargados:', usuarios.value.length)
     } else {
-      console.error('UsuariosView - Error en respuesta del servidor:', response.data.error)
-      mostrarNotificacion('Error del servidor: ' + (response.data.error || 'Respuesta inválida'), 'error')
-      usuarios.value = []
+      console.error('UsuariosView - Error en respuesta:', response.data.error)
+      mostrarNotificacion('Error al cargar usuarios: ' + response.data.error, 'error')
     }
     
   } catch (err) {
-    console.error('UsuariosView - Error completo al cargar usuarios:', {
-      message: err.message,
-      response: err.response ? {
-        status: err.response.status,
-        statusText: err.response.statusText,
-        data: err.response.data,
-        headers: err.response.headers
-      } : 'No response object',
-      request: err.request ? 'Request was made' : 'No request object',
-      config: err.config
-    })
+    console.error('UsuariosView - Error al cargar usuarios:', err)
     
-    // Manejar diferentes tipos de errores
-    if (err.code === 'ECONNABORTED') {
-      mostrarNotificacion('Timeout: El servidor tardó demasiado en responder', 'error')
-    } else if (err.code === 'ERR_NETWORK') {
-      mostrarNotificacion('Error de red: No se pudo conectar con el servidor', 'error')
-    } else if (err.response?.status === 403) {
+    if (err.response?.status === 403) {
       mostrarNotificacion('No tienes permisos para ver la lista de usuarios', 'error')
     } else if (err.response?.status === 401) {
       mostrarNotificacion('Tu sesión ha expirado. Por favor, inicia sesión nuevamente', 'error')
-      // Limpiar token inválido
-      localStorage.removeItem('authToken')
-    } else if (err.response?.status === 404) {
-      mostrarNotificacion('Endpoint de usuarios no encontrado en el servidor', 'error')
-    } else if (err.response?.status >= 500) {
-      mostrarNotificacion('Error interno del servidor. Intenta más tarde', 'error')
-    } else if (err.response?.data?.error) {
-      mostrarNotificacion('Error: ' + err.response.data.error, 'error')
     } else {
-      mostrarNotificacion('Error de conexión: ' + (err.message || 'Error desconocido'), 'error')
+      mostrarNotificacion('Error de conexión con el servidor', 'error')
     }
     
     usuarios.value = []
@@ -966,7 +877,7 @@ async function crearUsuario() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      timeout: API_CONFIG.TIMEOUT
+      timeout: 15000
     }
     
     const datosUsuario = {
@@ -978,8 +889,7 @@ async function crearUsuario() {
     
     console.log('Enviando datos del usuario:', { ...datosUsuario, contrasena: '[OCULTA]' })
     
-    const url = buildApiUrl('/usuarios')
-    const response = await axios.post(url, datosUsuario, config)
+    const response = await axios.post(`${BACKEND_URL}/usuarios`, datosUsuario, config)
     
     console.log('Usuario creado - Respuesta:', response.status, response.data)
     
@@ -1077,7 +987,7 @@ async function editarUsuario() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      timeout: API_CONFIG.TIMEOUT
+      timeout: 15000
     }
     
     const datosUsuario = {
@@ -1088,8 +998,7 @@ async function editarUsuario() {
     
     console.log('Enviando datos actualizados del usuario:', datosUsuario)
     
-    const url = buildApiUrl(`/usuarios/${formularioEditar.value.id}`)
-    const response = await axios.put(url, datosUsuario, config)
+    const response = await axios.put(`${BACKEND_URL}/usuarios/${formularioEditar.value.id}`, datosUsuario, config)
     
     console.log('Usuario editado - Respuesta:', response.status, response.data)
     
@@ -1168,13 +1077,12 @@ async function eliminarUsuario() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      timeout: API_CONFIG.TIMEOUT
+      timeout: 15000
     }
     
     console.log('Eliminando usuario ID:', usuarioEliminar.value.id)
     
-    const url = buildApiUrl(`/usuarios/${usuarioEliminar.value.id}`)
-    const response = await axios.delete(url, config)
+    const response = await axios.delete(`${BACKEND_URL}/usuarios/${usuarioEliminar.value.id}`, config)
     
     console.log('Usuario eliminado - Respuesta:', response.status, response.data)
     

@@ -240,7 +240,6 @@
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import axios from 'axios'
-import { API_CONFIG, buildApiUrl } from '../config/api.js'
 // Importaciones para Leaflet
 import { 
   LMap, 
@@ -277,12 +276,13 @@ const clusterGroup = ref(null)
 const heatmapLayer = ref(null)
 const markersLayer = ref(null)
 
-// Configurar axios y URLs del backend usando configuración centralizada
-axios.defaults.timeout = API_CONFIG.TIMEOUT
-const BACKEND_URL = API_CONFIG.BASE_URL
+// Configurar axios y URLs del backend
+axios.defaults.timeout = 10000
+const BACKEND_URL = import.meta.env.DEV 
+  ? 'http://localhost:4000/api' 
+  : 'https://api.biblioteca.sembrandodatos.com/api'
 
 console.log('MapaView - Backend URL:', BACKEND_URL)
-console.log('MapaView - Configuración completa:', API_CONFIG)
 
 // Observar cambios en marcadores para actualizar mapa
 watch([marcadores, tipoVista], () => {
@@ -401,10 +401,9 @@ async function obtenerArchivos() {
       timeout: 15000
     }
     
-    const url = buildApiUrl('/archivos?limit=1000')
-    console.log('MapaView - Obteniendo archivos desde:', url)
+    console.log('MapaView - Obteniendo archivos desde:', `${BACKEND_URL}/archivos`)
     
-    const res = await axios.get(url, config)
+    const res = await axios.get(`${BACKEND_URL}/archivos?limit=1000`, config)
     
     console.log('MapaView - Respuesta recibida:', res.status, res.data)
     
