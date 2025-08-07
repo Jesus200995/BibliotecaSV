@@ -3,19 +3,6 @@
     <div class="mb-6">
       <h1 class="text-3xl font-bold text-purple-700 mb-2">Gestión de Usuarios</h1>
       <p class="text-gray-600">Administrar usuarios del sistema</p>
-      
-      <!-- Panel de debug temporal -->
-      <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
-        <h3 class="font-medium text-blue-900 mb-2">Información de Debug:</h3>
-        <div class="space-y-1 text-blue-700">
-          <p><strong>Backend URL:</strong> {{ BACKEND_URL }}</p>
-          <p><strong>Entorno:</strong> {{ import.meta.env.MODE }}</p>
-          <p><strong>Host actual:</strong> {{ window.location.hostname }}</p>
-          <p><strong>Puerto actual:</strong> {{ window.location.port || 'no especificado' }}</p>
-          <p><strong>Protocolo:</strong> {{ window.location.protocol }}</p>
-          <p><strong>Token presente:</strong> {{ localStorage.getItem('authToken') ? 'Sí' : 'No' }}</p>
-        </div>
-      </div>
     </div>
 
     <!-- Indicador de carga -->
@@ -134,41 +121,12 @@ const usuarios = ref([])
 const cargando = ref(true)
 const error = ref(null)
 
-// Configurar URL del backend - Configuración más robusta
-const BACKEND_URL = (() => {
-  // En desarrollo (localhost o 127.0.0.1)
-  if (import.meta.env.DEV) {
-    return 'http://localhost:4000/api'
-  }
-  
-  // En producción, buscar en el orden de prioridad:
-  // 1. Variable de entorno
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL
-  }
-  
-  // 2. Si estamos en el dominio principal de biblioteca
-  if (window.location.hostname.includes('biblioteca.sembrandodatos.com')) {
-    return 'https://api.biblioteca.sembrandodatos.com/api'
-  }
-  
-  // 3. Para cualquier otro dominio o IP, asumir que el backend está en el mismo host
-  const protocol = window.location.protocol
-  const hostname = window.location.hostname
-  const port = window.location.port
-  
-  // Si hay puerto específico, usar puerto 4000 para el backend
-  if (port && port !== '80' && port !== '443') {
-    return `${protocol}//${hostname}:4000/api`
-  }
-  
-  // Si no hay puerto específico, usar el mismo host con /api
-  return `${protocol}//${hostname}/api`
-})()
+// Configurar URL del backend
+const BACKEND_URL = import.meta.env.DEV 
+  ? 'http://localhost:4000/api' 
+  : 'https://api.biblioteca.sembrandodatos.com/api'
 
 console.log('UsuariosView - BACKEND_URL configurada:', BACKEND_URL)
-console.log('UsuariosView - Entorno:', import.meta.env.MODE)
-console.log('UsuariosView - Host actual:', window.location.hostname)
 
 // Cargar usuarios al montar el componente
 onMounted(() => {
@@ -191,42 +149,16 @@ async function cargarUsuarios() {
       throw new Error('No hay token de autenticación')
     }
     
-    // Configurar headers con timeout más largo
-    const config = {
+    const response = await axios.get(`${BACKEND_URL}/usuarios`, {
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      timeout: 15000,  // 15 segundos de timeout
-      validateStatus: function (status) {
-        return status < 500; // Aceptar todas las respuestas excepto errores del servidor
-      }
-    }
-    
-    console.log('UsuariosView - Realizando petición con config:', config.headers)
-    
-    const response = await axios.get(`${BACKEND_URL}/usuarios`, config)
-    
-    console.log('UsuariosView - Respuesta recibida:', {
-      status: response.status,
-      statusText: response.statusText,
-      data: response.data,
-      headers: response.headers
+      timeout: 10000
     })
     
-    // Si hay error de autorización, dar información más clara
-    if (response.status === 401) {
-      throw new Error('Token de autenticación inválido o expirado')
-    }
-    
-    if (response.status === 403) {
-      throw new Error('No tienes permisos de administrador para ver los usuarios')
-    }
-    
-    if (response.status !== 200) {
-      throw new Error(`Error del servidor: ${response.status} ${response.statusText}`)
-    }
+    console.log('UsuariosView - Usuarios recibidos:', response.data)
     
     // Manejar diferentes formatos de respuesta
     if (Array.isArray(response.data)) {
@@ -240,27 +172,15 @@ async function cargarUsuarios() {
       usuarios.value = []
     }
     
-    console.log('UsuariosView - Usuarios cargados exitosamente:', usuarios.value)
-    
   } catch (err) {
-    console.error('UsuariosView - Error completo al cargar usuarios:', {
-      message: err.message,
-      code: err.code,
-      response: err.response,
-      stack: err.stack
-    })
+    console.error('UsuariosView - Error al cargar usuarios:', err)
     
-    // Mensajes de error más específicos
-    if (err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND') {
-      error.value = `No se pudo conectar con el servidor backend en ${BACKEND_URL}. Verifica que el servidor esté corriendo y la URL sea correcta.`
-    } else if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
-      error.value = 'La conexión con el servidor tardó demasiado tiempo. Verifica tu conexión a internet.'
-    } else if (err.response?.status === 403) {
-      error.value = 'No tienes permisos de administrador para ver los usuarios del sistema'
+    if (err.response?.status === 403) {
+      error.value = 'No tienes permisos para ver los usuarios del sistema'
     } else if (err.response?.status === 401) {
-      error.value = 'Tu sesión ha expirado. Por favor, vuelve a iniciar sesión.'
-    } else if (err.response?.status >= 500) {
-      error.value = 'Error interno del servidor. Contacta al administrador del sistema.'
+      error.value = 'No estás autorizado para acceder a esta información'
+    } else if (err.code === 'ECONNREFUSED') {
+      error.value = 'No se pudo conectar con el servidor'
     } else {
       error.value = err.message || 'Error desconocido al cargar usuarios'
     }
