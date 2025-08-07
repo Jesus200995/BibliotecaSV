@@ -9,11 +9,11 @@
         <h3 class="font-medium text-blue-900 mb-2">Información de Debug:</h3>
         <div class="space-y-1 text-blue-700">
           <p><strong>Backend URL:</strong> {{ BACKEND_URL }}</p>
-          <p><strong>Entorno:</strong> {{ import.meta.env.MODE }}</p>
-          <p><strong>Host actual:</strong> {{ window.location.hostname }}</p>
-          <p><strong>Puerto actual:</strong> {{ window.location.port || 'no especificado' }}</p>
-          <p><strong>Protocolo:</strong> {{ window.location.protocol }}</p>
-          <p><strong>Token presente:</strong> {{ localStorage.getItem('authToken') ? 'Sí' : 'No' }}</p>
+          <p><strong>Entorno:</strong> {{ entorno }}</p>
+          <p><strong>Host actual:</strong> {{ hostActual }}</p>
+          <p><strong>Puerto actual:</strong> {{ puertoActual }}</p>
+          <p><strong>Protocolo:</strong> {{ protocoloActual }}</p>
+          <p><strong>Token presente:</strong> {{ tokenPresente }}</p>
         </div>
       </div>
     </div>
@@ -134,6 +134,13 @@ const usuarios = ref([])
 const cargando = ref(true)
 const error = ref(null)
 
+// Variables de debug
+const entorno = ref(import.meta.env.MODE)
+const hostActual = ref(window.location.hostname)
+const puertoActual = ref(window.location.port || 'no especificado')
+const protocoloActual = ref(window.location.protocol)
+const tokenPresente = ref(localStorage.getItem('authToken') ? 'Sí' : 'No')
+
 // Configurar URL del backend - Configuración más robusta
 const BACKEND_URL = (() => {
   // En desarrollo (localhost o 127.0.0.1)
@@ -183,8 +190,9 @@ async function cargarUsuarios() {
     
     console.log('UsuariosView - Cargando usuarios desde:', `${BACKEND_URL}/usuarios`)
     
-    // Verificar si hay token
+    // Verificar si hay token y actualizar variable de debug
     const token = localStorage.getItem('authToken')
+    tokenPresente.value = token ? 'Sí' : 'No'
     console.log('UsuariosView - Token encontrado:', token ? 'Sí' : 'No')
     
     if (!token) {
