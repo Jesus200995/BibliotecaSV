@@ -6,20 +6,6 @@
         <h2 class="text-2xl font-bold text-gray-800">Gestión de Usuarios</h2>
         <p class="mt-1 text-sm text-gray-500">Administra todos los usuarios del sistema</p>
       </div>
-      
-      <!-- Botón de recarga -->
-      <div class="flex gap-2">
-        <button 
-          @click="fetchUsers"
-          :disabled="loading"
-          class="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" :class="{ 'animate-spin': loading }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          {{ loading ? 'Cargando...' : 'Recargar' }}
-        </button>
-      </div>
     </div>
     
     <!-- Estadísticas rápidas -->
@@ -198,20 +184,6 @@
         <p class="text-red-700 text-sm">{{ error }}</p>
       </div>
     </div>
-
-    <!-- Información de debug -->
-    <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-      <h4 class="text-sm font-medium text-blue-800 mb-2">🔧 Información de debugging:</h4>
-      <div class="text-xs text-blue-700 space-y-1">
-        <p><strong>Backend URL configurada:</strong> {{ BACKEND_URL }}</p>
-        <p><strong>Hostname actual:</strong> {{ window.location.hostname }}</p>
-        <p><strong>Puerto actual:</strong> {{ window.location.port }}</p>
-        <p><strong>URL completa:</strong> {{ window.location.href }}</p>
-        <p><strong>Modo:</strong> {{ envMode }}</p>
-        <p><strong>Es desarrollo:</strong> {{ envDev }}</p>
-        <p><strong>Token presente:</strong> {{ hasToken }}</p>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -224,13 +196,6 @@ import { API_CONFIG } from '../config/api.js'
 const users = ref([])
 const loading = ref(true)
 const error = ref('')
-
-// Exposer window para el template
-const window = globalThis.window
-
-// Variables de entorno para el template
-const envMode = import.meta.env.MODE || 'No definido'
-const envDev = import.meta.env.DEV ? 'Sí' : 'No'
 
 // Configurar URLs del backend
 const BACKEND_URL = API_CONFIG.BASE_URL
@@ -249,12 +214,6 @@ const adminUsersCount = computed(() => {
 
 const regularUsersCount = computed(() => {
   return users.value.filter(user => user.rol !== 'admin').length
-})
-
-// Computed para información de debug
-const hasToken = computed(() => {
-  const token = localStorage.getItem('authToken')
-  return token && token !== 'null' && token !== 'undefined' ? 'Sí' : 'No'
 })
 
 // Función para obtener usuarios
@@ -310,26 +269,16 @@ async function fetchUsers() {
         code: primaryError.code
       })
       
-      // Intentar con localhost como fallback (para desarrollo)
-      console.log('Intentando con localhost como fallback...')
+      // Intentar con URL de fallback
+      const fallbackUrl = BACKEND_URL.replace('/api', '')
+      console.log('Intentando URL de fallback:', `${fallbackUrl}/api/usuarios`)
       try {
-        const localhostConfig = { ...config }
-        response = await axios.get('http://localhost:4000/api/usuarios', localhostConfig)
-        console.log('✅ Fallback localhost exitoso')
-      } catch (localhostError) {
-        console.log('❌ Fallback localhost falló:', localhostError.message)
-        
-        // Intentar con URL de fallback original
-        const fallbackUrl = BACKEND_URL.replace('/api', '')
-        console.log('Intentando URL de fallback:', `${fallbackUrl}/api/usuarios`)
-        try {
-          response = await axios.get(`${fallbackUrl}/api/usuarios`, config)
-          console.log('✅ Fallback original exitoso')
-        } catch (fallbackError) {
-          console.log('❌ Todos los fallbacks fallaron')
-          // Si todos fallan, lanzar el error original
-          throw primaryError
-        }
+        response = await axios.get(`${fallbackUrl}/api/usuarios`, config)
+        console.log('✅ Fallback exitoso con:', `${fallbackUrl}/api/usuarios`)
+      } catch (fallbackError) {
+        console.log('❌ Fallback también falló:', fallbackError.message)
+        // Si ambos fallan, lanzar el error original
+        throw primaryError
       }
     }
     

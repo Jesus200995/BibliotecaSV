@@ -2,33 +2,12 @@
 export const API_CONFIG = {
   // Configuración dinámica basada en el entorno
   BASE_URL: (() => {
-    const hostname = window.location.hostname;
-    const port = window.location.port;
-    const protocol = window.location.protocol;
-    
-    console.log('Detectando entorno:', {
-      hostname,
-      port,
-      protocol,
-      fullUrl: window.location.href,
-      isDev: import.meta.env.DEV,
-      mode: import.meta.env.MODE
-    });
-    
-    // Si estamos en desarrollo o localhost, usar el backend local
-    if (hostname === 'localhost' || 
-        hostname === '127.0.0.1' || 
-        import.meta.env.DEV === true ||
-        import.meta.env.MODE === 'development' ||
-        port === '5173') {
-      console.log('🔧 Usando backend local');
+    // Si estamos en desarrollo (localhost), usar el backend local
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       return 'http://localhost:4000/api'
     }
-    
-    // En producción
-    const prodUrl = import.meta.env.VITE_API_URL || 'https://api.biblioteca.sembrandodatos.com/api';
-    console.log('🌐 Usando backend de producción:', prodUrl);
-    return prodUrl;
+    // En producción o si hay variable de entorno específica
+    return import.meta.env.VITE_API_URL || 'https://api.biblioteca.sembrandodatos.com/api'
   })(),
   
   APP_URL: import.meta.env.VITE_APP_URL || window.location.origin,
@@ -58,10 +37,9 @@ export const axiosConfig = {
   withCredentials: false // Cambiado a false para evitar problemas CORS en desarrollo
 }
 
-console.log('🚀 API Config final:', {
+console.log('API Config:', {
   baseUrl: API_CONFIG.BASE_URL,
   appUrl: API_CONFIG.APP_URL,
   environment: import.meta.env.MODE,
-  hostname: window.location.hostname,
-  isDev: import.meta.env.DEV
-});
+  hostname: window.location.hostname
+})
