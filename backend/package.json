@@ -3,16 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "SET NODE_ENV=development && node index.js",
-    "prod": "SET NODE_ENV=production && node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "test-connection": "node test_connection.js",
-    "verify": "node verify-config.js",
-    "pm2-start": "pm2 start ecosystem.config.js --env production",
-    "pm2-stop": "pm2 stop biblioteca-backend",
-    "pm2-restart": "pm2 restart biblioteca-backend",
-    "pm2-logs": "pm2 logs biblioteca-backend"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
