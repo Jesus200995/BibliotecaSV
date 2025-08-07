@@ -151,7 +151,19 @@ const handleLogin = async () => {
       contrasena: formData.value.contrasena
     })
 
+    console.log('Respuesta completa del login:', response.data)
+
+    // Verificar que la respuesta es válida
+    if (!response.data) {
+      throw new Error('Respuesta vacía del servidor')
+    }
+
     if (response.data.success) {
+      // Verificar que los datos del usuario están completos
+      if (!response.data.usuario || !response.data.usuario.usuario || !response.data.usuario.rol) {
+        throw new Error('Datos de usuario incompletos en la respuesta del servidor')
+      }
+
       // Guardar token y datos de usuario en localStorage
       localStorage.setItem('authToken', response.data.token)
       localStorage.setItem('userData', JSON.stringify(response.data.usuario))
@@ -170,17 +182,30 @@ const handleLogin = async () => {
       
     } else {
       error.value = response.data.error || 'Error en el login'
+      console.error('Login fallido:', response.data.error)
     }
     
   } catch (err) {
     console.error('Error en login:', err)
     
-    if (err.response?.data?.error) {
-      error.value = err.response.data.error
-    } else if (err.response?.status === 401) {
-      error.value = 'Usuario o contraseña incorrectos'
+    // Manejar diferentes tipos de errores
+    if (err.response) {
+      // Error de respuesta del servidor
+      if (err.response.data && err.response.data.error) {
+        error.value = err.response.data.error
+      } else if (err.response.status === 401) {
+        error.value = 'Usuario o contraseña incorrectos'
+      } else if (err.response.status === 500) {
+        error.value = 'Error interno del servidor. Inténtalo más tarde.'
+      } else {
+        error.value = `Error del servidor (${err.response.status})`
+      }
+    } else if (err.request) {
+      // Error de red
+      error.value = 'Error de conexión con el servidor. Verifica tu conexión a internet.'
     } else {
-      error.value = 'Error de conexión con el servidor'
+      // Otros errores
+      error.value = err.message || 'Error inesperado durante el login'
     }
   } finally {
     cargando.value = false
@@ -209,31 +234,44 @@ const getParticleStyle = (index) => {
 onMounted(() => {
   const token = localStorage.getItem('authToken')
   if (token) {
+    console.log('Token encontrado al montar LoginView, verificando...')
+    
     // Si hay token, verificar si es válido
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
     
     // Verificar token con el backend
     axios.get(`${BACKEND_URL}/verify-token`)
       .then(response => {
-        if (response.data.success) {
+        console.log('Respuesta de verify-token:', response.data)
+        
+        if (response.data && response.data.success && response.data.usuario) {
           const userData = localStorage.getItem('userData')
+          const usuarioData = userData ? JSON.parse(userData) : response.data.usuario
+          
+          console.log('Token válido, emitiendo login exitoso')
           emit('login-success', {
             token,
-            usuario: userData ? JSON.parse(userData) : response.data.usuario
+            usuario: usuarioData
           })
         } else {
-          // Token inválido, limpiar
-          localStorage.removeItem('authToken')
-          localStorage.removeItem('userData')
+          console.log('Token inválido según backend, limpiando...')
+          limpiarDatosAutenticacion()
         }
       })
-      .catch(() => {
-        // Error al verificar token, limpiar
-        localStorage.removeItem('authToken')
-        localStorage.removeItem('userData')
+      .catch(error => {
+        console.log('Error al verificar token:', error.message)
+        limpiarDatosAutenticacion()
       })
   }
 })
+
+// Función auxiliar para limpiar datos de autenticación
+function limpiarDatosAutenticacion() {
+  localStorage.removeItem('authToken')
+  localStorage.removeItem('userData')
+  localStorage.removeItem('userRole')
+  delete axios.defaults.headers.common['Authorization']
+}
 </script>
 
 <style scoped>
