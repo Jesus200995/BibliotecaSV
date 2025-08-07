@@ -222,40 +222,111 @@ async function fetchUsers() {
   error.value = ''
   
   try {
-    console.log('Obteniendo usuarios desde:', `${BACKEND_URL}/usuarios`)
+    console.log('=== INICIANDO CARGA DE USUARIOS ===')
+    console.log('Backend URL:', BACKEND_URL)
+    console.log('URL completa:', `${BACKEND_URL}/usuarios`)
     
     // Configurar headers con token de autorización
     const token = localStorage.getItem('authToken')
+    console.log('Token obtenido de localStorage:', token ? `${token.substring(0, 20)}...` : 'No hay token')
+    
     const config = {
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
-      timeout: 10000
+      timeout: 15000 // Aumentar timeout para producción
     }
     
     // Agregar token de autorización si existe
-    if (token) {
+    if (token && token !== 'undefined' && token !== 'null') {
       config.headers['Authorization'] = `Bearer ${token}`
+      console.log('Token agregado a headers')
+    } else {
+      console.warn('No se encontró token de autorización válido')
+      error.value = 'Sesión expirada. Por favor, inicia sesión nuevamente.'
+      return
     }
     
-    const response = await axios.get(`${BACKEND_URL}/usuarios`, config)
+    console.log('Configuración de la petición:', {
+      url: `${BACKEND_URL}/usuarios`,
+      headers: config.headers,
+      timeout: config.timeout
+    })
     
-    console.log('Usuarios obtenidos:', response.data)
-    users.value = response.data || []
+    // Intentar con la URL principal primero
+    let response
+    try {
+      console.log('Intentando petición principal...')
+      response = await axios.get(`${BACKEND_URL}/usuarios`, config)
+      console.log('✅ Petición principal exitosa')
+    } catch (primaryError) {
+      console.log('❌ Error en URL principal:', primaryError.message)
+      console.log('Detalles del error:', {
+        status: primaryError.response?.status,
+        statusText: primaryError.response?.statusText,
+        data: primaryError.response?.data,
+        code: primaryError.code
+      })
+      
+      // Intentar con URL de fallback
+      const fallbackUrl = BACKEND_URL.replace('/api', '')
+      console.log('Intentando URL de fallback:', `${fallbackUrl}/api/usuarios`)
+      try {
+        response = await axios.get(`${fallbackUrl}/api/usuarios`, config)
+        console.log('✅ Fallback exitoso con:', `${fallbackUrl}/api/usuarios`)
+      } catch (fallbackError) {
+        console.log('❌ Fallback también falló:', fallbackError.message)
+        // Si ambos fallan, lanzar el error original
+        throw primaryError
+      }
+    }
+    
+    console.log('Respuesta recibida:', response)
+    console.log('Status:', response.status)
+    console.log('Data:', response.data)
+    
+    // Validar que la respuesta sea un array
+    if (Array.isArray(response.data)) {
+      users.value = response.data
+      console.log(`✅ ${response.data.length} usuarios cargados exitosamente`)
+    } else if (response.data && Array.isArray(response.data.items)) {
+      // En caso de que venga paginado
+      users.value = response.data.items
+      console.log(`✅ ${response.data.items.length} usuarios cargados exitosamente (paginado)`)
+    } else {
+      console.warn('⚠️ Formato de respuesta inesperado:', response.data)
+      users.value = []
+    }
+    
+    console.log('=== USUARIOS CARGADOS EXITOSAMENTE ===')
     
   } catch (err) {
-    console.error('Error al obtener usuarios:', err)
+    console.error('=== ERROR AL OBTENER USUARIOS ===')
+    console.error('Error completo:', err)
     
     // Manejar diferentes tipos de errores
-    if (err.response?.status === 401 || err.response?.status === 403) {
-      error.value = 'No tienes permisos para ver los usuarios. Por favor, inicia sesión nuevamente.'
+    if (err.response?.status === 401) {
+      error.value = 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.'
+      console.log('Error 401: Token expirado o inválido')
+      // Opcional: redirigir al login
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('userData')
+    } else if (err.response?.status === 403) {
+      error.value = 'No tienes permisos suficientes para ver los usuarios.'
+      console.log('Error 403: Sin permisos')
     } else if (err.response?.status === 404) {
-      error.value = 'El servicio de usuarios no está disponible.'
+      error.value = 'El servicio de usuarios no está disponible en el servidor.'
+      console.log('Error 404: Endpoint no encontrado')
     } else if (err.code === 'ECONNREFUSED' || err.code === 'NETWORK_ERROR') {
-      error.value = 'No se puede conectar con el servidor. Verifica tu conexión.'
+      error.value = 'No se puede conectar con el servidor. Verifica tu conexión a internet.'
+      console.log('Error de conexión:', err.code)
+    } else if (err.code === 'ECONNABORTED') {
+      error.value = 'La conexión tardó demasiado. El servidor puede estar sobrecargado.'
+      console.log('Error de timeout')
     } else {
-      error.value = 'Error al cargar los usuarios. Por favor, intenta nuevamente.'
+      error.value = `Error al cargar los usuarios: ${err.message || 'Error desconocido'}`
+      console.log('Error desconocido:', err.message)
     }
     
     // En caso de error, mostrar array vacío
@@ -263,6 +334,7 @@ async function fetchUsers() {
     
   } finally {
     loading.value = false
+    console.log('=== CARGA DE USUARIOS FINALIZADA ===')
   }
 }
 
