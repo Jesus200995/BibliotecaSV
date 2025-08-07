@@ -805,58 +805,6 @@ app.delete('/api/archivos/:id', verificarToken, async (req, res) => {
   }
 });
 
-// ============ RUTAS DE USUARIOS ============
-
-// Endpoint para listar usuarios (solo campos públicos)
-app.get('/api/usuarios', verificarToken, async (req, res) => {
-  console.log('=== GET /api/usuarios ===');
-  
-  try {
-    // Solo devolver campos públicos, nunca la contraseña
-    const query = `
-      SELECT id, usuario, rol, activo
-      FROM usuarios 
-      ORDER BY usuario ASC
-    `;
-    
-    const result = await pool.query(query);
-    
-    console.log('Usuarios encontrados:', result.rows.length);
-    res.json(result.rows);
-    
-  } catch (error) {
-    console.error('Error al obtener usuarios:', error);
-    res.status(500).json({ error: 'Error interno del servidor al obtener usuarios' });
-  }
-});
-
-// Endpoint para obtener un usuario específico por ID (sin contraseña)
-app.get('/api/usuarios/:id', verificarToken, async (req, res) => {
-  console.log(`=== GET /api/usuarios/${req.params.id} ===`);
-  
-  try {
-    const { id } = req.params;
-    
-    const query = `
-      SELECT id, usuario, rol, activo
-      FROM usuarios 
-      WHERE id = $1
-    `;
-    
-    const result = await pool.query(query, [id]);
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
-    }
-    
-    res.json(result.rows[0]);
-    
-  } catch (error) {
-    console.error(`Error al obtener usuario con ID ${req.params.id}:`, error);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
 // Página de prueba para subir archivos
 app.get('/test-upload', (req, res) => {
   res.send(`
