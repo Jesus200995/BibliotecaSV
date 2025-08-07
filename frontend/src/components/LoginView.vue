@@ -152,11 +152,15 @@ const handleLogin = async () => {
     })
 
     if (response.data.success) {
-      // Guardar token en localStorage
+      // Guardar token y datos de usuario en localStorage
       localStorage.setItem('authToken', response.data.token)
       localStorage.setItem('userData', JSON.stringify(response.data.usuario))
       
+      // También guardar el rol por separado para facilitar el acceso
+      localStorage.setItem('userRole', response.data.usuario.rol)
+      
       console.log('Login exitoso:', response.data.usuario)
+      console.log('Rol del usuario:', response.data.usuario.rol)
       
       // Configurar axios con el token
       axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`
