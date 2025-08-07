@@ -8,7 +8,12 @@
         </svg>
       </div>
       <h2 class="text-xl font-bold text-gray-900 mb-2">Acceso Restringido</h2>
-      <p class="text-gray-600 mb-6">No tienes permisos para acceder a la gestión de usuarios. Esta sección está disponible solo para administradores.</p>
+      <p class="text-gray-600 mb-4">No tienes permisos para acceder a la gestión de usuarios. Esta sección está disponible solo para administradores.</p>
+      <p class="text-sm text-gray-500 mb-6">
+        Debug info - Rol actual: {{ getCurrentUserRole() }} | 
+        Ambiente: {{ ambienteActual }} |
+        Es Admin: {{ esAdmin }}
+      </p>
       <button 
         @click="volverInicio"
         class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
@@ -29,9 +34,9 @@
       
       <!-- Botón para agregar nuevo usuario -->
       <div class="flex items-center gap-3">
-        <!-- Botón de debug (solo en desarrollo) -->
+        <!-- Botón de debug (visible en desarrollo y cuando hay problemas en prod) -->
         <button 
-          v-if="esDesarrollo"
+          v-if="esDesarrollo || usuarios.length === 0"
           @click="verificarConectividad"
           class="inline-flex items-center gap-2 px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
           title="Verificar conectividad con el servidor"
@@ -39,7 +44,24 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span>Debug</span>
+          <span>Debug API</span>
+        </button>
+        
+        <!-- Botón de recargar -->
+        <button 
+          @click="cargarUsuarios"
+          :disabled="cargandoUsuarios"
+          class="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+          title="Recargar lista de usuarios"
+        >
+          <svg v-if="cargandoUsuarios" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span>{{ cargandoUsuarios ? 'Cargando...' : 'Recargar' }}</span>
         </button>
         
         <button 
@@ -703,28 +725,93 @@ const eliminandoUsuario = ref(false)
 const usuarioEliminar = ref(null)
 
 // Configurar axios y URLs usando la configuración centralizada
-const BACKEND_URL = API_CONFIG.BASE_URL
+const BACKEND_URL = (() => {
+  // Lógica más robusta para producción
+  console.log('UsuariosView - Determinando URL del backend...')
+  console.log('UsuariosView - Hostname:', window.location.hostname)
+  console.log('UsuariosView - Environment mode:', import.meta.env.MODE)
+  console.log('UsuariosView - Is production:', import.meta.env.PROD)
+  
+  // Si estamos en desarrollo local
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    console.log('UsuariosView - Usando URL de desarrollo')
+    return 'http://localhost:4000/api'
+  }
+  
+  // Si hay variable de entorno específica
+  const envApiUrl = import.meta.env.VITE_API_URL
+  if (envApiUrl) {
+    console.log('UsuariosView - Usando VITE_API_URL:', envApiUrl)
+    return envApiUrl
+  }
+  
+  // Para producción, construir la URL basada en el hostname
+  const currentHostname = window.location.hostname
+  
+  if (currentHostname.includes('biblioteca.sembrandodatos.com')) {
+    console.log('UsuariosView - Usando URL de producción específica')
+    return 'https://api.biblioteca.sembrandodatos.com/api'
+  }
+  
+  // Si es otro dominio de producción, usar URL relativa al mismo servidor
+  if (import.meta.env.PROD) {
+    const backendUrl = `${window.location.protocol}//${window.location.hostname}:4000/api`
+    console.log('UsuariosView - Usando URL de producción genérica:', backendUrl)
+    return backendUrl
+  }
+  
+  // Fallback final
+  console.log('UsuariosView - Usando URL fallback')
+  return API_CONFIG.BASE_URL || 'http://localhost:4000/api'
+})()
+
+// Función mejorada para construir URLs
+const buildUsuariosUrl = (endpoint = '') => {
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
+  const url = `${BACKEND_URL}${cleanEndpoint}`
+  console.log('UsuariosView - URL construida:', url)
+  return url
+}
 
 // Configurar timeout de axios
-axios.defaults.timeout = API_CONFIG.TIMEOUT
+axios.defaults.timeout = import.meta.env.PROD ? 30000 : 15000
 
 // Variable para mostrar/ocultar botón de debug
-const esDesarrollo = computed(() => !import.meta.env.PROD)
+const esDesarrollo = computed(() => {
+  return !import.meta.env.PROD || window.location.hostname === 'localhost'
+})
 
-// Computed para verificar si el usuario actual es admin
+// Computed para obtener información del ambiente (para usar en template)
+const ambienteActual = computed(() => {
+  return import.meta.env.MODE || 'unknown'
+})
+
+// Computed mejorado para verificar si el usuario actual es admin
 const esAdmin = computed(() => {
-  // Obtener datos del usuario desde localStorage
+  console.log('UsuariosView - Verificando permisos de admin...')
+  
   try {
+    // Intentar obtener datos del usuario desde localStorage
     const userData = localStorage.getItem('userData')
-    if (userData) {
-      const usuario = JSON.parse(userData)
-      console.log('UsuariosView - Verificando permisos admin para usuario:', usuario)
-      return usuario && usuario.rol === 'admin'
+    console.log('UsuariosView - UserData raw:', userData)
+    
+    if (!userData) {
+      console.log('UsuariosView - No hay datos de usuario en localStorage')
+      return false
     }
+    
+    const usuario = JSON.parse(userData)
+    console.log('UsuariosView - Usuario parseado:', usuario)
+    console.log('UsuariosView - Rol del usuario:', usuario?.rol)
+    
+    const isAdmin = usuario && usuario.rol === 'admin'
+    console.log('UsuariosView - Es admin:', isAdmin)
+    
+    return isAdmin
   } catch (error) {
-    console.error('Error al verificar rol de admin:', error)
+    console.error('UsuariosView - Error al verificar rol de admin:', error)
+    return false
   }
-  return false
 })
 
 console.log('UsuariosView - Backend URL:', BACKEND_URL)
@@ -745,13 +832,19 @@ const usuariosAdmin = computed(() => {
 // Cargar usuarios al montar el componente
 onMounted(async () => {
   console.log('UsuariosView montado')
+  console.log('UsuariosView - Backend URL:', BACKEND_URL)
+  console.log('UsuariosView - Es producción:', import.meta.env.PROD)
+  console.log('UsuariosView - Hostname:', window.location.hostname)
+  console.log('UsuariosView - Es admin:', esAdmin.value)
   
   // Verificar permisos antes de cargar datos
   if (!esAdmin.value) {
-    console.warn('Usuario sin permisos de administrador intentando acceder a UsuariosView')
+    console.warn('UsuariosView - Usuario sin permisos de administrador intentando acceder')
+    mostrarNotificacion('No tienes permisos para acceder a esta sección', 'error')
     return
   }
   
+  console.log('UsuariosView - Usuario tiene permisos de admin, cargando usuarios...')
   await cargarUsuarios()
 })
 
@@ -762,13 +855,27 @@ function volverInicio() {
   window.location.reload()
 }
 
+// Función helper para obtener el rol del usuario actual (para debugging)
+function getCurrentUserRole() {
+  try {
+    const userData = localStorage.getItem('userData')
+    if (userData) {
+      const usuario = JSON.parse(userData)
+      return usuario?.rol || 'sin-rol'
+    }
+  } catch (error) {
+    console.error('Error al obtener rol del usuario:', error)
+  }
+  return 'no-data'
+}
+
 // Función de debug para verificar conectividad
 async function verificarConectividad() {
   console.log('=== Verificando conectividad del API ===')
   
   try {
     // Verificar endpoint de salud
-    const healthUrl = buildApiUrl('/health')
+    const healthUrl = buildUsuariosUrl('/health')
     console.log('Verificando health endpoint:', healthUrl)
     
     const healthResponse = await axios.get(healthUrl, { timeout: 5000 })
@@ -777,7 +884,7 @@ async function verificarConectividad() {
     mostrarNotificacion('Conexión al servidor OK', 'success')
     
     // Verificar endpoint de debug de usuarios
-    const debugUrl = buildApiUrl('/usuarios/debug')
+    const debugUrl = buildUsuariosUrl('/usuarios/debug')
     console.log('Verificando debug endpoint:', debugUrl)
     
     const debugResponse = await axios.get(debugUrl, { timeout: 5000 })
@@ -819,10 +926,10 @@ async function cargarUsuarios() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      timeout: API_CONFIG.TIMEOUT
+      timeout: import.meta.env.PROD ? 30000 : 15000
     }
     
-    const url = buildApiUrl('/usuarios')
+    const url = buildUsuariosUrl('/usuarios')
     console.log('UsuariosView - Petición a:', url)
     console.log('UsuariosView - Token:', token ? `${token.substring(0, 20)}...` : 'No token')
     console.log('UsuariosView - Headers:', config.headers)
@@ -1035,7 +1142,7 @@ async function crearUsuario() {
     
     console.log('Enviando datos del usuario:', { ...datosUsuario, contrasena: '[OCULTA]' })
     
-    const url = buildApiUrl('/usuarios')
+    const url = buildUsuariosUrl('/usuarios')
     const response = await axios.post(url, datosUsuario, config)
     
     console.log('Usuario creado - Respuesta:', response.status, response.data)
@@ -1145,7 +1252,7 @@ async function editarUsuario() {
     
     console.log('Enviando datos actualizados del usuario:', datosUsuario)
     
-    const url = buildApiUrl(`/usuarios/${formularioEditar.value.id}`)
+    const url = buildUsuariosUrl(`/usuarios/${formularioEditar.value.id}`)
     const response = await axios.put(url, datosUsuario, config)
     
     console.log('Usuario editado - Respuesta:', response.status, response.data)
@@ -1230,7 +1337,7 @@ async function eliminarUsuario() {
     
     console.log('Eliminando usuario ID:', usuarioEliminar.value.id)
     
-    const url = buildApiUrl(`/usuarios/${usuarioEliminar.value.id}`)
+    const url = buildUsuariosUrl(`/usuarios/${usuarioEliminar.value.id}`)
     const response = await axios.delete(url, config)
     
     console.log('Usuario eliminado - Respuesta:', response.status, response.data)
