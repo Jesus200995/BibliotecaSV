@@ -147,8 +147,8 @@
       </header>
 
       <!-- Contenido principal -->
-      <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
-        <div class="w-full">
+      <main class="flex-1 p-6 bg-gray-50 overflow-hidden">
+        <div class="w-full h-full">
           <!-- Dashboard -->
           <ArchivoTable v-if="vistaActual === 'dashboard'" @ver="verFicha" @navigate="navegarA"/>
           
