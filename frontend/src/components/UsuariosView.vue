@@ -6,12 +6,46 @@
         <button 
           @click="cargar" 
           class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors flex items-center"
+          :disabled="loading"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" 
+               class="h-4 w-4 mr-2" 
+               :class="{'animate-spin': loading}" 
+               fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          Refrescar
+          {{ loading ? 'Cargando...' : 'Refrescar' }}
         </button>
+        
+        <button 
+          v-if="error"
+          @click="mostrarDebug = !mostrarDebug" 
+          class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors flex items-center"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Info Debug
+        </button>
+      </div>
+    </div>
+    
+    <!-- Sección de depuración -->
+    <div v-if="mostrarDebug && error" class="bg-gray-100 p-4 rounded-md mb-6 text-sm">
+      <h3 class="font-bold mb-2">Información de Depuración</h3>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <p><strong>URL API:</strong> {{ BACKEND_URL }}</p>
+          <p><strong>Token disponible:</strong> {{ !!localStorage.getItem('authToken') }}</p>
+          <p><strong>Usuario disponible:</strong> {{ !!localStorage.getItem('userData') }}</p>
+          <p v-if="tokenInfo"><strong>Usuario en token:</strong> {{ tokenInfo.usuario }}</p>
+          <p v-if="tokenInfo"><strong>Rol en token:</strong> {{ tokenInfo.rol }}</p>
+        </div>
+        <div>
+          <p><strong>Hora:</strong> {{ new Date().toLocaleTimeString() }}</p>
+          <p><strong>Servidor:</strong> {{ import.meta.env.DEV ? 'Desarrollo' : 'Producción' }}</p>
+          <p><button @click="intentarConResolverCORS" class="text-blue-600 underline">Intentar con resolución CORS</button></p>
+        </div>
       </div>
     </div>
     
@@ -75,11 +109,41 @@ const BACKEND_URL = import.meta.env.DEV
 const usuarios = ref([])
 const loading = ref(true)
 const error = ref('')
+const tokenInfo = ref(null)
+const mostrarDebug = ref(false)
+
+// Comprobar el token al inicio
+function verificarToken() {
+  const token = localStorage.getItem('authToken')
+  if (token) {
+    try {
+      // Decodificar el token (sin verificar la firma)
+      const base64Url = token.split('.')[1]
+      const base64 = base64Url.replace('-', '+').replace('_', '/')
+      const decodedToken = JSON.parse(window.atob(base64))
+      tokenInfo.value = decodedToken
+      console.log('UsuariosView - Token decodificado:', decodedToken)
+      return true
+    } catch (e) {
+      console.error('UsuariosView - Error al decodificar token:', e)
+      return false
+    }
+  }
+  return false
+}
 
 async function cargar() {
   console.log('UsuariosView - Intentando cargar usuarios desde:', BACKEND_URL)
   loading.value = true
   error.value = ''
+  
+  // Verificar el token primero
+  if (!verificarToken()) {
+    error.value = 'No hay un token de autenticación válido'
+    loading.value = false
+    return
+  }
+  
   try {
     const token = localStorage.getItem('authToken')
     console.log('UsuariosView - Token encontrado:', token ? 'Sí' : 'No')
@@ -96,12 +160,97 @@ async function cargar() {
     if (!json.ok) throw new Error(json.error || 'Error')
     usuarios.value = json.data
   } catch (e) {
+    console.error('UsuariosView - Error al cargar usuarios:', e);
     error.value = `No se pudo cargar: ${e.message}`
+    
+    // Intentar con una ruta alternativa si la primera falla
+    try {
+      console.log('UsuariosView - Intentando con ruta alternativa');
+      const token = localStorage.getItem('authToken');
+      const altBackendUrl = import.meta.env.DEV 
+        ? 'http://localhost:4000' 
+        : 'https://api.biblioteca.sembrandodatos.com';
+        
+      const res = await fetch(`${altBackendUrl}/api/usuarios`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log('UsuariosView - Respuesta alternativa:', res.status);
+      
+      if (res.ok) {
+        const json = await res.json();
+        console.log('UsuariosView - Datos alternativos:', json);
+        if (json.ok) {
+          usuarios.value = json.data;
+          error.value = '';
+        }
+      }
+    } catch (altError) {
+      console.error('UsuariosView - Error en ruta alternativa:', altError);
+    }
   } finally {
     loading.value = false
   }
 }
-onMounted(cargar)
+onMounted(() => {
+  console.log('UsuariosView - Componente montado')
+  // Verificar si hay un token almacenado
+  const token = localStorage.getItem('authToken')
+  console.log('UsuariosView - Token en localStorage:', token ? `${token.substring(0, 20)}...` : 'No hay token')
+  
+  // También intentar recuperar datos del usuario
+  const userData = localStorage.getItem('userData')
+  console.log('UsuariosView - Datos de usuario en localStorage:', userData ? 'Disponibles' : 'No disponibles')
+  
+  if (userData) {
+    try {
+      const user = JSON.parse(userData)
+      console.log('UsuariosView - Rol de usuario:', user.rol)
+      if (user.rol !== 'admin') {
+        error.value = 'Se requieren permisos de administrador para ver esta sección'
+        loading.value = false
+        return
+      }
+    } catch (e) {
+      console.error('UsuariosView - Error al procesar datos de usuario:', e)
+    }
+  }
+  
+  // Cargar los usuarios si todo está correcto
+  cargar()
+})
+
+// Función para intentar cargar con opciones adicionales para resolver problemas de CORS
+async function intentarConResolverCORS() {
+  console.log('UsuariosView - Intentando resolver CORS')
+  loading.value = true
+  try {
+    const token = localStorage.getItem('authToken')
+    const res = await fetch(`${BACKEND_URL}/usuarios`, {
+      method: 'GET',
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      mode: 'cors',
+      credentials: 'include'
+    })
+    console.log('UsuariosView - Respuesta con opciones CORS:', res.status)
+    
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const json = await res.json()
+    console.log('UsuariosView - Datos recibidos con CORS:', json)
+    
+    if (!json.ok) throw new Error(json.error || 'Error')
+    usuarios.value = json.data
+    error.value = ''
+  } catch (e) {
+    console.error('UsuariosView - Error al resolver CORS:', e)
+    error.value = `Error con opciones CORS: ${e.message}`
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <style scoped>
