@@ -103,16 +103,13 @@ function verificarToken(req, res, next) {
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
   if (!token) {
-    console.log('verificarToken - No se proporcionó token');
     return res.status(401).json({ error: 'Token de acceso requerido' });
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, usuario) => {
     if (err) {
-      console.log('verificarToken - Token inválido:', err.message);
       return res.status(403).json({ error: 'Token inválido' });
     }
-    console.log('verificarToken - Token válido para usuario:', usuario.usuario, 'con rol:', usuario.rol);
     req.usuario = usuario;
     next();
   });
@@ -120,18 +117,9 @@ function verificarToken(req, res, next) {
 
 // Middleware para verificar rol de administrador
 function verificarAdmin(req, res, next) {
-  console.log('verificarAdmin - Verificando rol del usuario:', req.usuario);
-  if (!req.usuario) {
-    console.log('verificarAdmin - No hay información de usuario');
-    return res.status(403).json({ error: 'Acceso denegado: No se ha proporcionado información de usuario' });
-  }
-  
-  if (req.usuario.rol !== 'admin') {
-    console.log('verificarAdmin - El usuario no tiene rol de administrador. Rol actual:', req.usuario.rol);
+  if (!req.usuario || req.usuario.rol !== 'admin') {
     return res.status(403).json({ error: 'Acceso denegado: Se requieren permisos de administrador' });
   }
-  
-  console.log('verificarAdmin - Usuario confirmado como administrador');
   next();
 }
 
@@ -222,7 +210,7 @@ app.post('/api/login', async (req, res) => {
     }
     console.log(`Login exitoso para usuario: ${usuarioData.usuario}`);
     
-    // Generar token JWT con información de rol
+    // Generar token JWT
     const token = jwt.sign(
       { 
         id: usuarioData.id, 
@@ -232,8 +220,6 @@ app.post('/api/login', async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
-    
-    console.log(`Login exitoso para usuario: ${usuarioData.usuario} con rol: ${usuarioData.rol}`);
     
     res.json({
       success: true,
@@ -570,8 +556,8 @@ app.get('/archivos/descargar/:id', async (req, res) => {
   }
 });
 
-// Endpoint para upload de archivos - DEBE IR ANTES DE LA RUTA GENÉRICA (Solo admin)
-app.post('/archivos/upload', verificarToken, verificarAdmin, upload.single('file'), async (req, res) => {
+// Endpoint para upload de archivos - DEBE IR ANTES DE LA RUTA GENÉRICA
+app.post('/archivos/upload', verificarToken, upload.single('file'), async (req, res) => {
   console.log('Recibida solicitud en /archivos/upload');
   
   try {
@@ -697,8 +683,8 @@ app.get('/archivos/:id', async (req, res) => {
   }
 });
 
-// Endpoint para actualizar un archivo por su ID (Solo admin)
-app.put('/archivos/:id', verificarToken, verificarAdmin, async (req, res) => {
+// Endpoint para actualizar un archivo por su ID
+app.put('/archivos/:id', verificarToken, async (req, res) => {
   console.log(`=== PUT /archivos/${req.params.id} ===`);
   
   try {
@@ -758,8 +744,8 @@ app.put('/archivos/:id', verificarToken, verificarAdmin, async (req, res) => {
   }
 });
 
-// Endpoint para eliminar un archivo por su ID (Solo admin)
-app.delete('/archivos/:id', verificarToken, verificarAdmin, async (req, res) => {
+// Endpoint para eliminar un archivo por su ID
+app.delete('/archivos/:id', verificarToken, async (req, res) => {
   console.log(`=== DELETE /archivos/${req.params.id} ===`);
   
   try {
@@ -838,7 +824,7 @@ app.get('/api/archivos/descargar/:id', async (req, res) => {
   }
 });
 
-app.post('/api/archivos/upload', verificarToken, verificarAdmin, upload.single('file'), async (req, res) => {
+app.post('/api/archivos/upload', verificarToken, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No se ha subido ningún archivo' });
@@ -947,7 +933,7 @@ app.get('/api/archivos/:id', async (req, res) => {
   }
 });
 
-app.put('/api/archivos/:id', verificarToken, verificarAdmin, async (req, res) => {
+app.put('/api/archivos/:id', verificarToken, async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -1003,7 +989,7 @@ app.put('/api/archivos/:id', verificarToken, verificarAdmin, async (req, res) =>
   }
 });
 
-app.delete('/api/archivos/:id', verificarToken, verificarAdmin, async (req, res) => {
+app.delete('/api/archivos/:id', verificarToken, async (req, res) => {
   try {
     const { id } = req.params;
     
