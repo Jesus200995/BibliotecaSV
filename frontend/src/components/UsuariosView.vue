@@ -319,26 +319,16 @@ async function fetchUsers() {
       } catch (localhostError) {
         console.log('❌ Fallback localhost falló:', localhostError.message)
         
-        // Intentar con el puerto 4000 en el dominio actual (para producción)
-        const productionFallback = `${window.location.protocol}//${window.location.hostname}:4000/api/usuarios`;
-        console.log('Intentando URL de producción directa:', productionFallback)
+        // Intentar con URL de fallback original
+        const fallbackUrl = BACKEND_URL.replace('/api', '')
+        console.log('Intentando URL de fallback:', `${fallbackUrl}/api/usuarios`)
         try {
-          response = await axios.get(productionFallback, config)
-          console.log('✅ Fallback producción exitoso')
-        } catch (productionError) {
-          console.log('❌ Fallback producción falló:', productionError.message)
-          
-          // Último intento sin puerto específico
-          const basicFallback = `${window.location.protocol}//${window.location.hostname}/api/usuarios`;
-          console.log('Intentando URL básica:', basicFallback)
-          try {
-            response = await axios.get(basicFallback, config)
-            console.log('✅ Fallback básico exitoso')
-          } catch (basicError) {
-            console.log('❌ Todos los fallbacks fallaron')
-            // Si todos fallan, lanzar el error original
-            throw primaryError
-          }
+          response = await axios.get(`${fallbackUrl}/api/usuarios`, config)
+          console.log('✅ Fallback original exitoso')
+        } catch (fallbackError) {
+          console.log('❌ Todos los fallbacks fallaron')
+          // Si todos fallan, lanzar el error original
+          throw primaryError
         }
       }
     }

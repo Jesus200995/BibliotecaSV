@@ -20,23 +20,15 @@ export const API_CONFIG = {
         hostname === '127.0.0.1' || 
         import.meta.env.DEV === true ||
         import.meta.env.MODE === 'development' ||
-        port === '5173' || 
-        port === '5174') {
+        port === '5173') {
       console.log('🔧 Usando backend local');
       return 'http://localhost:4000/api'
     }
     
-    // En producción: el backend está corriendo directamente en Node.js puerto 4000
-    if (hostname === 'biblioteca.sembrandodatos.com') {
-      const prodUrl = `${protocol}//biblioteca.sembrandodatos.com:4000/api`;
-      console.log('🌐 Usando backend de producción (Node.js directo):', prodUrl);
-      return prodUrl;
-    }
-    
-    // Fallback para otros dominios de producción
-    const fallbackUrl = import.meta.env.VITE_API_URL || `${protocol}//${hostname}:4000/api`;
-    console.log('🌐 Usando backend fallback:', fallbackUrl);
-    return fallbackUrl;
+    // En producción
+    const prodUrl = import.meta.env.VITE_API_URL || 'https://api.biblioteca.sembrandodatos.com/api';
+    console.log('🌐 Usando backend de producción:', prodUrl);
+    return prodUrl;
   })(),
   
   APP_URL: import.meta.env.VITE_APP_URL || window.location.origin,
