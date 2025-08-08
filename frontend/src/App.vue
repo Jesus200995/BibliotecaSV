@@ -237,6 +237,10 @@ function verificarAutenticacion() {
 function manejarLoginExitoso(loginData) {
   console.log('Login exitoso en App:', loginData)
   
+  // Guardar datos en localStorage para persistencia
+  localStorage.setItem('authToken', loginData.token)
+  localStorage.setItem('userData', JSON.stringify(loginData.usuario))
+  
   estaAutenticado.value = true
   usuarioActual.value = loginData.usuario
   
