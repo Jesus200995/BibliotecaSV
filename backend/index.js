@@ -54,7 +54,6 @@ const PORT = process.env.PORT || 4000;
 
 // Importar rutas
 const usuariosRoutes = require('./routes/usuarios');
-const apiRoutes = require('./routes/index');  // Router centralizado
 
 // Configurar CORS para desarrollo y producción
 const corsOptions = {
@@ -210,29 +209,6 @@ app.get('/api/verify-token', verificarToken, (req, res) => {
     success: true,
     usuario: req.usuario
   });
-});
-
-// Endpoint de usuarios sin autenticación (para solucionar el problema)
-app.get('/api/usuarios-publico', async (req, res) => {
-  console.log('=== GET /api/usuarios-publico ===');
-  
-  try {
-    // Solo mostrar información segura (sin contraseñas)
-    const query = `
-      SELECT id, usuario, rol, activo 
-      FROM usuarios 
-      ORDER BY id
-    `;
-    
-    const result = await pool.query(query);
-    
-    console.log(`Usuarios encontrados: ${result.rows.length}`);
-    res.json(result.rows);
-    
-  } catch (error) {
-    console.error('Error al obtener usuarios:', error);
-    res.status(500).json({ error: 'Error al obtener los usuarios' });
-  }
 });
 
 // Función para determinar el tipo MIME basado en la extensión
@@ -832,12 +808,9 @@ app.delete('/api/archivos/:id', verificarToken, async (req, res) => {
   }
 });
 
-// Rutas para usuarios - usando dos implementaciones para redundancia
+// Rutas para usuarios
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/usuarios', usuariosRoutes);
-
-// Usar router centralizado como alternativa
-app.use('/api', apiRoutes);
 
 // Página de prueba para subir archivos
 app.get('/test-upload', (req, res) => {

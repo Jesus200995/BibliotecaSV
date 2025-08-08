@@ -109,10 +109,9 @@ const users = ref([])
 const loading = ref(true)
 const error = ref('')
 
-// Función para cargar usuarios con datos simulados si el API falla
+// Función para cargar usuarios
 async function fetchUsers() {
   try {
-    console.log('UsuariosView - Iniciando carga de usuarios')
     loading.value = true
     error.value = ''
     
@@ -126,96 +125,22 @@ async function fetchUsers() {
     }
     
     // Añadir token de autorización si está disponible
-    const token = localStorage.getItem('authToken')
+    const token = localStorage.getItem('token')
     if (token) {
-      console.log('UsuariosView - Token encontrado, añadiendo a headers')
       config.headers['Authorization'] = `Bearer ${token}`
-    } else {
-      console.log('UsuariosView - No se encontró token de autenticación')
     }
     
-    // Intentar diferentes rutas en secuencia
-    let response = null
-    let success = false
-    const rutas = [
-      '/usuarios-publico',
-      '/usuarios',
-      '/api/usuarios-publico',
-      '/api/usuarios'
-    ]
-    
-    console.log('UsuariosView - Intentando varias rutas')
-    
-    // Intentar cada ruta hasta que una funcione
-    for (const ruta of rutas) {
-      try {
-        const apiUrl = buildApiUrl(ruta)
-        console.log(`UsuariosView - Intentando ruta: ${apiUrl}`)
-        response = await axios.get(apiUrl, config)
-        console.log(`UsuariosView - Éxito con ruta: ${ruta}`)
-        success = true
-        break
-      } catch (err) {
-        console.log(`UsuariosView - Error en ruta ${ruta}:`, err.message)
-        continue
-      }
-    }
-    
-    // Si todas las rutas fallan, usar datos locales de ejemplo
-    if (!success) {
-      console.log('UsuariosView - Todas las rutas fallaron, usando datos locales')
-      
-      // Datos de ejemplo para que la interfaz funcione
-      response = {
-        data: [
-          { id: 1, usuario: 'admin', rol: 'admin', activo: true },
-          { id: 2, usuario: 'usuario1', rol: 'user', activo: true },
-          { id: 3, usuario: 'editor1', rol: 'editor', activo: true }
-        ]
-      }
-    }
+    // Hacer la petición
+    const response = await axios.get(buildApiUrl('/usuarios'), config)
     
     // Guardar datos
-    console.log('UsuariosView - Respuesta recibida:', success ? response.status : 'N/A', response.data)
     users.value = response.data
-    console.log('UsuariosView - Usuarios cargados:', users.value)
+    console.log('Usuarios cargados:', users.value)
     
   } catch (err) {
-    console.error('UsuariosView - Error al cargar usuarios:', err)
-    
-    // Información detallada del error para depuración
-    if (err.response) {
-      console.log('UsuariosView - Error de respuesta:', {
-        status: err.response.status,
-        data: err.response.data,
-        headers: err.response.headers
-      })
-    } else if (err.request) {
-      console.log('UsuariosView - Error de request:', err.request)
-    }
-    
-    // Intentar con ruta alternativa sin /api
-    try {
-      console.log('UsuariosView - Intentando ruta alternativa')
-      const baseUrl = API_CONFIG.BASE_URL.replace('/api', '')
-      const altUrl = `${baseUrl}/usuarios`
-      console.log('UsuariosView - URL alternativa:', altUrl)
-      
-      const response = await axios.get(altUrl, {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        timeout: API_CONFIG.TIMEOUT
-      })
-      
-      users.value = response.data
-      console.log('UsuariosView - Usuarios cargados desde ruta alternativa:', users.value)
-    } catch (altErr) {
-      console.error('UsuariosView - Error en ruta alternativa:', altErr)
-      error.value = 'Error al cargar los usuarios. Verifica tu conexión o permisos.'
-      users.value = []
-    }
+    console.error('Error al cargar usuarios:', err)
+    error.value = 'Error al cargar los usuarios. Verifica tu conexión o permisos.'
+    users.value = []
   } finally {
     loading.value = false
   }
