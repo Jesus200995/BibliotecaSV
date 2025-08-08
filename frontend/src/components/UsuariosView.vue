@@ -109,7 +109,7 @@ const users = ref([])
 const loading = ref(true)
 const error = ref('')
 
-// Función para cargar usuarios con datos simulados si el API falla
+// Función para cargar usuarios desde la base de datos PostgreSQL
 async function fetchUsers() {
   try {
     console.log('UsuariosView - Iniciando carga de usuarios')
@@ -134,17 +134,17 @@ async function fetchUsers() {
       console.log('UsuariosView - No se encontró token de autenticación')
     }
     
-    // Intentar diferentes rutas en secuencia
+    // Intentar diferentes rutas en secuencia, priorizando la ruta pública
     let response = null
     let success = false
     const rutas = [
       '/usuarios-publico',
-      '/usuarios',
       '/api/usuarios-publico',
+      '/usuarios',
       '/api/usuarios'
     ]
     
-    console.log('UsuariosView - Intentando varias rutas')
+    console.log('UsuariosView - Intentando varias rutas para obtener usuarios reales')
     
     // Intentar cada ruta hasta que una funcione
     for (const ruta of rutas) {
@@ -152,7 +152,7 @@ async function fetchUsers() {
         const apiUrl = buildApiUrl(ruta)
         console.log(`UsuariosView - Intentando ruta: ${apiUrl}`)
         response = await axios.get(apiUrl, config)
-        console.log(`UsuariosView - Éxito con ruta: ${ruta}`)
+        console.log(`UsuariosView - Éxito con ruta: ${ruta}, usuarios encontrados:`, response.data.length)
         success = true
         break
       } catch (err) {
@@ -161,24 +161,45 @@ async function fetchUsers() {
       }
     }
     
-    // Si todas las rutas fallan, usar datos locales de ejemplo
+    // Si todas las rutas fallan, intenta directamente con el servidor sin /api
     if (!success) {
-      console.log('UsuariosView - Todas las rutas fallaron, usando datos locales')
-      
-      // Datos de ejemplo para que la interfaz funcione
-      response = {
-        data: [
-          { id: 1, usuario: 'admin', rol: 'admin', activo: true },
-          { id: 2, usuario: 'usuario1', rol: 'user', activo: true },
-          { id: 3, usuario: 'editor1', rol: 'editor', activo: true }
+      try {
+        console.log('UsuariosView - Intentando conexión directa al backend')
+        const baseUrl = API_CONFIG.BASE_URL.replace('/api', '')
+        const directUrls = [
+          `${baseUrl}/usuarios-publico`,
+          `${baseUrl}/usuarios`
         ]
+        
+        for (const url of directUrls) {
+          try {
+            console.log(`UsuariosView - Intentando URL directa: ${url}`)
+            response = await axios.get(url, config)
+            console.log(`UsuariosView - Éxito con URL directa: ${url}`)
+            success = true
+            break
+          } catch (directErr) {
+            console.log(`UsuariosView - Error en URL directa ${url}:`, directErr.message)
+            continue
+          }
+        }
+      } catch (baseErr) {
+        console.error('UsuariosView - Error en conexión directa:', baseErr)
       }
     }
     
-    // Guardar datos
-    console.log('UsuariosView - Respuesta recibida:', success ? response.status : 'N/A', response.data)
+    // Si todas las rutas fallan, mostrar mensaje de error
+    if (!success) {
+      console.error('UsuariosView - No se pudieron obtener los usuarios de la base de datos')
+      error.value = 'No se pudieron cargar los usuarios. Verifica la conexión con el servidor.'
+      users.value = []
+      return
+    }
+    
+    // Guardar datos de los usuarios reales
+    console.log('UsuariosView - Respuesta recibida:', response.status, response.data)
     users.value = response.data
-    console.log('UsuariosView - Usuarios cargados:', users.value)
+    console.log('UsuariosView - Usuarios reales cargados desde PostgreSQL:', users.value)
     
   } catch (err) {
     console.error('UsuariosView - Error al cargar usuarios:', err)
@@ -194,28 +215,8 @@ async function fetchUsers() {
       console.log('UsuariosView - Error de request:', err.request)
     }
     
-    // Intentar con ruta alternativa sin /api
-    try {
-      console.log('UsuariosView - Intentando ruta alternativa')
-      const baseUrl = API_CONFIG.BASE_URL.replace('/api', '')
-      const altUrl = `${baseUrl}/usuarios`
-      console.log('UsuariosView - URL alternativa:', altUrl)
-      
-      const response = await axios.get(altUrl, {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        timeout: API_CONFIG.TIMEOUT
-      })
-      
-      users.value = response.data
-      console.log('UsuariosView - Usuarios cargados desde ruta alternativa:', users.value)
-    } catch (altErr) {
-      console.error('UsuariosView - Error en ruta alternativa:', altErr)
-      error.value = 'Error al cargar los usuarios. Verifica tu conexión o permisos.'
-      users.value = []
-    }
+    error.value = 'Error al cargar los usuarios. Verifica tu conexión con el servidor.'
+    users.value = []
   } finally {
     loading.value = false
   }
