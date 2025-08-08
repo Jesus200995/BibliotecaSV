@@ -91,9 +91,8 @@
               <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             </div>
             
-            <!-- Botón "Subir archivo" solo para administradores -->
+            <!-- NUEVO: Botón compacto "Subir archivo" en morado -->
             <button 
-              v-if="esAdmin"
               @click="modalSubidaVisible = true"
               class="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-full transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
             >
@@ -280,7 +279,7 @@
               
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div class="flex items-center gap-2">
-                  <!-- Botón Ver detalles (siempre visible para todos) -->
+                  <!-- Botón Ver detalles -->
                   <button 
                     @click="$emit('ver', archivo.id)"
                     class="w-8 h-8 bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-700 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
@@ -292,9 +291,8 @@
                     </svg>
                   </button>
                   
-                  <!-- Botón Editar (solo para administradores) -->
+                  <!-- Botón Editar -->
                   <button 
-                    v-if="esAdmin"
                     @click="abrirModalEditar(archivo)"
                     class="w-8 h-8 bg-amber-100 hover:bg-amber-200 text-amber-600 hover:text-amber-700 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
                     title="Editar archivo"
@@ -304,7 +302,7 @@
                     </svg>
                   </button>
                   
-                  <!-- Botón Descargar (siempre visible para todos) -->
+                  <!-- Botón Descargar -->
                   <a 
                     :href="`http://localhost:4000/archivos/${archivo.id}/download`"
                     class="w-8 h-8 bg-green-100 hover:bg-green-200 text-green-600 hover:text-green-700 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
@@ -316,9 +314,8 @@
                     </svg>
                   </a>
                   
-                  <!-- Botón Eliminar (solo para administradores) -->
+                  <!-- Botón Eliminar -->
                   <button 
-                    v-if="esAdmin"
                     @click="confirmarEliminar(archivo)"
                     class="w-8 h-8 bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
                     title="Eliminar archivo"
@@ -1117,7 +1114,6 @@ defineEmits(['ver'])
 // Variables reactivas
 const archivos = ref([])
 const cargandoPagina = ref(false)
-const esAdmin = ref(false)
 
 // Configurar axios y URLs
 axios.defaults.timeout = 10000
@@ -1357,23 +1353,6 @@ function getValidationText(validacion) {
 // Cargar archivos al montar el componente
 onMounted(async () => {
   console.log('ArchivosView montado')
-  
-  // Verificar si el usuario es administrador
-  const userData = localStorage.getItem('userData')
-  if (userData) {
-    try {
-      const usuario = JSON.parse(userData)
-      esAdmin.value = usuario.rol === 'admin'
-      console.log('ArchivosView - Usuario conectado con rol:', usuario.rol, 'Es admin:', esAdmin.value)
-    } catch (e) {
-      console.error('ArchivosView - Error al procesar datos de usuario:', e)
-      esAdmin.value = false
-    }
-  } else {
-    console.log('ArchivosView - No hay datos de usuario disponibles')
-    esAdmin.value = false
-  }
-  
   await cargarArchivos()
 })
 
