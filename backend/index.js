@@ -827,6 +827,11 @@ app.get('/test-upload', (req, res) => {
   `);
 });
 
+// Endpoint de salud adicional para verificación desde navegador
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, service: 'biblioteca-api', time: new Date().toISOString() });
+});
+
 // Iniciar el servidor
 app.listen(PORT, () => {
   console.log(`Servidor backend corriendo en http://localhost:${PORT}`);
