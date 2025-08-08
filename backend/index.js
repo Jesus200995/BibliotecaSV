@@ -115,6 +115,14 @@ function verificarToken(req, res, next) {
   });
 }
 
+// Middleware para verificar rol de administrador
+function verificarAdmin(req, res, next) {
+  if (!req.usuario || req.usuario.rol !== 'admin') {
+    return res.status(403).json({ error: 'Acceso denegado: Se requieren permisos de administrador' });
+  }
+  next();
+}
+
 // ============ ENDPOINT DE LOGIN ============
 
 // Endpoint de login
@@ -206,6 +214,33 @@ app.get('/api/verify-token', verificarToken, (req, res) => {
     success: true,
     usuario: req.usuario
   });
+});
+
+// ============ ENDPOINT DE GESTIÓN DE USUARIOS ============
+
+// Endpoint para obtener todos los usuarios (solo admins)
+app.get('/api/usuarios', verificarToken, verificarAdmin, async (req, res) => {
+  console.log('=== GET /api/usuarios ===');
+  console.log('Usuario solicitante:', req.usuario);
+  
+  try {
+    const query = `
+      SELECT id, usuario, rol, activo 
+      FROM usuarios 
+      ORDER BY id ASC
+    `;
+    
+    const result = await pool.query(query);
+    
+    console.log(`Usuarios encontrados: ${result.rows.length}`);
+    
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error al obtener usuarios:', error);
+    res.status(500).json({ 
+      error: 'Error interno del servidor al obtener usuarios' 
+    });
+  }
 });
 
 // Función para determinar el tipo MIME basado en la extensión

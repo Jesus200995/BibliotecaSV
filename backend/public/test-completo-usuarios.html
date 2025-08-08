@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba Completa de Gestión de Usuarios</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        .response { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; white-space: pre-wrap; font-family: monospace; font-size: 12px; }
+        button { background: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        button.success { background: #28a745; }
+        button.danger { background: #dc3545; }
+        button.warning { background: #ffc107; color: black; }
+        .error { background: #ffebee; border: 1px solid #f44336; }
+        .success { background: #e8f5e9; border: 1px solid #4caf50; }
+        .info { background: #e3f2fd; border: 1px solid #2196f3; }
+        h1 { color: #333; text-align: center; }
+        h2 { color: #555; border-bottom: 2px solid #007bff; padding-bottom: 5px; }
+        .user-card { 
+            display: inline-block; 
+            margin: 5px; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+            background: white;
+            min-width: 150px;
+            text-align: center;
+        }
+        .admin { border-left: 4px solid #9c27b0; }
+        .user { border-left: 4px solid #2196f3; }
+        .inactive { opacity: 0.5; background: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Prueba Completa: Gestión de Usuarios</h1>
+        <p>Prueba exhaustiva del sistema de gestión de usuarios para la Biblioteca SV</p>
+        
+        <div class="section">
+            <h2>🚀 Prueba 1: Autenticación como Admin</h2>
+            <button onclick="loginAdmin()">Login Admin</button>
+            <button onclick="loginUser()">Login Usuario Normal</button>
+            <button onclick="clearAuth()">Limpiar Autenticación</button>
+            <div id="authResponse" class="response"></div>
+        </div>
+        
+        <div class="section">
+            <h2>👥 Prueba 2: Obtener Lista de Usuarios (Admin)</h2>
+            <button onclick="obtenerUsuarios()">Obtener Usuarios</button>
+            <div id="usuariosResponse" class="response"></div>
+            <div id="usuariosCards"></div>
+        </div>
+        
+        <div class="section">
+            <h2>🚫 Prueba 3: Verificar Restricciones de Acceso</h2>
+            <button onclick="pruebaUsuarioNormal()" class="warning">Probar con Usuario Normal</button>
+            <button onclick="pruebaSinToken()" class="danger">Probar sin Token</button>
+            <div id="restrictionsResponse" class="response"></div>
+        </div>
+        
+        <div class="section">
+            <h2>📊 Prueba 4: Estadísticas del Sistema</h2>
+            <button onclick="mostrarEstadisticas()" class="success">Generar Estadísticas</button>
+            <div id="statsResponse" class="response"></div>
+        </div>
+
+        <div class="section">
+            <h2>⚡ Estado del Sistema</h2>
+            <div id="systemStatus" class="response info">Cargando estado del sistema...</div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = '';
+        let userData = {};
+        let usuariosList = [];
+        
+        // URLs de la API
+        const API_BASE = 'http://localhost:4000/api';
+        
+        async function loginAdmin() {
+            const responseDiv = document.getElementById('authResponse');
+            responseDiv.textContent = '🔄 Autenticando como admin...';
+            responseDiv.className = 'response';
+            
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        usuario: 'admin',
+                        contrasena: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    authToken = data.token;
+                    userData = data.usuario;
+                    
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('userData', JSON.stringify(userData));
+                    
+                    responseDiv.textContent = `✅ LOGIN EXITOSO\n\nUsuario: ${userData.usuario}\nRol: ${userData.rol}\nID: ${userData.id}\nToken: ${authToken.substring(0, 20)}...`;
+                    responseDiv.className = 'response success';
+                    
+                    updateSystemStatus();
+                } else {
+                    responseDiv.textContent = `❌ ERROR EN LOGIN\n${JSON.stringify(data, null, 2)}`;
+                    responseDiv.className = 'response error';
+                }
+            } catch (error) {
+                responseDiv.textContent = `❌ ERROR DE RED: ${error.message}`;
+                responseDiv.className = 'response error';
+            }
+        }
+        
+        async function loginUser() {
+            const responseDiv = document.getElementById('authResponse');
+            responseDiv.textContent = '🔄 Autenticando como usuario normal...';
+            responseDiv.className = 'response';
+            
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        usuario: 'maria_user',
+                        contrasena: 'maria123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    authToken = data.token;
+                    userData = data.usuario;
+                    
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('userData', JSON.stringify(userData));
+                    
+                    responseDiv.textContent = `✅ LOGIN EXITOSO (Usuario Normal)\n\nUsuario: ${userData.usuario}\nRol: ${userData.rol}\nID: ${userData.id}`;
+                    responseDiv.className = 'response info';
+                    
+                    updateSystemStatus();
+                } else {
+                    responseDiv.textContent = `❌ ERROR EN LOGIN\n${JSON.stringify(data, null, 2)}`;
+                    responseDiv.className = 'response error';
+                }
+            } catch (error) {
+                responseDiv.textContent = `❌ ERROR DE RED: ${error.message}`;
+                responseDiv.className = 'response error';
+            }
+        }
+        
+        function clearAuth() {
+            authToken = '';
+            userData = {};
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            
+            document.getElementById('authResponse').textContent = '🚪 Autenticación eliminada';
+            document.getElementById('authResponse').className = 'response info';
+            
+            updateSystemStatus();
+        }
+        
+        async function obtenerUsuarios() {
+            const responseDiv = document.getElementById('usuariosResponse');
+            const cardsDiv = document.getElementById('usuariosCards');
+            
+            responseDiv.textContent = '🔄 Obteniendo lista de usuarios...';
+            responseDiv.className = 'response';
+            cardsDiv.innerHTML = '';
+            
+            if (!authToken) {
+                responseDiv.textContent = '❌ ERROR: No hay token de autenticación';
+                responseDiv.className = 'response error';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/usuarios`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    usuariosList = data;
+                    
+                    let resultado = `✅ USUARIOS OBTENIDOS (${data.length} usuarios)\n\n`;
+                    data.forEach((usuario, index) => {
+                        const estado = usuario.activo ? '✅' : '❌';
+                        const rolIcon = usuario.rol === 'admin' ? '👑' : '👤';
+                        resultado += `${index + 1}. ${estado} ${rolIcon} ${usuario.usuario} (${usuario.rol.toUpperCase()}) - ID: ${usuario.id}\n`;
+                    });
+                    
+                    responseDiv.textContent = resultado;
+                    responseDiv.className = 'response success';
+                    
+                    // Crear tarjetas visuales
+                    data.forEach(usuario => {
+                        const card = document.createElement('div');
+                        card.className = `user-card ${usuario.rol} ${!usuario.activo ? 'inactive' : ''}`;
+                        card.innerHTML = `
+                            <strong>${usuario.usuario}</strong><br>
+                            ${usuario.rol === 'admin' ? '👑' : '👤'} ${usuario.rol.toUpperCase()}<br>
+                            ID: ${usuario.id}<br>
+                            ${usuario.activo ? '✅ Activo' : '❌ Inactivo'}
+                        `;
+                        cardsDiv.appendChild(card);
+                    });
+                    
+                } else {
+                    responseDiv.textContent = `❌ ERROR (${response.status})\n${JSON.stringify(data, null, 2)}`;
+                    responseDiv.className = 'response error';
+                }
+            } catch (error) {
+                responseDiv.textContent = `❌ ERROR DE RED: ${error.message}`;
+                responseDiv.className = 'response error';
+            }
+        }
+        
+        async function pruebaUsuarioNormal() {
+            const responseDiv = document.getElementById('restrictionsResponse');
+            responseDiv.textContent = '🔄 Probando acceso con usuario normal...';
+            
+            // Primero hacer login como usuario normal
+            try {
+                const loginResponse = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        usuario: 'maria_user',
+                        contrasena: 'maria123'
+                    })
+                });
+                
+                const loginData = await loginResponse.json();
+                
+                if (!loginResponse.ok || !loginData.success) {
+                    throw new Error('No se pudo hacer login como usuario normal');
+                }
+                
+                // Intentar acceder a usuarios con token de usuario normal
+                const usuariosResponse = await fetch(`${API_BASE}/usuarios`, {
+                    headers: {
+                        'Authorization': `Bearer ${loginData.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const usuariosData = await usuariosResponse.json();
+                
+                if (usuariosResponse.status === 403) {
+                    responseDiv.textContent = `✅ RESTRICCIÓN FUNCIONANDO CORRECTAMENTE\n\nUsuario normal NO puede acceder a la lista de usuarios\nEstado: ${usuariosResponse.status}\nMensaje: ${usuariosData.error}`;
+                    responseDiv.className = 'response success';
+                } else {
+                    responseDiv.textContent = `❌ FALLA DE SEGURIDAD\n\nEl usuario normal SÍ puede acceder (no debería)\nEstado: ${usuariosResponse.status}\nDatos: ${JSON.stringify(usuariosData, null, 2)}`;
+                    responseDiv.className = 'response error';
+                }
+                
+            } catch (error) {
+                responseDiv.textContent = `❌ ERROR EN PRUEBA: ${error.message}`;
+                responseDiv.className = 'response error';
+            }
+        }
+        
+        async function pruebaSinToken() {
+            const responseDiv = document.getElementById('restrictionsResponse');
+            responseDiv.textContent = '🔄 Probando acceso sin token...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/usuarios`);
+                const data = await response.json();
+                
+                if (response.status === 401) {
+                    responseDiv.textContent = `✅ SEGURIDAD FUNCIONANDO\n\nAcceso sin token correctamente denegado\nEstado: ${response.status}\nMensaje: ${data.error}`;
+                    responseDiv.className = 'response success';
+                } else {
+                    responseDiv.textContent = `❌ FALLA DE SEGURIDAD\n\nSe permite acceso sin token\nEstado: ${response.status}\nDatos: ${JSON.stringify(data, null, 2)}`;
+                    responseDiv.className = 'response error';
+                }
+            } catch (error) {
+                responseDiv.textContent = `❌ ERROR EN PRUEBA: ${error.message}`;
+                responseDiv.className = 'response error';
+            }
+        }
+        
+        function mostrarEstadisticas() {
+            const responseDiv = document.getElementById('statsResponse');
+            
+            if (usuariosList.length === 0) {
+                responseDiv.textContent = '❌ Primero debes obtener la lista de usuarios';
+                responseDiv.className = 'response error';
+                return;
+            }
+            
+            const stats = {
+                total: usuariosList.length,
+                activos: usuariosList.filter(u => u.activo).length,
+                inactivos: usuariosList.filter(u => !u.activo).length,
+                admins: usuariosList.filter(u => u.rol === 'admin').length,
+                users: usuariosList.filter(u => u.rol === 'user').length,
+                adminsActivos: usuariosList.filter(u => u.rol === 'admin' && u.activo).length,
+                usersActivos: usuariosList.filter(u => u.rol === 'user' && u.activo).length
+            };
+            
+            const resultado = `📊 ESTADÍSTICAS DEL SISTEMA\n
+🔢 Total de usuarios: ${stats.total}
+✅ Usuarios activos: ${stats.activos}
+❌ Usuarios inactivos: ${stats.inactivos}
+
+👑 Administradores: ${stats.admins} (${stats.adminsActivos} activos)
+👤 Usuarios normales: ${stats.users} (${stats.usersActivos} activos)
+
+📈 Porcentaje de usuarios activos: ${((stats.activos/stats.total)*100).toFixed(1)}%
+🏆 Porcentaje de administradores: ${((stats.admins/stats.total)*100).toFixed(1)}%`;
+            
+            responseDiv.textContent = resultado;
+            responseDiv.className = 'response success';
+        }
+        
+        function updateSystemStatus() {
+            const statusDiv = document.getElementById('systemStatus');
+            const token = localStorage.getItem('authToken');
+            const userData = localStorage.getItem('userData');
+            
+            let status = '💻 ESTADO DEL SISTEMA\n\n';
+            status += `🌐 API Backend: http://localhost:4000\n`;
+            status += `🔗 Frontend: http://localhost:5174\n\n`;
+            
+            if (token && userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    status += `✅ AUTENTICADO\n`;
+                    status += `👤 Usuario: ${user.usuario}\n`;
+                    status += `🎭 Rol: ${user.rol}\n`;
+                    status += `🔑 Token: ${token.substring(0, 20)}...\n`;
+                    status += `⏰ Fecha: ${new Date().toLocaleString('es-ES')}\n`;
+                    statusDiv.className = 'response success';
+                } catch (e) {
+                    status += `❌ ERROR: Datos de usuario corruptos`;
+                    statusDiv.className = 'response error';
+                }
+            } else {
+                status += `🚪 NO AUTENTICADO\n`;
+                status += `🔑 Token: ${token ? 'Presente pero no válido' : 'Ausente'}\n`;
+                statusDiv.className = 'response info';
+            }
+            
+            statusDiv.textContent = status;
+        }
+        
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            // Recuperar autenticación si existe
+            const storedToken = localStorage.getItem('authToken');
+            const storedUserData = localStorage.getItem('userData');
+            
+            if (storedToken && storedUserData) {
+                authToken = storedToken;
+                try {
+                    userData = JSON.parse(storedUserData);
+                } catch (e) {
+                    console.error('Error parseando userData:', e);
+                }
+            }
+            
+            updateSystemStatus();
+            
+            // Actualizar estado cada 30 segundos
+            setInterval(updateSystemStatus, 30000);
+        });
+    </script>
+</body>
+</html>

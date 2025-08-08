@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba Endpoint Usuarios</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .response { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; white-space: pre-wrap; }
+        button { background: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        .error { background: #ffebee; border: 1px solid #f44336; }
+        .success { background: #e8f5e9; border: 1px solid #4caf50; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Prueba de Endpoint de Usuarios</h1>
+        
+        <div>
+            <h2>1. Hacer Login</h2>
+            <button onclick="hacerLogin()">Login como Admin</button>
+            <div id="loginResponse" class="response"></div>
+        </div>
+        
+        <div>
+            <h2>2. Obtener Usuarios</h2>
+            <button onclick="obtenerUsuarios()">Obtener Lista de Usuarios</button>
+            <div id="usuariosResponse" class="response"></div>
+        </div>
+        
+        <div>
+            <h2>3. Estado de Autenticación</h2>
+            <div id="authStatus" class="response"></div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = '';
+        
+        async function hacerLogin() {
+            const loginDiv = document.getElementById('loginResponse');
+            loginDiv.textContent = 'Realizando login...';
+            loginDiv.className = 'response';
+            
+            try {
+                const response = await fetch('http://localhost:4000/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        usuario: 'admin',
+                        contrasena: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    authToken = data.token;
+                    loginDiv.textContent = `LOGIN EXITOSO\n${JSON.stringify(data, null, 2)}`;
+                    loginDiv.className = 'response success';
+                    
+                    // Almacenar en localStorage como lo haría la aplicación
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('userData', JSON.stringify(data.usuario));
+                    
+                    mostrarEstadoAuth();
+                } else {
+                    loginDiv.textContent = `ERROR EN LOGIN\n${JSON.stringify(data, null, 2)}`;
+                    loginDiv.className = 'response error';
+                }
+            } catch (error) {
+                loginDiv.textContent = `ERROR DE RED: ${error.message}`;
+                loginDiv.className = 'response error';
+            }
+        }
+        
+        async function obtenerUsuarios() {
+            const usuariosDiv = document.getElementById('usuariosResponse');
+            usuariosDiv.textContent = 'Obteniendo usuarios...';
+            usuariosDiv.className = 'response';
+            
+            if (!authToken) {
+                usuariosDiv.textContent = 'ERROR: No hay token de autenticación. Haz login primero.';
+                usuariosDiv.className = 'response error';
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:4000/api/usuarios', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let resultado = `USUARIOS OBTENIDOS (${data.length} usuarios):\n\n`;
+                    data.forEach((usuario, index) => {
+                        resultado += `${index + 1}. ID: ${usuario.id}\n`;
+                        resultado += `   Usuario: ${usuario.usuario}\n`;
+                        resultado += `   Rol: ${usuario.rol}\n`;
+                        resultado += `   Activo: ${usuario.activo ? 'Sí' : 'No'}\n\n`;
+                    });
+                    
+                    usuariosDiv.textContent = resultado;
+                    usuariosDiv.className = 'response success';
+                } else {
+                    usuariosDiv.textContent = `ERROR AL OBTENER USUARIOS (${response.status})\n${JSON.stringify(data, null, 2)}`;
+                    usuariosDiv.className = 'response error';
+                }
+            } catch (error) {
+                usuariosDiv.textContent = `ERROR DE RED: ${error.message}`;
+                usuariosDiv.className = 'response error';
+            }
+        }
+        
+        function mostrarEstadoAuth() {
+            const authDiv = document.getElementById('authStatus');
+            const token = localStorage.getItem('authToken');
+            const userData = localStorage.getItem('userData');
+            
+            if (token && userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    authDiv.textContent = `AUTENTICADO\nUsuario: ${user.usuario}\nRol: ${user.rol}\nToken presente: Sí`;
+                    authDiv.className = 'response success';
+                } catch (e) {
+                    authDiv.textContent = `ERROR: Datos de usuario corruptos`;
+                    authDiv.className = 'response error';
+                }
+            } else {
+                authDiv.textContent = `NO AUTENTICADO\nToken: ${token ? 'Presente' : 'Ausente'}\nDatos: ${userData ? 'Presentes' : 'Ausentes'}`;
+                authDiv.className = 'response error';
+            }
+        }
+        
+        // Mostrar estado inicial
+        mostrarEstadoAuth();
+        
+        // Verificar si ya hay un token almacenado
+        const storedToken = localStorage.getItem('authToken');
+        if (storedToken) {
+            authToken = storedToken;
+        }
+    </script>
+</body>
+</html>
