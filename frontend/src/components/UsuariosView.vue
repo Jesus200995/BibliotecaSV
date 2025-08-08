@@ -138,10 +138,16 @@ async function fetchUsers() {
     let response = null
     let success = false
     const rutas = [
-      '/usuarios-publico',
-      '/api/usuarios-publico',
-      '/usuarios',
-      '/api/usuarios'
+      '/test-usuarios',              // Nueva ruta de prueba
+      '/api/test-usuarios',          // Nueva ruta de prueba con prefijo
+      '/usuarios-publico',           // Ruta directa en index.js
+      '/api/usuarios-publico',       // Ruta con prefijo /api en index.js
+      '/usuarios/usuarios-publico',  // Ruta dentro del router usuarios
+      '/api/usuarios/usuarios-publico', // Ruta con prefijo /api dentro del router usuarios
+      '/usuarios/publico',           // Nueva ruta simplificada
+      '/api/usuarios/publico',       // Nueva ruta simplificada con prefijo
+      '/usuarios',                   // Ruta básica de usuarios
+      '/api/usuarios'                // Ruta básica con prefijo
     ]
     
     console.log('UsuariosView - Intentando varias rutas para obtener usuarios reales')
@@ -167,7 +173,10 @@ async function fetchUsers() {
         console.log('UsuariosView - Intentando conexión directa al backend')
         const baseUrl = API_CONFIG.BASE_URL.replace('/api', '')
         const directUrls = [
+          `${baseUrl}/test-usuarios`,
           `${baseUrl}/usuarios-publico`,
+          `${baseUrl}/usuarios/usuarios-publico`,
+          `${baseUrl}/usuarios/publico`,
           `${baseUrl}/usuarios`
         ]
         
@@ -198,7 +207,34 @@ async function fetchUsers() {
     
     // Guardar datos de los usuarios reales
     console.log('UsuariosView - Respuesta recibida:', response.status, response.data)
-    users.value = response.data
+    
+    // Verificar si la respuesta es HTML en lugar de JSON
+    if (typeof response.data === 'string' && response.data.includes('<!doctype html>')) {
+      console.warn('UsuariosView - La respuesta contiene HTML en lugar de JSON')
+      error.value = 'El servidor devolvió HTML en lugar de datos JSON. Verifica la configuración del proxy.'
+      users.value = []
+      return
+    }
+    
+    // Extraer usuarios de diferentes formatos de respuesta
+    let usuariosData = response.data
+    if (response.data.usuarios) {
+      // Si la respuesta tiene un wrapper con 'usuarios'
+      usuariosData = response.data.usuarios
+    } else if (response.data.items) {
+      // Si la respuesta tiene un wrapper con 'items'
+      usuariosData = response.data.items
+    }
+    
+    // Verificar que tenemos un array
+    if (!Array.isArray(usuariosData)) {
+      console.error('UsuariosView - La respuesta no contiene un array de usuarios:', usuariosData)
+      error.value = 'Los datos de usuarios no tienen el formato esperado.'
+      users.value = []
+      return
+    }
+    
+    users.value = usuariosData
     console.log('UsuariosView - Usuarios reales cargados desde PostgreSQL:', users.value)
     
   } catch (err) {

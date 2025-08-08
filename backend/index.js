@@ -215,6 +215,11 @@ app.get('/api/verify-token', verificarToken, (req, res) => {
 // Endpoint de usuarios sin autenticación (para solucionar el problema)
 app.get('/api/usuarios-publico', async (req, res) => {
   console.log('=== GET /api/usuarios-publico ===');
+  console.log('Headers recibidos:', req.headers);
+  console.log('Origin:', req.get('Origin'));
+  
+  // Asegurar que la respuesta sea JSON
+  res.setHeader('Content-Type', 'application/json');
   
   try {
     // Solo mostrar información segura (sin contraseñas)
@@ -227,6 +232,38 @@ app.get('/api/usuarios-publico', async (req, res) => {
     const result = await pool.query(query);
     
     console.log(`Usuarios encontrados: ${result.rows.length}`);
+    console.log('Usuarios:', result.rows);
+    
+    res.json(result.rows);
+    
+  } catch (error) {
+    console.error('Error al obtener usuarios:', error);
+    res.status(500).json({ error: 'Error al obtener los usuarios' });
+  }
+});
+
+// Endpoint adicional sin prefijo /api para compatibilidad
+app.get('/usuarios-publico', async (req, res) => {
+  console.log('=== GET /usuarios-publico (sin prefijo api) ===');
+  console.log('Headers recibidos:', req.headers);
+  console.log('Origin:', req.get('Origin'));
+  
+  // Asegurar que la respuesta sea JSON
+  res.setHeader('Content-Type', 'application/json');
+  
+  try {
+    // Solo mostrar información segura (sin contraseñas)
+    const query = `
+      SELECT id, usuario, rol, activo 
+      FROM usuarios 
+      ORDER BY id
+    `;
+    
+    const result = await pool.query(query);
+    
+    console.log(`Usuarios encontrados: ${result.rows.length}`);
+    console.log('Usuarios:', result.rows);
+    
     res.json(result.rows);
     
   } catch (error) {
@@ -276,6 +313,73 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     cors: 'enabled'
   });
+});
+
+// Endpoint específico para probar usuarios públicos
+app.get('/test-usuarios', async (req, res) => {
+  console.log('=== GET /test-usuarios ===');
+  console.log('Headers recibidos:', req.headers);
+  console.log('Origin:', req.get('Origin'));
+  
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  
+  try {
+    const query = `SELECT id, usuario, rol, activo FROM usuarios ORDER BY id`;
+    const result = await pool.query(query);
+    
+    console.log(`Test usuarios - encontrados: ${result.rows.length}`);
+    
+    res.json({
+      success: true,
+      count: result.rows.length,
+      usuarios: result.rows,
+      timestamp: new Date().toISOString(),
+      endpoint: '/test-usuarios'
+    });
+    
+  } catch (error) {
+    console.error('Error en test-usuarios:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString(),
+      endpoint: '/test-usuarios'
+    });
+  }
+});
+
+app.get('/api/test-usuarios', async (req, res) => {
+  console.log('=== GET /api/test-usuarios ===');
+  console.log('Headers recibidos:', req.headers);
+  console.log('Origin:', req.get('Origin'));
+  
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  
+  try {
+    const query = `SELECT id, usuario, rol, activo FROM usuarios ORDER BY id`;
+    const result = await pool.query(query);
+    
+    console.log(`Test usuarios API - encontrados: ${result.rows.length}`);
+    
+    res.json({
+      success: true,
+      count: result.rows.length,
+      usuarios: result.rows,
+      timestamp: new Date().toISOString(),
+      endpoint: '/api/test-usuarios'
+    });
+    
+  } catch (error) {
+    console.error('Error en api/test-usuarios:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString(),
+      endpoint: '/api/test-usuarios'
+    });
+  }
 });
 
 // Endpoint de estado completo del sistema
@@ -838,6 +942,11 @@ app.use('/usuarios', usuariosRoutes);
 
 // Usar router centralizado como alternativa
 app.use('/api', apiRoutes);
+
+// Ruta adicional para servir el archivo de prueba
+app.get('/test-usuarios-web', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'test-usuarios-web.html'));
+});
 
 // Página de prueba para subir archivos
 app.get('/test-upload', (req, res) => {

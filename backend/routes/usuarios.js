@@ -73,7 +73,15 @@ router.get('/', async (req, res) => {
 
 // Endpoint público para listar usuarios (versión segura sin tokens)
 router.get('/usuarios-publico', async (req, res) => {
-  console.log('=== GET /usuarios-publico ===');
+  console.log('=== GET /usuarios-publico (desde router) ===');
+  console.log('Headers recibidos:', req.headers);
+  console.log('Origin:', req.get('Origin'));
+  
+  // Asegurar que la respuesta sea JSON
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   
   try {
     // Solo mostrar información segura (sin contraseñas)
@@ -86,6 +94,41 @@ router.get('/usuarios-publico', async (req, res) => {
     const result = await pool.query(query);
     
     console.log(`Usuarios públicos encontrados: ${result.rows.length}`);
+    console.log('Usuarios:', result.rows);
+    
+    res.json(result.rows);
+    
+  } catch (error) {
+    console.error('Error al obtener usuarios públicos:', error);
+    res.status(500).json({ error: 'Error al obtener los usuarios' });
+  }
+});
+
+// Endpoint adicional con prefijo publico
+router.get('/publico', async (req, res) => {
+  console.log('=== GET /publico (desde router usuarios) ===');
+  console.log('Headers recibidos:', req.headers);
+  console.log('Origin:', req.get('Origin'));
+  
+  // Asegurar que la respuesta sea JSON
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  try {
+    // Solo mostrar información segura (sin contraseñas)
+    const query = `
+      SELECT id, usuario, rol, activo
+      FROM usuarios 
+      ORDER BY id
+    `;
+    
+    const result = await pool.query(query);
+    
+    console.log(`Usuarios públicos encontrados (ruta /publico): ${result.rows.length}`);
+    console.log('Usuarios:', result.rows);
+    
     res.json(result.rows);
     
   } catch (error) {

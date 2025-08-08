@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Usuarios API - BibliotecaSV</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; margin: 10px 5px; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 4px; font-family: monospace; white-space: pre-wrap; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        .endpoint { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 4px; }
+        h3 { margin-top: 0; color: #333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test de Endpoints de Usuarios - BibliotecaSV</h1>
+        <p>Esta página prueba diferentes endpoints para cargar usuarios desde el VPS.</p>
+        
+        <button onclick="testAllEndpoints()">🚀 Probar Todos los Endpoints</button>
+        <button onclick="clearResults()">🧹 Limpiar Resultados</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const baseUrls = [
+            'https://api.biblioteca.sembrandodatos.com',
+            'https://biblioteca.sembrandodatos.com',
+            window.location.origin // URL actual
+        ];
+
+        const endpoints = [
+            { path: '/health', name: 'Health Check' },
+            { path: '/api/health', name: 'API Health Check' },
+            { path: '/test-usuarios', name: 'Test Usuarios (Directo)' },
+            { path: '/api/test-usuarios', name: 'Test Usuarios (API)' },
+            { path: '/usuarios-publico', name: 'Usuarios Públicos (Directo)' },
+            { path: '/api/usuarios-publico', name: 'Usuarios Públicos (API)' },
+            { path: '/usuarios/usuarios-publico', name: 'Usuarios Públicos (Router)' },
+            { path: '/api/usuarios/usuarios-publico', name: 'Usuarios Públicos (API Router)' },
+            { path: '/usuarios/publico', name: 'Usuarios Simplificado (Router)' },
+            { path: '/api/usuarios/publico', name: 'Usuarios Simplificado (API Router)' },
+            { path: '/usuarios', name: 'Usuarios Básico' },
+            { path: '/api/usuarios', name: 'Usuarios Básico (API)' }
+        ];
+
+        async function testEndpoint(baseUrl, endpoint) {
+            const url = `${baseUrl}${endpoint.path}`;
+            const resultId = `result_${Math.random().toString(36).substr(2, 9)}`;
+            
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'endpoint';
+            resultDiv.innerHTML = `
+                <h3>${endpoint.name}</h3>
+                <p><strong>URL:</strong> ${url}</p>
+                <div id="${resultId}" class="result info">🔄 Probando...</div>
+            `;
+            document.getElementById('results').appendChild(resultDiv);
+            
+            try {
+                const startTime = Date.now();
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                const contentType = response.headers.get('content-type');
+                let resultText = `⏱️ Tiempo: ${duration}ms\n📊 Status: ${response.status} ${response.statusText}\n📄 Content-Type: ${contentType}\n\n`;
+                
+                if (response.ok) {
+                    if (contentType && contentType.includes('application/json')) {
+                        const data = await response.json();
+                        
+                        if (Array.isArray(data)) {
+                            resultText += `✅ Usuarios encontrados: ${data.length}\n`;
+                            if (data.length > 0) {
+                                resultText += `👤 Primer usuario: ${JSON.stringify(data[0], null, 2)}`;
+                            }
+                        } else if (data.usuarios && Array.isArray(data.usuarios)) {
+                            resultText += `✅ Usuarios encontrados: ${data.usuarios.length}\n`;
+                            if (data.usuarios.length > 0) {
+                                resultText += `👤 Primer usuario: ${JSON.stringify(data.usuarios[0], null, 2)}`;
+                            }
+                        } else {
+                            resultText += `📋 Respuesta: ${JSON.stringify(data, null, 2)}`;
+                        }
+                        
+                        document.getElementById(resultId).className = 'result success';
+                    } else {
+                        const text = await response.text();
+                        resultText += `⚠️ Respuesta no es JSON:\n${text.substring(0, 200)}${text.length > 200 ? '...' : ''}`;
+                        document.getElementById(resultId).className = 'result error';
+                    }
+                } else {
+                    const text = await response.text();
+                    resultText += `❌ Error:\n${text.substring(0, 200)}${text.length > 200 ? '...' : ''}`;
+                    document.getElementById(resultId).className = 'result error';
+                }
+                
+                document.getElementById(resultId).textContent = resultText;
+                
+            } catch (error) {
+                const resultText = `❌ Error de red o CORS:\n${error.message}`;
+                document.getElementById(resultId).textContent = resultText;
+                document.getElementById(resultId).className = 'result error';
+            }
+        }
+
+        async function testAllEndpoints() {
+            clearResults();
+            
+            for (const baseUrl of baseUrls) {
+                const serverDiv = document.createElement('div');
+                serverDiv.innerHTML = `<h2>🌐 Servidor: ${baseUrl}</h2><hr>`;
+                document.getElementById('results').appendChild(serverDiv);
+                
+                for (const endpoint of endpoints) {
+                    await testEndpoint(baseUrl, endpoint);
+                    // Pequeña pausa entre requests
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                }
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // Auto-ejecutar una prueba inicial
+        setTimeout(() => {
+            console.log('🚀 Ejecutando prueba inicial...');
+            testAllEndpoints();
+        }, 1000);
+    </script>
+</body>
+</html>
