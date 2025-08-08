@@ -123,6 +123,38 @@ function verificarAdmin(req, res, next) {
   next();
 }
 
+// Middlewares de auth según especificación
+function requireAuth(req, res, next) {
+  try {
+    console.log('requireAuth - Verificando token...');
+    const auth = req.headers.authorization || '';
+    console.log('requireAuth - Header authorization:', auth.slice(0, 20) + '...');
+    const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
+    if (!token) {
+      console.log('requireAuth - No se proporcionó token');
+      return res.status(401).json({ ok:false, error:'No token' });
+    }
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('requireAuth - Token verificado para usuario:', payload.usuario);
+    req.user = payload;
+    next();
+  } catch (e) {
+    console.error('requireAuth - Error al verificar token:', e.message);
+    return res.status(401).json({ ok:false, error:'Token inválido' });
+  }
+}
+
+function requireAdmin(req, res, next) {
+  console.log('requireAdmin - Verificando rol de administrador...');
+  console.log('requireAdmin - Datos de usuario:', req.user);
+  if (!req.user || req.user.rol !== 'admin') {
+    console.log('requireAdmin - Acceso denegado: No es administrador');
+    return res.status(403).json({ ok:false, error:'Solo admin' });
+  }
+  console.log('requireAdmin - Acceso permitido para administrador');
+  next();
+}
+
 // ============ ENDPOINT DE LOGIN ============
 
 // Endpoint de login
@@ -218,28 +250,20 @@ app.get('/api/verify-token', verificarToken, (req, res) => {
 
 // ============ ENDPOINT DE GESTIÓN DE USUARIOS ============
 
-// Endpoint para obtener todos los usuarios (solo admins)
+// Lista de usuarios (SOLO admin) - Endpoint específico según las instrucciones
 app.get('/api/usuarios', verificarToken, verificarAdmin, async (req, res) => {
-  console.log('=== GET /api/usuarios ===');
-  console.log('Usuario solicitante:', req.usuario);
-  
   try {
-    const query = `
-      SELECT id, usuario, rol, activo 
-      FROM usuarios 
+    console.log('GET /api/usuarios - Solicitud recibida');
+    const { rows } = await pool.query(`
+      SELECT id, usuario, rol, activo
+      FROM usuarios
       ORDER BY id ASC
-    `;
-    
-    const result = await pool.query(query);
-    
-    console.log(`Usuarios encontrados: ${result.rows.length}`);
-    
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error al obtener usuarios:', error);
-    res.status(500).json({ 
-      error: 'Error interno del servidor al obtener usuarios' 
-    });
+    `);
+    console.log('GET /api/usuarios - Usuarios encontrados:', rows.length);
+    res.json({ ok:true, data: rows });
+  } catch (err) {
+    console.error('Error /api/usuarios:', err);
+    res.status(500).json({ ok:false, error:'DB error' });
   }
 });
 

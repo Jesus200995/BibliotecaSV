@@ -112,17 +112,19 @@
           </svg>
           Mapa
         </a>
-
-        <!-- Ítem Usuarios - Solo visible para admins -->
-        <a v-if="usuarioActual?.rol === 'admin'" 
-           href="#" @click="vistaActual = 'usuarios'" 
+        
+        <!-- Enlace a Usuarios solo visible para administradores -->
+        <a href="#" v-if="usuarioActual && usuarioActual.rol === 'admin'" 
+           @click="vistaActual = 'usuarios'" 
            class="flex items-center px-6 py-3 text-purple-100 transition-colors"
            :class="vistaActual === 'usuarios' ? 'bg-purple-800 border-l-4 border-white' : 'hover:bg-purple-800'">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
           Usuarios
         </a>
+
+
       </nav>
     </aside>
 
@@ -176,7 +178,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import LoginView from './components/LoginView.vue'
 import ArchivoTable from './components/ArchivoTable.vue'
@@ -189,6 +191,8 @@ import UsuariosView from './components/UsuariosView.vue'
 // Estado de autenticación
 const estaAutenticado = ref(false)
 const usuarioActual = ref(null)
+
+
 
 // Estado de la aplicación
 const archivoSeleccionado = ref(null)
