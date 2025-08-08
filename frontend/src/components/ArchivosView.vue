@@ -91,8 +91,9 @@
               <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             </div>
             
-            <!-- NUEVO: Botón compacto "Subir archivo" en morado -->
+            <!-- NUEVO: Botón compacto "Subir archivo" en morado - Solo visible para usuarios autorizados -->
             <button 
+              v-if="esUsuarioAutorizado"
               @click="modalSubidaVisible = true"
               class="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-full transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
             >
@@ -291,8 +292,9 @@
                     </svg>
                   </button>
                   
-                  <!-- Botón Editar -->
+                  <!-- Botón Editar - Solo visible para adminsv (ID 1) y ericksv (ID 19) -->
                   <button 
+                    v-if="esUsuarioAutorizado"
                     @click="abrirModalEditar(archivo)"
                     class="w-8 h-8 bg-amber-100 hover:bg-amber-200 text-amber-600 hover:text-amber-700 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
                     title="Editar archivo"
@@ -302,7 +304,7 @@
                     </svg>
                   </button>
                   
-                  <!-- Botón Descargar -->
+                  <!-- Botón Descargar - Visible para todos -->
                   <a 
                     :href="`http://localhost:4000/archivos/${archivo.id}/download`"
                     class="w-8 h-8 bg-green-100 hover:bg-green-200 text-green-600 hover:text-green-700 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
@@ -314,8 +316,9 @@
                     </svg>
                   </a>
                   
-                  <!-- Botón Eliminar -->
+                  <!-- Botón Eliminar - Solo visible para adminsv (ID 1) y ericksv (ID 19) -->
                   <button 
+                    v-if="esUsuarioAutorizado"
                     @click="confirmarEliminar(archivo)"
                     class="w-8 h-8 bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
                     title="Eliminar archivo"
@@ -1111,6 +1114,21 @@ import { formatFileSize, calculateTotalSize, bytesToMB } from '../utils/fileUtil
 // Definir emits
 defineEmits(['ver'])
 
+// Verificar si el usuario actual está autorizado (adminsv con ID 1 o ericksv con ID 19)
+const esUsuarioAutorizado = computed(() => {
+  const userData = localStorage.getItem('userData')
+  if (!userData) return false
+  
+  try {
+    const usuario = JSON.parse(userData)
+    // Comprobar si el ID de usuario es 1 (adminsv) o 19 (ericksv)
+    return usuario.id === 1 || usuario.id === 19
+  } catch (error) {
+    console.error('Error al verificar autorización del usuario:', error)
+    return false
+  }
+})
+
 // Variables reactivas
 const archivos = ref([])
 const cargandoPagina = ref(false)
@@ -1164,6 +1182,14 @@ const confirmacionVisible = ref(false)
 const sugerenciasUbicacion = ref([])
 const mostrarSugerencias = ref(false)
 const cargandoUbicaciones = ref(false)
+
+// Watcher para asegurar que el modal de subida solo se abra si el usuario está autorizado
+watch(modalSubidaVisible, (nuevoValor) => {
+  if (nuevoValor && !esUsuarioAutorizado.value) {
+    modalSubidaVisible.value = false
+    mostrarNotificacion('No tienes permiso para subir archivos', 'error')
+  }
+})
 
 // Variables para notificaciones
 const notificaciones = ref([])
@@ -1409,6 +1435,12 @@ async function cargarArchivos() {
 
 // Funciones del modal de edición
 function abrirModalEditar(archivo) {
+  // Verificar si el usuario está autorizado antes de abrir el modal
+  if (!esUsuarioAutorizado.value) {
+    mostrarNotificacion('No tienes permiso para editar archivos', 'error')
+    return
+  }
+  
   archivoEditando.value = archivo
   formularioEdicion.value = {
     nombre: archivo.nombre || '',
@@ -1463,6 +1495,13 @@ function seleccionarNuevoArchivo(event) {
 
 async function guardarCambios() {
   if (!archivoEditando.value) return
+  
+  // Verificación adicional de seguridad para asegurar que solo usuarios autorizados puedan guardar cambios
+  if (!esUsuarioAutorizado.value) {
+    mostrarNotificacion('No tienes permiso para modificar archivos', 'error')
+    cerrarModalEditar()
+    return
+  }
   
   try {
     guardandoCambios.value = true
@@ -1529,6 +1568,12 @@ async function guardarCambios() {
 
 // Funciones para eliminar archivo
 function confirmarEliminar(archivo) {
+  // Verificar si el usuario está autorizado antes de abrir el modal de confirmación
+  if (!esUsuarioAutorizado.value) {
+    mostrarNotificacion('No tienes permiso para eliminar archivos', 'error')
+    return
+  }
+  
   archivoAEliminar.value = archivo
   modalEliminarVisible.value = true
 }
@@ -1540,6 +1585,13 @@ function cerrarModalEliminar() {
 
 async function eliminarArchivo() {
   if (!archivoAEliminar.value) return
+  
+  // Verificación adicional de seguridad para asegurar que solo usuarios autorizados puedan eliminar archivos
+  if (!esUsuarioAutorizado.value) {
+    mostrarNotificacion('No tienes permiso para eliminar archivos', 'error')
+    cerrarModalEliminar()
+    return
+  }
   
   try {
     eliminandoArchivo.value = true
@@ -1707,6 +1759,13 @@ function gestionarTeclasAlcance(event) {
 
 // Función principal para subir archivo
 async function subirArchivo() {
+  // Verificación adicional de seguridad para asegurar que solo usuarios autorizados puedan subir archivos
+  if (!esUsuarioAutorizado.value) {
+    mostrarNotificacion('No tienes permiso para subir archivos', 'error')
+    modalSubidaVisible.value = false
+    return
+  }
+  
   if (!archivo.value) {
     mostrarNotificacion('Debe seleccionar un archivo', 'error')
     return
