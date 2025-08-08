@@ -99,98 +99,40 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Middleware para verificar token JWT
 function verificarToken(req, res, next) {
-  try {
-    // Obtener el token desde varias fuentes posibles
-    const authHeader = req.headers['authorization'];
-    const tokenFromHeader = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-    const tokenFromQuery = req.query.token; 
-    const tokenFromBody = req.body.token;
-    
-    // Usar el primer token disponible
-    const token = tokenFromHeader || tokenFromQuery || tokenFromBody;
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
-    if (!token) {
-      console.log('verificarToken - No se proporcionó token en ninguna fuente');
-      return res.status(401).json({ 
-        error: 'Token de acceso requerido', 
-        detalles: 'No se encontró token en headers, query ni body'
-      });
-    }
+  if (!token) {
+    console.log('verificarToken - No se proporcionó token');
+    return res.status(401).json({ error: 'Token de acceso requerido' });
+  }
 
-    // Verificar y decodificar el token
-    const usuario = jwt.verify(token, process.env.JWT_SECRET);
-    
-    if (!usuario || !usuario.id || !usuario.rol) {
-      console.log('verificarToken - Token con formato inválido:', usuario);
-      return res.status(403).json({ 
-        error: 'Token inválido', 
-        detalles: 'El token no contiene la información de usuario requerida'
-      });
+  jwt.verify(token, process.env.JWT_SECRET, (err, usuario) => {
+    if (err) {
+      console.log('verificarToken - Token inválido:', err.message);
+      return res.status(403).json({ error: 'Token inválido' });
     }
-    
-    console.log('verificarToken - Token válido para:', JSON.stringify({
-      id: usuario.id,
-      usuario: usuario.usuario,
-      rol: usuario.rol,
-      exp: new Date(usuario.exp * 1000).toISOString()
-    }));
-    
+    console.log('verificarToken - Token válido para usuario:', usuario.usuario, 'con rol:', usuario.rol);
     req.usuario = usuario;
     next();
-  } catch (error) {
-    console.error('verificarToken - Error al verificar token:', error.message);
-    return res.status(403).json({ 
-      error: 'Token inválido', 
-      detalles: error.message 
-    });
-  }
+  });
 }
 
 // Middleware para verificar rol de administrador
 function verificarAdmin(req, res, next) {
-  try {
-    if (!req.usuario) {
-      console.log('verificarAdmin - No hay información de usuario');
-      return res.status(403).json({ 
-        error: 'Acceso denegado: No se ha proporcionado información de usuario',
-        codigo: 'NO_USER_INFO'
-      });
-    }
-    
-    console.log('verificarAdmin - Verificando rol del usuario:', {
-      id: req.usuario.id,
-      usuario: req.usuario.usuario,
-      rol: req.usuario.rol
-    });
-    
-    // Verificación estricta del rol
-    if (!req.usuario.rol) {
-      console.log('verificarAdmin - El usuario no tiene rol definido');
-      return res.status(403).json({ 
-        error: 'Acceso denegado: El usuario no tiene un rol definido',
-        codigo: 'NO_ROLE_DEFINED'
-      });
-    }
-    
-    // Verificación case-insensitive para evitar problemas con mayúsculas/minúsculas
-    if (req.usuario.rol.toLowerCase() !== 'admin') {
-      console.log('verificarAdmin - El usuario no tiene rol de administrador. Rol actual:', req.usuario.rol);
-      return res.status(403).json({ 
-        error: 'Acceso denegado: Se requieren permisos de administrador',
-        codigo: 'NOT_ADMIN',
-        rolActual: req.usuario.rol
-      });
-    }
-    
-    console.log('verificarAdmin - Usuario confirmado como administrador');
-    next();
-  } catch (error) {
-    console.error('verificarAdmin - Error inesperado:', error);
-    return res.status(500).json({ 
-      error: 'Error interno al verificar permisos',
-      detalles: error.message
-    });
+  console.log('verificarAdmin - Verificando rol del usuario:', req.usuario);
+  if (!req.usuario) {
+    console.log('verificarAdmin - No hay información de usuario');
+    return res.status(403).json({ error: 'Acceso denegado: No se ha proporcionado información de usuario' });
   }
+  
+  if (req.usuario.rol !== 'admin') {
+    console.log('verificarAdmin - El usuario no tiene rol de administrador. Rol actual:', req.usuario.rol);
+    return res.status(403).json({ error: 'Acceso denegado: Se requieren permisos de administrador' });
+  }
+  
+  console.log('verificarAdmin - Usuario confirmado como administrador');
+  next();
 }
 
 // Middlewares de auth según especificación
@@ -280,43 +222,26 @@ app.post('/api/login', async (req, res) => {
     }
     console.log(`Login exitoso para usuario: ${usuarioData.usuario}`);
     
-    // Normalizar el rol para evitar problemas de mayúsculas/minúsculas
-    let rolNormalizado = (usuarioData.rol || '').toLowerCase();
-    // Asegurar que el rol sea "admin" o "user" (para evitar otros valores)
-    if (rolNormalizado !== 'admin') {
-      rolNormalizado = 'user'; // Valor por defecto para cualquier rol que no sea admin
-    }
-    
-    // Generar token JWT con información de rol normalizada
+    // Generar token JWT con información de rol
     const token = jwt.sign(
       { 
         id: usuarioData.id, 
         usuario: usuarioData.usuario, 
-        rol: rolNormalizado,
-        // Añadir información adicional para depuración
-        permisos: rolNormalizado === 'admin' ? ['editar', 'eliminar', 'subir'] : ['ver'],
-        fechaCreacion: new Date().toISOString()
+        rol: usuarioData.rol 
       },
       process.env.JWT_SECRET,
-      { 
-        expiresIn: '24h',
-        // Añadir información adicional que puede ser útil para depuración
-        subject: usuarioData.id.toString(),
-        issuer: 'BibliotecaSV'
-      }
+      { expiresIn: '24h' }
     );
     
-    console.log(`Login exitoso para usuario: ${usuarioData.usuario} con rol normalizado: ${rolNormalizado}`);
+    console.log(`Login exitoso para usuario: ${usuarioData.usuario} con rol: ${usuarioData.rol}`);
     
-    // Incluir el rol normalizado en la respuesta
     res.json({
       success: true,
       token,
       usuario: {
         id: usuarioData.id,
         usuario: usuarioData.usuario,
-        rol: rolNormalizado,
-        permisos: rolNormalizado === 'admin' ? ['editar', 'eliminar', 'subir'] : ['ver']
+        rol: usuarioData.rol
       }
     });
     
@@ -329,58 +254,12 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// Endpoint para verificar token (mejorado)
+// Endpoint para verificar token
 app.get('/api/verify-token', verificarToken, (req, res) => {
-  try {
-    // Extraer y normalizar el rol
-    const rol = (req.usuario.rol || '').toLowerCase();
-    const esAdmin = rol === 'admin';
-    
-    // Retornar información detallada
-    res.json({
-      success: true,
-      usuario: {
-        id: req.usuario.id,
-        usuario: req.usuario.usuario,
-        rol: rol,
-        esAdmin: esAdmin,
-        permisos: esAdmin ? ['editar', 'eliminar', 'subir'] : ['ver'],
-        tokenInfo: {
-          exp: new Date(req.usuario.exp * 1000).toISOString(),
-          iat: new Date(req.usuario.iat * 1000).toISOString()
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Error en verify-token:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error al procesar información del token',
-      detalles: error.message
-    });
-  }
-});
-
-// Endpoint para obtener el rol y permisos del usuario actual
-app.get('/api/user-role', verificarToken, (req, res) => {
-  try {
-    const rol = (req.usuario.rol || '').toLowerCase();
-    const esAdmin = rol === 'admin';
-    
-    res.json({
-      success: true,
-      rol: rol,
-      esAdmin: esAdmin,
-      permisos: esAdmin ? ['editar', 'eliminar', 'subir'] : ['ver']
-    });
-  } catch (error) {
-    console.error('Error en user-role:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error al obtener información de rol',
-      mensaje: error.message
-    });
-  }
+  res.json({
+    success: true,
+    usuario: req.usuario
+  });
 });
 
 // ============ ENDPOINT DE GESTIÓN DE USUARIOS ============
