@@ -102,178 +102,80 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
-import { API_CONFIG, buildApiUrl } from '../config/api.js'
-import { fetchUsuariosDirect } from '../config/api-direct.js'
 
 // Variables reactivas para el estado
 const users = ref([])
 const loading = ref(true)
 const error = ref('')
 
-// Función para cargar usuarios desde la base de datos PostgreSQL
+// URL del backend configurada dinámicamente - IGUAL QUE ARCHIVOS
+const BACKEND_URL = import.meta.env.DEV 
+  ? 'http://localhost:4000/api'
+  : 'https://api.biblioteca.sembrandodatos.com/api'
+
+// Función para cargar usuarios desde la base de datos PostgreSQL - IGUAL QUE ARCHIVOS
 async function fetchUsers() {
   try {
     console.log('UsuariosView - Iniciando carga de usuarios')
     loading.value = true
     error.value = ''
     
-    // Configuración para la petición
+    // Configuración para la petición - IGUAL QUE ARCHIVOS
     const config = {
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
-      timeout: API_CONFIG.TIMEOUT
+      timeout: 15000 // 15 segundos de timeout
     }
     
-    // Añadir token de autorización si está disponible
-    const token = localStorage.getItem('authToken')
-    if (token) {
-      console.log('UsuariosView - Token encontrado, añadiendo a headers')
-      config.headers['Authorization'] = `Bearer ${token}`
+    console.log('Realizando petición GET a:', `${BACKEND_URL}/usuarios`)
+    
+    const res = await axios.get(`${BACKEND_URL}/usuarios`, config)
+    
+    console.log('Respuesta recibida:', res.status, res.data)
+    
+    // Manejar diferentes formatos de respuesta - IGUAL QUE ARCHIVOS
+    if (res.data && res.data.items) {
+      users.value = res.data.items
+      console.log('Usuarios cargados desde items:', users.value.length)
+    } else if (Array.isArray(res.data)) {
+      users.value = res.data
+      console.log('Usuarios cargados directamente:', users.value.length)
     } else {
-      console.log('UsuariosView - No se encontró token de autenticación')
-    }
-    
-    // Intentar diferentes rutas en secuencia, priorizando las rutas específicas del backend
-    let response = null
-    let success = false
-    const rutas = [
-      '/backend-usuarios',           // Nueva ruta específica del backend
-      '/server-usuarios',            // Nueva ruta específica del servidor
-      '/test-usuarios',              // Nueva ruta de prueba
-      '/api/test-usuarios',          // Nueva ruta de prueba con prefijo
-      '/usuarios-publico',           // Ruta directa en index.js
-      '/api/usuarios-publico',       // Ruta con prefijo /api en index.js
-      '/usuarios/usuarios-publico',  // Ruta dentro del router usuarios
-      '/api/usuarios/usuarios-publico', // Ruta con prefijo /api dentro del router usuarios
-      '/usuarios/publico',           // Nueva ruta simplificada
-      '/api/usuarios/publico',       // Nueva ruta simplificada con prefijo
-      '/usuarios',                   // Ruta básica de usuarios
-      '/api/usuarios'                // Ruta básica con prefijo
-    ]
-    
-    console.log('UsuariosView - Intentando varias rutas para obtener usuarios reales')
-    
-    // Intentar cada ruta hasta que una funcione
-    for (const ruta of rutas) {
-      try {
-        const apiUrl = buildApiUrl(ruta)
-        console.log(`UsuariosView - Intentando ruta: ${apiUrl}`)
-        response = await axios.get(apiUrl, config)
-        console.log(`UsuariosView - Éxito con ruta: ${ruta}, usuarios encontrados:`, response.data.length)
-        success = true
-        break
-      } catch (err) {
-        console.log(`UsuariosView - Error en ruta ${ruta}:`, err.message)
-        continue
-      }
-    }
-    
-    // Si todas las rutas fallan, intenta conexión directa al backend
-    if (!success) {
-      try {
-        console.log('UsuariosView - Intentando conexión directa al backend Node.js')
-        const usuariosDirectos = await fetchUsuariosDirect()
-        
-        if (usuariosDirectos && usuariosDirectos.length > 0) {
-          users.value = usuariosDirectos
-          console.log('UsuariosView - ¡Usuarios obtenidos mediante conexión directa!:', users.value)
-          return
-        }
-      } catch (directError) {
-        console.error('UsuariosView - Error en conexión directa:', directError)
-      }
-    }
-    
-    // Si aún no tenemos éxito, intentar con URLs modificadas sin el prefijo /api
-    if (!success) {
-      try {
-        console.log('UsuariosView - Intentando conexión directa al backend sin proxy')
-        const baseUrl = API_CONFIG.BASE_URL.replace('/api', '')
-        const directUrls = [
-          `${baseUrl}/backend-usuarios`,
-          `${baseUrl}/server-usuarios`,
-          `${baseUrl}/test-usuarios`,
-          `${baseUrl}/usuarios-publico`,
-          `${baseUrl}/usuarios/usuarios-publico`,
-          `${baseUrl}/usuarios/publico`,
-          `${baseUrl}/usuarios`
-        ]
-        
-        for (const url of directUrls) {
-          try {
-            console.log(`UsuariosView - Intentando URL directa: ${url}`)
-            response = await axios.get(url, config)
-            console.log(`UsuariosView - Éxito con URL directa: ${url}`)
-            success = true
-            break
-          } catch (directErr) {
-            console.log(`UsuariosView - Error en URL directa ${url}:`, directErr.message)
-            continue
-          }
-        }
-      } catch (baseErr) {
-        console.error('UsuariosView - Error en conexión directa:', baseErr)
-      }
-    }
-    
-    // Si todas las rutas fallan, mostrar mensaje de error
-    if (!success) {
-      console.error('UsuariosView - No se pudieron obtener los usuarios de la base de datos')
-      error.value = 'No se pudieron cargar los usuarios. Verifica la conexión con el servidor.'
+      console.warn('Formato de respuesta inesperado:', res.data)
       users.value = []
-      return
     }
-    
-    // Guardar datos de los usuarios reales
-    console.log('UsuariosView - Respuesta recibida:', response.status, response.data)
-    
-    // Verificar si la respuesta es HTML en lugar de JSON
-    if (typeof response.data === 'string' && response.data.includes('<!doctype html>')) {
-      console.warn('UsuariosView - La respuesta contiene HTML en lugar de JSON')
-      error.value = 'El servidor devolvió HTML en lugar de datos JSON. Verifica la configuración del proxy.'
-      users.value = []
-      return
-    }
-    
-    // Extraer usuarios de diferentes formatos de respuesta
-    let usuariosData = response.data
-    if (response.data.usuarios) {
-      // Si la respuesta tiene un wrapper con 'usuarios'
-      usuariosData = response.data.usuarios
-    } else if (response.data.items) {
-      // Si la respuesta tiene un wrapper con 'items'
-      usuariosData = response.data.items
-    }
-    
-    // Verificar que tenemos un array
-    if (!Array.isArray(usuariosData)) {
-      console.error('UsuariosView - La respuesta no contiene un array de usuarios:', usuariosData)
-      error.value = 'Los datos de usuarios no tienen el formato esperado.'
-      users.value = []
-      return
-    }
-    
-    users.value = usuariosData
-    console.log('UsuariosView - Usuarios reales cargados desde PostgreSQL:', users.value)
     
   } catch (err) {
-    console.error('UsuariosView - Error al cargar usuarios:', err)
+    console.error('Error detallado al cargar usuarios:', {
+      message: err.message,
+      status: err.response?.status,
+      statusText: err.response?.statusText,
+      data: err.response?.data,
+      config: err.config
+    })
     
-    // Información detallada del error para depuración
-    if (err.response) {
-      console.log('UsuariosView - Error de respuesta:', {
-        status: err.response.status,
-        data: err.response.data,
-        headers: err.response.headers
-      })
-    } else if (err.request) {
-      console.log('UsuariosView - Error de request:', err.request)
+    // Intentar con la URL sin /api como fallback - IGUAL QUE ARCHIVOS
+    if (err.response?.status === 404 || err.code === 'ECONNREFUSED') {
+      console.log('Intentando URL alternativa...')
+      try {
+        const fallbackUrl = BACKEND_URL.replace('/api', '')
+        console.log('URL fallback:', fallbackUrl)
+        
+        const res = await axios.get(`${fallbackUrl}/usuarios`)
+        console.log('Respuesta fallback:', res.data)
+        
+        users.value = res.data.items || res.data || []
+      } catch (fallbackErr) {
+        console.error('Error en fallback:', fallbackErr)
+        users.value = []
+        error.value = 'Error de conexión con el servidor. Verifica que el backend esté funcionando.'
+      }
+    } else {
+      users.value = []
+      error.value = 'Error al cargar los usuarios. Verifica tu conexión con el servidor.'
     }
-    
-    error.value = 'Error al cargar los usuarios. Verifica tu conexión con el servidor.'
-    users.value = []
   } finally {
     loading.value = false
   }

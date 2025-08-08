@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Conexión - Usuarios</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .result {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+        .error {
+            background: #ffe6e6;
+            color: #cc0000;
+        }
+        .success {
+            background: #e6ffe6;
+            color: #006600;
+        }
+        button {
+            background: #007cba;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005f8b;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 Prueba de Conexión - Sistema de Usuarios</h1>
+        <p>Esta página prueba la conexión entre el frontend y el backend para obtener usuarios de PostgreSQL.</p>
+        
+        <button onclick="probarUsuarios()">🔄 Probar Endpoint /api/usuarios</button>
+        <button onclick="probarUsuariosSinApi()">🔄 Probar Endpoint /usuarios</button>
+        <button onclick="limpiarResultados()">🧹 Limpiar</button>
+        
+        <div id="resultado"></div>
+        <div id="tablaUsuarios"></div>
+    </div>
+
+    <script>
+        function mostrarResultado(mensaje, tipo = 'result') {
+            const resultado = document.getElementById('resultado');
+            const div = document.createElement('div');
+            div.className = `result ${tipo}`;
+            div.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${mensaje}`;
+            resultado.appendChild(div);
+        }
+
+        function mostrarTablaUsuarios(usuarios) {
+            const tablaDiv = document.getElementById('tablaUsuarios');
+            
+            if (!usuarios || usuarios.length === 0) {
+                tablaDiv.innerHTML = '<p>No se encontraron usuarios.</p>';
+                return;
+            }
+
+            let html = `
+                <h3>📊 Usuarios encontrados: ${usuarios.length}</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Usuario</th>
+                            <th>Rol</th>
+                            <th>Activo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            usuarios.forEach(usuario => {
+                html += `
+                    <tr>
+                        <td>${usuario.id}</td>
+                        <td>${usuario.usuario}</td>
+                        <td>${usuario.rol}</td>
+                        <td>${usuario.activo ? '✅ Sí' : '❌ No'}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+
+            tablaDiv.innerHTML = html;
+        }
+
+        async function probarUsuarios() {
+            mostrarResultado('🚀 Iniciando prueba del endpoint /api/usuarios...', 'result');
+            
+            try {
+                const response = await fetch('http://localhost:4000/api/usuarios', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                mostrarResultado(`📡 Respuesta HTTP: ${response.status} ${response.statusText}`, 'result');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                mostrarResultado(`✅ Datos recibidos correctamente`, 'success');
+                mostrarResultado(`📦 Formato de respuesta: ${JSON.stringify(data, null, 2)}`, 'result');
+                
+                // Manejar diferentes formatos de respuesta
+                let usuarios = [];
+                if (data.items) {
+                    usuarios = data.items;
+                    mostrarResultado(`📋 Usando formato con 'items': ${usuarios.length} usuarios`, 'success');
+                } else if (Array.isArray(data)) {
+                    usuarios = data;
+                    mostrarResultado(`📋 Usando formato de array directo: ${usuarios.length} usuarios`, 'success');
+                } else {
+                    mostrarResultado(`⚠️ Formato de respuesta no reconocido`, 'error');
+                }
+
+                mostrarTablaUsuarios(usuarios);
+
+            } catch (error) {
+                mostrarResultado(`❌ Error: ${error.message}`, 'error');
+                console.error('Error completo:', error);
+            }
+        }
+
+        async function probarUsuariosSinApi() {
+            mostrarResultado('🚀 Iniciando prueba del endpoint /usuarios (sin prefijo api)...', 'result');
+            
+            try {
+                const response = await fetch('http://localhost:4000/usuarios', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                mostrarResultado(`📡 Respuesta HTTP: ${response.status} ${response.statusText}`, 'result');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                mostrarResultado(`✅ Datos recibidos correctamente`, 'success');
+                mostrarResultado(`📦 Formato de respuesta: ${JSON.stringify(data, null, 2)}`, 'result');
+                
+                // Manejar diferentes formatos de respuesta
+                let usuarios = [];
+                if (data.items) {
+                    usuarios = data.items;
+                    mostrarResultado(`📋 Usando formato con 'items': ${usuarios.length} usuarios`, 'success');
+                } else if (Array.isArray(data)) {
+                    usuarios = data;
+                    mostrarResultado(`📋 Usando formato de array directo: ${usuarios.length} usuarios`, 'success');
+                } else {
+                    mostrarResultado(`⚠️ Formato de respuesta no reconocido`, 'error');
+                }
+
+                mostrarTablaUsuarios(usuarios);
+
+            } catch (error) {
+                mostrarResultado(`❌ Error: ${error.message}`, 'error');
+                console.error('Error completo:', error);
+            }
+        }
+
+        function limpiarResultados() {
+            document.getElementById('resultado').innerHTML = '';
+            document.getElementById('tablaUsuarios').innerHTML = '';
+        }
+
+        // Probar automáticamente al cargar la página
+        window.addEventListener('load', () => {
+            mostrarResultado('🌟 Página de pruebas cargada. Sistema listo.', 'success');
+        });
+    </script>
+</body>
+</html>
