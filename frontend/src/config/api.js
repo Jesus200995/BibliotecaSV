@@ -6,7 +6,7 @@ export const API_CONFIG = {
     const port = window.location.port;
     const protocol = window.location.protocol;
     
-    console.log('🔍 Detectando entorno para API:', {
+    console.log('Detectando entorno:', {
       hostname,
       port,
       protocol,
@@ -15,35 +15,27 @@ export const API_CONFIG = {
       mode: import.meta.env.MODE
     });
     
-    // Detección de desarrollo local
-    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
-    const isDevPort = port === '5173' || port === '5174' || port === '3000';
-    const isDevMode = import.meta.env.DEV === true || import.meta.env.MODE === 'development';
-    
-    if (isLocalhost || isDevPort || isDevMode) {
-      const backendUrl = 'http://localhost:4000/api';
-      console.log('🔧 Entorno de desarrollo detectado - Backend local:', backendUrl);
-      return backendUrl;
+    // Si estamos en desarrollo o localhost, usar el backend local
+    if (hostname === 'localhost' || 
+        hostname === '127.0.0.1' || 
+        import.meta.env.DEV === true ||
+        import.meta.env.MODE === 'development' ||
+        port === '5173' || 
+        port === '5174') {
+      console.log('🔧 Usando backend local');
+      return 'http://localhost:4000/api'
     }
     
-    // Detección de producción
+    // En producción: el backend está corriendo directamente en Node.js puerto 4000
     if (hostname === 'biblioteca.sembrandodatos.com') {
-      // En producción, el backend está corriendo en el puerto 4000
-      const backendUrl = `${protocol}//biblioteca.sembrandodatos.com:4000/api`;
-      console.log('🌐 Entorno de producción detectado - Backend puerto 4000:', backendUrl);
-      return backendUrl;
+      const prodUrl = `${protocol}//biblioteca.sembrandodatos.com:4000/api`;
+      console.log('🌐 Usando backend de producción (Node.js directo):', prodUrl);
+      return prodUrl;
     }
     
-    // Detección por variable de entorno (si existe)
-    if (import.meta.env.VITE_API_URL) {
-      const envUrl = import.meta.env.VITE_API_URL;
-      console.log('🌍 URL del backend desde variable de entorno:', envUrl);
-      return envUrl;
-    }
-    
-    // Fallback inteligente
-    const fallbackUrl = `${protocol}//${hostname}:4000/api`;
-    console.log('🔄 Usando URL de fallback:', fallbackUrl);
+    // Fallback para otros dominios de producción
+    const fallbackUrl = import.meta.env.VITE_API_URL || `${protocol}//${hostname}:4000/api`;
+    console.log('🌐 Usando backend fallback:', fallbackUrl);
     return fallbackUrl;
   })(),
   

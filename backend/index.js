@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
+const cors = require('cors'); // Habilitado para desarrollo local
 const { Pool } = require('pg');
 const multer = require('multer');
 const path = require('path');
@@ -8,100 +8,34 @@ const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
-// Detectar entorno y cargar configuración apropiada
-const NODE_ENV = process.env.NODE_ENV || 'development';
-console.log(`🌍 Iniciando en modo: ${NODE_ENV}`);
-
-// Cargar configuración específica del entorno
-if (NODE_ENV === 'production' && fs.existsSync(path.join(__dirname, '.env.production'))) {
-  require('dotenv').config({ path: path.join(__dirname, '.env.production') });
-  console.log('✅ Cargada configuración de producción desde .env.production');
-} else if (fs.existsSync(path.join(__dirname, '.env.local'))) {
-  require('dotenv').config({ path: path.join(__dirname, '.env.local') });
-  console.log('✅ Cargada configuración local desde .env.local');
+// Cargar configuración local si existe
+try {
+  if (fs.existsSync(path.join(__dirname, '.env.local'))) {
+    require('dotenv').config({ path: path.join(__dirname, '.env.local') });
+    console.log('Cargada configuración local desde .env.local');
+  }
+} catch (err) {
+  console.error('Error al cargar .env.local:', err);
 }
 
-// Validar variables de entorno críticas
-const requiredEnvVars = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD', 'JWT_SECRET'];
-const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+// Imprimir información de conexión
+console.log('Configuración de conexión a BD:');
+console.log(`Host: ${process.env.DB_HOST}`);
+console.log(`Puerto: ${process.env.DB_PORT}`);
+console.log(`Base de datos: ${process.env.DB_NAME}`);
+console.log(`Usuario: ${process.env.DB_USER}`);
+console.log(`Contraseña: ${process.env.DB_PASSWORD ? '******' : 'no configurada'}`);
+console.log(`JWT_SECRET: ${process.env.JWT_SECRET ? '******' : 'NO CONFIGURADO'}`);
 
-if (missingVars.length > 0) {
-  console.error('❌ Error: Variables de entorno faltantes:', missingVars);
-  process.exit(1);
-}
-
-// Imprimir información de conexión (sin mostrar contraseñas)
-console.log('📋 Configuración de conexión a BD:');
-console.log(`   Host: ${process.env.DB_HOST}`);
-console.log(`   Puerto: ${process.env.DB_PORT}`);
-console.log(`   Base de datos: ${process.env.DB_NAME}`);
-console.log(`   Usuario: ${process.env.DB_USER}`);
-console.log(`   Contraseña: ${process.env.DB_PASSWORD ? '✅ Configurada' : '❌ No configurada'}`);
-console.log(`   SSL: ${process.env.DB_SSL === 'true' ? 'Habilitado' : 'Deshabilitado'}`);
-console.log(`   JWT_SECRET: ${process.env.JWT_SECRET ? '✅ Configurado' : '❌ NO CONFIGURADO'}`);
-console.log(`   Entorno: ${NODE_ENV}`);
-
-// Configuración de la conexión a PostgreSQL con reintentos
-const poolConfig = {
+// Configuración de la conexión a PostgreSQL
+const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
   database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
-  port: parseInt(process.env.DB_PORT) || 5432,
+  port: process.env.DB_PORT || 5432,
   ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
-  // Configuración de conexión robusta
-  max: 20, // máximo número de clientes en el pool
-  idleTimeoutMillis: 30000, // cuánto tiempo un cliente puede estar inactivo antes de ser cerrado
-  connectionTimeoutMillis: 10000, // tiempo de espera para obtener conexión
-  query_timeout: 30000, // tiempo de espera para queries
-  statement_timeout: 30000, // tiempo de espera para statements
-};
-
-console.log('🔗 Configuración del pool de conexiones:', {
-  host: poolConfig.host,
-  port: poolConfig.port,
-  database: poolConfig.database,
-  user: poolConfig.user,
-  ssl: poolConfig.ssl !== false ? 'habilitado' : 'deshabilitado',
-  max: poolConfig.max
 });
-
-const pool = new Pool(poolConfig);
-
-// Event listeners para el pool
-pool.on('connect', () => {
-  console.log('🟢 Nueva conexión establecida con la base de datos');
-});
-
-pool.on('error', (err) => {
-  console.error('❌ Error inesperado en el pool de conexiones:', err);
-});
-
-// Función para verificar la conexión a la base de datos
-async function verificarConexionBD() {
-  let reintentos = 5;
-  while (reintentos > 0) {
-    try {
-      console.log(`🔍 Verificando conexión a la base de datos... (intentos restantes: ${reintentos})`);
-      const client = await pool.connect();
-      const result = await client.query('SELECT NOW(), version()');
-      client.release();
-      console.log('✅ Conexión a la base de datos exitosa');
-      console.log(`   Timestamp: ${result.rows[0].now}`);
-      console.log(`   PostgreSQL version: ${result.rows[0].version.split(' ')[0]} ${result.rows[0].version.split(' ')[1]}`);
-      return true;
-    } catch (error) {
-      reintentos--;
-      console.error(`❌ Error de conexión a BD (intentos restantes: ${reintentos}):`, error.message);
-      if (reintentos > 0) {
-        console.log('⏳ Esperando 3 segundos antes del siguiente intento...');
-        await new Promise(resolve => setTimeout(resolve, 3000));
-      }
-    }
-  }
-  console.error('💥 No se pudo establecer conexión con la base de datos después de 5 intentos');
-  return false;
-}
 
 // Configuración para almacenar archivos con multer (en memoria)
 const storage = multer.memoryStorage();
@@ -118,127 +52,48 @@ const upload = multer({
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Configurar CORS de manera robusta para desarrollo y producción
+// Configurar CORS para desarrollo y producción
 const corsOptions = {
   origin: function (origin, callback) {
-    console.log(`🔍 CORS: Verificando origen: ${origin || 'No origin'}`);
+    // Permitir requests sin origin (aplicaciones móviles, postman, etc.)
+    if (!origin) return callback(null, true);
     
-    // Permitir requests sin origin (aplicaciones móviles, postman, curl, etc.)
-    if (!origin) {
-      console.log('✅ CORS: Permitido - Sin origin (herramientas de desarrollo)');
-      return callback(null, true);
-    }
-    
-    // Lista de orígenes permitidos basada en el entorno
-    let allowedOrigins = [];
-    
-    if (NODE_ENV === 'production') {
-      allowedOrigins = [
-        'https://biblioteca.sembrandodatos.com',
-        'http://biblioteca.sembrandodatos.com',
-        // Permitir acceso directo al puerto del backend para debugging
-        'https://biblioteca.sembrandodatos.com:4000',
-        'http://biblioteca.sembrandodatos.com:4000'
-      ];
-      
-      // Agregar orígenes desde variables de entorno si existen
-      if (process.env.CORS_ORIGIN) {
-        const envOrigins = process.env.CORS_ORIGIN.split(',').map(o => o.trim());
-        allowedOrigins.push(...envOrigins);
-      }
-    } else {
-      // Desarrollo
-      allowedOrigins = [
-        'http://localhost:5173',
-        'http://localhost:5174',
-        'http://localhost:3000',
-        'http://127.0.0.1:5173',
-        'http://127.0.0.1:5174',
-        'http://127.0.0.1:3000'
-      ];
-    }
-    
-    console.log('📋 CORS: Orígenes permitidos:', allowedOrigins);
+    // Lista de orígenes permitidos
+    const allowedOrigins = [
+      'http://localhost:5173',                      // Desarrollo local Vite
+      'http://localhost:5174',                      // Desarrollo local Vite (puerto alternativo)
+      'http://localhost:3000',                      // Desarrollo alternativo
+      'http://127.0.0.1:5173',                      // Desarrollo con IP local
+      'http://127.0.0.1:5174',                      // Desarrollo con IP local (puerto alternativo)
+      'https://biblioteca.sembrandodatos.com',      // Producción frontend
+      'http://biblioteca.sembrandodatos.com',       // Producción frontend (HTTP)
+      'https://api.biblioteca.sembrandodatos.com',  // Producción API (por si acaso)
+      'http://biblioteca.sembrandodatos.com:4000',  // Backend directo (por si se accede)
+      'https://biblioteca.sembrandodatos.com:4000'  // Backend directo HTTPS (por si se accede)
+    ];
     
     if (allowedOrigins.indexOf(origin) !== -1) {
-      console.log('✅ CORS: Origen permitido');
       callback(null, true);
     } else {
-      console.log(`❌ CORS: Origen no permitido: ${origin}`);
-      // En desarrollo, permitir de todos modos para facilitar testing
-      if (NODE_ENV === 'development') {
-        console.log('🔧 CORS: Permitido en modo desarrollo');
-        callback(null, true);
-      } else {
-        callback(new Error('No permitido por la política CORS'));
-      }
+      console.log('CORS: Origen no permitido:', origin);
+      callback(null, true); // Permitir por ahora para desarrollo
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: [
-    'Origin',
-    'X-Requested-With', 
-    'Content-Type', 
-    'Accept',
-    'Authorization',
-    'Cache-Control',
-    'X-HTTP-Method-Override'
-  ],
-  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
-  maxAge: 86400, // 24 horas
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));
 
-// Middleware para parsear JSON con límites apropiados
-app.use(express.json({ 
-  limit: '50mb',
-  verify: (req, res, buf) => {
-    req.rawBody = buf;
-  }
-}));
+// Middleware para parsear JSON
+app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Middleware de seguridad básica
+// Middleware para logging de requests
 app.use((req, res, next) => {
-  // Headers de seguridad
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  
-  if (NODE_ENV === 'production') {
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  }
-  
-  next();
-});
-
-// Middleware para logging detallado de requests
-app.use((req, res, next) => {
-  const timestamp = new Date().toISOString();
-  const origin = req.get('Origin') || 'No origin';
-  const userAgent = req.get('User-Agent') || 'No user agent';
-  const ip = req.ip || req.connection.remoteAddress || 'Unknown IP';
-  
-  console.log(`📥 ${timestamp} - ${req.method} ${req.path}`);
-  console.log(`   Origin: ${origin}`);
-  console.log(`   IP: ${ip}`);
-  console.log(`   User-Agent: ${userAgent.substring(0, 100)}...`);
-  
-  if (req.method !== 'GET' && Object.keys(req.body).length > 0) {
-    console.log(`   Body keys: ${Object.keys(req.body).join(', ')}`);
-  }
-  
-  // Capturar el tiempo de respuesta
-  const start = Date.now();
-  
-  res.on('finish', () => {
-    const duration = Date.now() - start;
-    console.log(`📤 ${req.method} ${req.path} - ${res.statusCode} (${duration}ms)`);
-  });
-  
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${req.get('Origin') || 'No origin'}`);
   next();
 });
 
@@ -1029,117 +884,7 @@ app.get('/test-upload', (req, res) => {
   `);
 });
 
-// Función principal para iniciar el servidor
-async function iniciarServidor() {
-  try {
-    console.log('🚀 Iniciando servidor BibliotecaSV...');
-    
-    // Verificar conexión a la base de datos antes de iniciar el servidor
-    const conexionExitosa = await verificarConexionBD();
-    if (!conexionExitosa) {
-      console.error('💥 No se puede iniciar el servidor sin conexión a la base de datos');
-      process.exit(1);
-    }
-    
-    // Verificar que las tablas necesarias existan
-    await verificarEsquemaBD();
-    
-    // Iniciar el servidor
-    const server = app.listen(PORT, '0.0.0.0', () => {
-      console.log('');
-      console.log('🎉 ========================================');
-      console.log('✅ Servidor BibliotecaSV iniciado correctamente');
-      console.log('🎉 ========================================');
-      console.log(`🌐 URL Local: http://localhost:${PORT}`);
-      console.log(`🌐 URL Red: http://0.0.0.0:${PORT}`);
-      console.log(`📊 Entorno: ${NODE_ENV}`);
-      console.log(`🗄️ Base de datos: ${process.env.DB_NAME}@${process.env.DB_HOST}`);
-      console.log(`🔐 JWT: ${process.env.JWT_SECRET ? 'Configurado' : 'NO CONFIGURADO'}`);
-      console.log('');
-      console.log('📚 Endpoints disponibles:');
-      console.log(`   GET  ${PORT}/api/health - Health check`);
-      console.log(`   GET  ${PORT}/api/status - Estado completo del sistema`);
-      console.log(`   POST ${PORT}/api/login - Autenticación`);
-      console.log(`   GET  ${PORT}/api/usuarios - Lista de usuarios (requiere auth)`);
-      console.log(`   GET  ${PORT}/api/archivos - Lista de archivos`);
-      console.log('');
-      console.log('🔧 Para debugging:');
-      console.log(`   curl http://localhost:${PORT}/api/health`);
-      console.log(`   curl http://localhost:${PORT}/api/status`);
-      console.log('');
-    });
-    
-    // Configurar timeouts del servidor
-    server.timeout = 60000; // 60 segundos
-    server.keepAliveTimeout = 65000; // 65 segundos
-    server.headersTimeout = 66000; // 66 segundos
-    
-    // Manejo graceful de cierre del servidor
-    process.on('SIGTERM', () => {
-      console.log('🛑 Recibida señal SIGTERM, cerrando servidor gracefully...');
-      server.close(() => {
-        console.log('✅ Servidor cerrado correctamente');
-        pool.end(() => {
-          console.log('✅ Pool de conexiones cerrado correctamente');
-          process.exit(0);
-        });
-      });
-    });
-    
-    process.on('SIGINT', () => {
-      console.log('🛑 Recibida señal SIGINT (Ctrl+C), cerrando servidor gracefully...');
-      server.close(() => {
-        console.log('✅ Servidor cerrado correctamente');
-        pool.end(() => {
-          console.log('✅ Pool de conexiones cerrado correctamente');
-          process.exit(0);
-        });
-      });
-    });
-    
-  } catch (error) {
-    console.error('💥 Error fatal al iniciar el servidor:', error);
-    process.exit(1);
-  }
-}
-
-// Función para verificar el esquema de la base de datos
-async function verificarEsquemaBD() {
-  try {
-    console.log('🔍 Verificando esquema de la base de datos...');
-    
-    // Verificar tabla usuarios
-    const usuariosResult = await pool.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND table_name = 'usuarios'
-    `);
-    
-    // Verificar tabla catalogo_archivos
-    const archivosResult = await pool.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND table_name = 'catalogo_archivos'
-    `);
-    
-    if (usuariosResult.rows.length === 0) {
-      console.warn('⚠️ Tabla "usuarios" no encontrada');
-    } else {
-      console.log('✅ Tabla "usuarios" encontrada');
-    }
-    
-    if (archivosResult.rows.length === 0) {
-      console.warn('⚠️ Tabla "catalogo_archivos" no encontrada');
-    } else {
-      console.log('✅ Tabla "catalogo_archivos" encontrada');
-    }
-    
-  } catch (error) {
-    console.warn('⚠️ Error al verificar esquema de BD:', error.message);
-  }
-}
-
 // Iniciar el servidor
-iniciarServidor();
+app.listen(PORT, () => {
+  console.log(`Servidor backend corriendo en http://localhost:${PORT}`);
+});
