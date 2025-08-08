@@ -216,38 +216,19 @@ function verificarAutenticacion() {
   const token = localStorage.getItem('authToken')
   const userData = localStorage.getItem('userData')
   
-  // Verificar que los valores no sean null, undefined o la cadena "undefined"
-  if (token && userData && 
-      token !== 'null' && token !== 'undefined' &&
-      userData !== 'null' && userData !== 'undefined') {
+  if (token && userData) {
     try {
       // Configurar axios con el token
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       
-      // Parsear userData de manera segura
-      const parsedUserData = JSON.parse(userData)
+      // Establecer estado de autenticación
+      estaAutenticado.value = true
+      usuarioActual.value = JSON.parse(userData)
       
-      // Verificar que el parsed data sea válido
-      if (parsedUserData && typeof parsedUserData === 'object' && parsedUserData.usuario) {
-        // Establecer estado de autenticación
-        estaAutenticado.value = true
-        usuarioActual.value = parsedUserData
-        
-        console.log('Usuario autenticado:', usuarioActual.value)
-      } else {
-        console.warn('Datos de usuario inválidos en localStorage')
-        cerrarSesion()
-      }
+      console.log('Usuario autenticado:', usuarioActual.value)
     } catch (error) {
       console.error('Error al verificar autenticación:', error)
       cerrarSesion()
-    }
-  } else {
-    console.log('No hay credenciales válidas en localStorage')
-    // Limpiar localStorage si tiene valores inválidos
-    if (token === 'undefined' || userData === 'undefined') {
-      localStorage.removeItem('authToken')
-      localStorage.removeItem('userData')
     }
   }
 }
