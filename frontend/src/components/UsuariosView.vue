@@ -51,7 +51,18 @@
     
     <section class="card">
       <header class="card-header">
-        <h2>Usuarios del Sistema</h2>
+        <div class="flex justify-between items-center">
+          <h2>Usuarios del Sistema</h2>
+          <button 
+            @click="abrirModalAgregar" 
+            class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md transition-colors flex items-center text-sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Nuevo Usuario
+          </button>
+        </div>
       </header>
       <div class="card-body">
         <div v-if="loading" class="flex justify-center py-8">
@@ -220,6 +231,96 @@
         </div>
       </div>
     </div>
+    
+    <!-- Modal Agregar Nuevo Usuario -->
+    <div v-if="modalAgregar" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">Nuevo Usuario</h3>
+        <form @submit.prevent="crearUsuario">
+          <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="nuevoUsuario">
+              Usuario:
+            </label>
+            <input 
+              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              type="text" 
+              id="nuevoUsuario" 
+              v-model="nuevoUsuario.usuario" 
+              placeholder="Nombre de usuario"
+              required
+            />
+          </div>
+          
+          <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="nuevoRol">
+              Rol:
+            </label>
+            <select 
+              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="nuevoRol" 
+              v-model="nuevoUsuario.rol"
+              required
+            >
+              <option value="admin">Administrador</option>
+              <option value="user">Usuario</option>
+            </select>
+          </div>
+          
+          <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="nuevoActivo">
+              Estado:
+            </label>
+            <div class="flex items-center">
+              <input 
+                type="checkbox" 
+                id="nuevoActivo" 
+                v-model="nuevoUsuario.activo" 
+                class="mr-2"
+              />
+              <label for="nuevoActivo">Usuario activo</label>
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="nuevaContrasena">
+              Contraseña:
+            </label>
+            <input 
+              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              type="password" 
+              id="nuevaContrasena" 
+              v-model="nuevoUsuario.contrasena" 
+              placeholder="Contraseña"
+              required
+            />
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <button 
+              type="submit" 
+              class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              :disabled="loading"
+            >
+              <span v-if="loading" class="flex items-center">
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Creando...
+              </span>
+              <span v-else>Crear Usuario</span>
+            </button>
+            <button 
+              type="button" 
+              @click="cerrarModalAgregar" 
+              class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -241,6 +342,7 @@ const modo = ref(esDesarrollo ? 'Desarrollo' : 'Producción')
 // Variables para los modales
 const modalEditar = ref(false)
 const modalEliminar = ref(false)
+const modalAgregar = ref(false)
 const usuarioEditando = ref({
   id: null,
   usuario: '',
@@ -249,6 +351,12 @@ const usuarioEditando = ref({
   contrasena: ''
 })
 const usuarioEliminar = ref(null)
+const nuevoUsuario = ref({
+  usuario: '',
+  rol: 'user',
+  activo: true,
+  contrasena: ''
+})
 
 // Comprobar el token al inicio
 function verificarToken() {
@@ -504,6 +612,74 @@ async function eliminarUsuario() {
   } catch (e) {
     console.error('UsuariosView - Error al eliminar usuario:', e)
     error.value = `No se pudo eliminar: ${e.message}`
+  } finally {
+    loading.value = false
+  }
+}
+
+// Funciones para manejar el modal de agregar usuario
+function abrirModalAgregar() {
+  // Resetear el formulario
+  nuevoUsuario.value = {
+    usuario: '',
+    rol: 'user',
+    activo: true,
+    contrasena: ''
+  }
+  modalAgregar.value = true
+}
+
+function cerrarModalAgregar() {
+  modalAgregar.value = false
+}
+
+async function crearUsuario() {
+  loading.value = true
+  error.value = ''
+  
+  try {
+    const token = localStorage.getItem('authToken')
+    // Usar directamente la URL completa para evitar problemas con la ruta
+    const endpoint = esDesarrollo 
+      ? 'http://localhost:4000/api/usuarios'  
+      : 'https://api.biblioteca.sembrandodatos.com/api/usuarios'
+    
+    console.log('UsuariosView - Creando nuevo usuario:', nuevoUsuario.value.usuario)
+    console.log('UsuariosView - URL del endpoint:', endpoint)
+    
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(nuevoUsuario.value)
+    })
+    
+    if (!res.ok) {
+      console.error('UsuariosView - Error en la respuesta:', res.status)
+      
+      // Intentar leer el mensaje de error del servidor si está disponible
+      try {
+        const errorData = await res.json()
+        console.error('UsuariosView - Datos del error:', errorData)
+        throw new Error(`HTTP ${res.status}: ${errorData.error || 'Error desconocido'}`)
+      } catch (jsonError) {
+        throw new Error(`HTTP ${res.status}`)
+      }
+    }
+    
+    const json = await res.json()
+    console.log('UsuariosView - Respuesta creación:', json)
+    
+    // Actualizar la lista de usuarios
+    await cargar()
+    
+    // Cerrar el modal
+    cerrarModalAgregar()
+  } catch (e) {
+    console.error('UsuariosView - Error al crear usuario:', e)
+    error.value = `No se pudo crear el usuario: ${e.message}`
   } finally {
     loading.value = false
   }

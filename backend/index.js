@@ -267,6 +267,46 @@ app.get('/api/usuarios', verificarToken, verificarAdmin, async (req, res) => {
   }
 });
 
+// Crear un nuevo usuario (SOLO admin)
+app.post('/api/usuarios', verificarToken, verificarAdmin, async (req, res) => {
+  try {
+    const { usuario, rol, activo, contrasena } = req.body;
+    
+    console.log('POST /api/usuarios - Creando nuevo usuario');
+    
+    // Validaciones básicas
+    if (!usuario || !contrasena) {
+      return res.status(400).json({ ok: false, error: 'Usuario y contraseña son obligatorios' });
+    }
+    
+    // Verificar que el rol sea válido (solo 'admin' o 'user')
+    if (rol !== 'admin' && rol !== 'user') {
+      return res.status(400).json({ ok: false, error: 'Rol no válido. Solo se permiten los valores "admin" o "user"' });
+    }
+    
+    // Verificar si el usuario ya existe
+    const usuarioExistente = await pool.query('SELECT id FROM usuarios WHERE usuario = $1', [usuario]);
+    if (usuarioExistente.rows.length > 0) {
+      return res.status(400).json({ ok: false, error: 'El nombre de usuario ya existe' });
+    }
+    
+    // Hash de la contraseña
+    const hashedPassword = await bcrypt.hash(contrasena, 10);
+    
+    // Insertar nuevo usuario
+    const result = await pool.query(
+      'INSERT INTO usuarios (usuario, contrasena, rol, activo) VALUES ($1, $2, $3, $4) RETURNING id, usuario, rol, activo',
+      [usuario, hashedPassword, rol, activo]
+    );
+    
+    console.log('Usuario creado con éxito:', result.rows[0]);
+    res.status(201).json({ ok: true, usuario: result.rows[0] });
+  } catch (err) {
+    console.error('Error al crear usuario:', err);
+    res.status(500).json({ ok: false, error: 'Error al crear usuario: ' + err.message });
+  }
+});
+
 // Actualizar un usuario (SOLO admin)
 app.put('/api/usuarios/:id', verificarToken, verificarAdmin, async (req, res) => {
   try {
