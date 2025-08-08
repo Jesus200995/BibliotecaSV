@@ -621,44 +621,6 @@ app.post('/archivos/upload', verificarToken, upload.single('file'), async (req, 
   }
 });
 
-// Endpoint para listar usuarios - MISMO FORMATO QUE ARCHIVOS
-app.get('/usuarios', async (req, res) => {
-  console.log('=== GET /usuarios ===');
-  
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 100;
-    const offset = (page - 1) * limit;
-    
-    const query = `
-      SELECT id, usuario, rol, activo 
-      FROM usuarios 
-      ORDER BY id
-      LIMIT $1 OFFSET $2
-    `;
-    
-    const result = await pool.query(query, [limit, offset]);
-    const countResult = await pool.query('SELECT COUNT(*) FROM usuarios');
-    const totalItems = parseInt(countResult.rows[0].count);
-    const totalPages = Math.ceil(totalItems / limit);
-    
-    console.log('Usuarios encontrados:', result.rows.length, 'de', totalItems);
-    
-    res.json({
-      items: result.rows,
-      metadata: {
-        page,
-        limit,
-        totalItems,
-        totalPages
-      }
-    });
-  } catch (error) {
-    console.error('Error al listar usuarios:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // Endpoint para listar archivos
 app.get('/archivos', async (req, res) => {
   console.log('=== GET /archivos ===');
@@ -914,36 +876,6 @@ app.post('/api/archivos/upload', verificarToken, upload.single('file'), async (r
 
     const result = await pool.query(query, values);
     res.json({ mensaje: 'Archivo subido y registrado', registro: result.rows[0] });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/api/usuarios', async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 100;
-    const offset = (page - 1) * limit;
-    
-    const query = `
-      SELECT id, usuario, rol, activo 
-      FROM usuarios 
-      ORDER BY id
-      LIMIT $1 OFFSET $2
-    `;
-    
-    const [result, countResult] = await Promise.all([
-      pool.query(query, [limit, offset]),
-      pool.query('SELECT COUNT(*) FROM usuarios')
-    ]);
-    
-    const totalItems = parseInt(countResult.rows[0].count);
-    const totalPages = Math.ceil(totalItems / limit);
-    
-    res.json({
-      items: result.rows,
-      metadata: { page, limit, totalItems, totalPages }
-    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
