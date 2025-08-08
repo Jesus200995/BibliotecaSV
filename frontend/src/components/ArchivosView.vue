@@ -1107,7 +1107,15 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
-import { API_CONFIG, buildApiUrl } from '../config/api.js'
+import { 
+  API_CONFIG, 
+  buildApiUrl, 
+  isUserAdmin, 
+  getAuthHeaders, 
+  isTokenValid, 
+  getCurrentUser, 
+  decodeToken 
+} from '../config/api.js'
 // Importar funciones utilitarias centralizadas para manejo de archivos
 import { formatFileSize, calculateTotalSize, bytesToMB } from '../utils/fileUtils.js'
 
@@ -1118,6 +1126,7 @@ defineEmits(['ver'])
 const archivos = ref([])
 const cargandoPagina = ref(false)
 const esAdmin = ref(false)
+const verificandoRol = ref(true) // Nuevo estado para indicar verificación en curso
 
 // Configurar axios y URLs
 axios.defaults.timeout = 10000
@@ -1168,6 +1177,7 @@ const confirmacionVisible = ref(false)
 const sugerenciasUbicacion = ref([])
 const mostrarSugerencias = ref(false)
 const cargandoUbicaciones = ref(false)
+const errorPermisos = ref(false) // Nueva variable para controlar errores de permisos
 
 // Variables para notificaciones
 const notificaciones = ref([])
@@ -1358,24 +1368,78 @@ function getValidationText(validacion) {
 onMounted(async () => {
   console.log('ArchivosView montado')
   
-  // Verificar si el usuario es administrador
-  const userData = localStorage.getItem('userData')
-  if (userData) {
-    try {
-      const usuario = JSON.parse(userData)
-      esAdmin.value = usuario.rol === 'admin'
-      console.log('ArchivosView - Usuario conectado con rol:', usuario.rol, 'Es admin:', esAdmin.value)
-    } catch (e) {
-      console.error('ArchivosView - Error al procesar datos de usuario:', e)
-      esAdmin.value = false
-    }
-  } else {
-    console.log('ArchivosView - No hay datos de usuario disponibles')
-    esAdmin.value = false
-  }
+  // Verificar si el usuario es administrador usando múltiples métodos para mayor seguridad
+  await verificarRolUsuario()
   
   await cargarArchivos()
 })
+
+// Función robusta para verificar rol de usuario
+async function verificarRolUsuario() {
+  verificandoRol.value = true
+  
+  try {
+    // 1. Primero, intentar verificar desde los datos locales
+    const currentUser = getCurrentUser()
+    const localRol = currentUser?.rol?.toLowerCase()
+    let rolEsAdmin = localRol === 'admin'
+    
+    console.log('ArchivosView - Verificación local de rol:', { 
+      usuarioEncontrado: !!currentUser, 
+      rol: localRol, 
+      esAdmin: rolEsAdmin 
+    })
+    
+    // 2. Si tenemos un token válido, intentar verificar desde el servidor
+    if (isTokenValid()) {
+      try {
+        const response = await axios.get(`${BACKEND_URL}/user-role`, { 
+          headers: getAuthHeaders(),
+          timeout: 5000 // Timeout corto para evitar esperas largas
+        })
+        
+        if (response.data && response.data.success) {
+          // Usar el rol reportado por el servidor (más fiable)
+          rolEsAdmin = response.data.esAdmin
+          console.log('ArchivosView - Verificación en servidor de rol:', { 
+            rol: response.data.rol, 
+            esAdmin: rolEsAdmin,
+            permisos: response.data.permisos
+          })
+        }
+      } catch (serverError) {
+        console.warn('ArchivosView - Error al verificar rol en servidor:', serverError.message)
+        // Continuamos con el rol obtenido localmente
+      }
+    } else {
+      console.log('ArchivosView - Token inválido, usando solo verificación local')
+    }
+    
+    // 3. Si no tenemos información local, intentar decodificar el token directamente
+    if (!currentUser && isTokenValid()) {
+      const token = localStorage.getItem('token')
+      const decodedToken = decodeToken(token)
+      
+      if (decodedToken && decodedToken.rol) {
+        rolEsAdmin = decodedToken.rol.toLowerCase() === 'admin'
+        console.log('ArchivosView - Verificación desde token decodificado:', { 
+          rol: decodedToken.rol, 
+          esAdmin: rolEsAdmin 
+        })
+      }
+    }
+    
+    // Actualizar el estado con el resultado final de las verificaciones
+    esAdmin.value = rolEsAdmin
+    console.log('ArchivosView - Resultado final de verificación de rol:', { esAdmin: esAdmin.value })
+    
+  } catch (e) {
+    console.error('ArchivosView - Error al verificar rol de usuario:', e)
+    esAdmin.value = false
+  } finally {
+    verificandoRol.value = false
+  }
+}
 
 async function cargarArchivos() {
   console.log('ArchivosView - Cargando archivos...')
@@ -1383,11 +1447,9 @@ async function cargarArchivos() {
   try {
     cargandoPagina.value = true
     
+    // Usar los headers de autenticación
     const config = {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
+      headers: getAuthHeaders(),
       timeout: 15000
     }
     
@@ -1402,6 +1464,10 @@ async function cargarArchivos() {
     
     console.log('ArchivosView - Archivos cargados:', archivos.value.length)
     
+    // Verificar nuevamente el rol después de cargar datos correctamente
+    // Esto puede ayudar en caso de que el usuario cambie de rol durante la sesión
+    await verificarRolUsuario()
+    
   } catch (err) {
     console.error('ArchivosView - Error al cargar archivos:', err)
     
@@ -1411,7 +1477,8 @@ async function cargarArchivos() {
         const fallbackUrl = BACKEND_URL.replace('/api', '')
         console.log('ArchivosView - Intentando fallback:', fallbackUrl)
         
-        const res = await axios.get(`${fallbackUrl}/archivos`)
+        // Usar también headers de autenticación en el fallback
+        const res = await axios.get(`${fallbackUrl}/archivos`, { headers: getAuthHeaders() })
         archivos.value = res.data.items || res.data || []
         console.log('ArchivosView - Fallback exitoso:', archivos.value.length)
       } catch (fallbackErr) {
@@ -1419,6 +1486,11 @@ async function cargarArchivos() {
         archivos.value = []
         mostrarNotificacion('Error de conexión con el servidor', 'error')
       }
+    } else if (err.response?.status === 401 || err.response?.status === 403) {
+      // Error de autenticación/autorización
+      mostrarNotificacion('No tienes permiso para acceder a los archivos. Inicia sesión nuevamente.', 'error')
+      // Intentar reautenticar o redirigir al login
+      archivos.value = []
     } else {
       archivos.value = []
       mostrarNotificacion('Error al cargar archivos: ' + err.message, 'error')
@@ -1728,6 +1800,14 @@ function gestionarTeclasAlcance(event) {
 
 // Función principal para subir archivo
 async function subirArchivo() {
+  // Verificar si el usuario es admin antes de intentar subir
+  if (!esAdmin.value) {
+    mostrarNotificacion('No tienes permisos para subir archivos', 'error')
+    errorPermisos.value = true
+    modalSubidaVisible.value = false
+    return
+  }
+
   if (!archivo.value) {
     mostrarNotificacion('Debe seleccionar un archivo', 'error')
     return
@@ -1756,9 +1836,13 @@ async function subirArchivo() {
       formData.append('alcance_coordenadas', JSON.stringify(alcanceArray.value))
     }
 
+    // Obtener el token y añadirlo explícitamente
+    const token = localStorage.getItem('token')
+    
     const response = await axios.post(`${BACKEND_URL}/archivos/upload`, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
+        'Content-Type': 'multipart/form-data',
+        'Authorization': token ? `Bearer ${token}` : undefined
       }
     })
 
@@ -1775,7 +1859,15 @@ async function subirArchivo() {
     
   } catch (error) {
     console.error('Error al subir archivo:', error)
-    mostrarNotificacion('Error al subir el archivo: ' + (error.response?.data?.error || error.message), 'error')
+    
+    // Detectar error de permisos
+    if (error.response?.status === 403) {
+      mostrarNotificacion('No tienes permiso para subir archivos. Este recurso es solo para administradores.', 'error')
+      errorPermisos.value = true
+      modalSubidaVisible.value = false
+    } else {
+      mostrarNotificacion('Error al subir el archivo: ' + (error.response?.data?.error || error.message), 'error')
+    }
   } finally {
     subiendo.value = false
   }
