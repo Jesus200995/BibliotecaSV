@@ -71,29 +71,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Endpoint público para listar usuarios (versión segura sin tokens)
-router.get('/usuarios-publico', async (req, res) => {
-  console.log('=== GET /usuarios-publico ===');
-  
-  try {
-    // Solo mostrar información segura (sin contraseñas)
-    const query = `
-      SELECT id, usuario, rol, activo
-      FROM usuarios 
-      ORDER BY id
-    `;
-    
-    const result = await pool.query(query);
-    
-    console.log(`Usuarios públicos encontrados: ${result.rows.length}`);
-    res.json(result.rows);
-    
-  } catch (error) {
-    console.error('Error al obtener usuarios públicos:', error);
-    res.status(500).json({ error: 'Error al obtener los usuarios' });
-  }
-});
-
 // Endpoint para obtener un usuario específico
 router.get('/:id', verificarToken, async (req, res) => {
   try {
