@@ -436,23 +436,13 @@ function determinarContentType(tipo) {
 
 // ============ RUTAS PRINCIPALES ============
 
-// Endpoint de salud simple
+// --- Health checks ---
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    message: 'Servidor backend funcionando correctamente',
-    timestamp: new Date().toISOString(),
-    cors: 'enabled'
-  });
+  res.json({ ok: true, path: '/health', service: 'biblioteca-api', time: new Date().toISOString() });
 });
 
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    message: 'API backend funcionando correctamente',
-    timestamp: new Date().toISOString(),
-    cors: 'enabled'
-  });
+  res.json({ ok: true, path: '/api/health', service: 'biblioteca-api', time: new Date().toISOString() });
 });
 
 // Endpoint de estado completo del sistema
@@ -1031,10 +1021,7 @@ app.get('/test-upload', (req, res) => {
   `);
 });
 
-// Endpoint de salud adicional para verificación desde navegador
-app.get('/api/health', (req, res) => {
-  res.json({ ok: true, service: 'biblioteca-api', time: new Date().toISOString() });
-});
+// Este endpoint se ha movido arriba con el resto de health checks
 
 // Iniciar el servidor
 app.listen(PORT, () => {
