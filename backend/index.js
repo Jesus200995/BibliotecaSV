@@ -52,6 +52,9 @@ const upload = multer({
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// Importar rutas
+const usuariosRoutes = require('./routes/usuarios');
+
 // Configurar CORS para desarrollo y producción
 const corsOptions = {
   origin: function (origin, callback) {
@@ -804,6 +807,10 @@ app.delete('/api/archivos/:id', verificarToken, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Rutas para usuarios
+app.use('/api/usuarios', usuariosRoutes);
+app.use('/usuarios', usuariosRoutes);
 
 // Página de prueba para subir archivos
 app.get('/test-upload', (req, res) => {
