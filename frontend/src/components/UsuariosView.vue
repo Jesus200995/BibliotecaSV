@@ -43,7 +43,7 @@
         </div>
         <div>
           <p><strong>Hora:</strong> {{ new Date().toLocaleTimeString() }}</p>
-          <p><strong>Servidor:</strong> {{ import.meta.env.DEV ? 'Desarrollo' : 'Producción' }}</p>
+          <p><strong>Servidor:</strong> {{ modo }}</p>
           <p><button @click="intentarConResolverCORS" class="text-blue-600 underline">Intentar con resolución CORS</button></p>
         </div>
       </div>
@@ -103,7 +103,8 @@
 import { ref, onMounted } from 'vue'
 
 // Usar la misma URL base que en el resto de la aplicación
-const BACKEND_URL = import.meta.env.DEV 
+const esDesarrollo = import.meta.env.DEV
+const BACKEND_URL = esDesarrollo 
   ? 'http://localhost:4000/api' 
   : 'https://api.biblioteca.sembrandodatos.com/api'
 const usuarios = ref([])
@@ -111,6 +112,7 @@ const loading = ref(true)
 const error = ref('')
 const tokenInfo = ref(null)
 const mostrarDebug = ref(false)
+const modo = ref(esDesarrollo ? 'Desarrollo' : 'Producción')
 
 // Comprobar el token al inicio
 function verificarToken() {
@@ -167,7 +169,7 @@ async function cargar() {
     try {
       console.log('UsuariosView - Intentando con ruta alternativa');
       const token = localStorage.getItem('authToken');
-      const altBackendUrl = import.meta.env.DEV 
+      const altBackendUrl = esDesarrollo 
         ? 'http://localhost:4000' 
         : 'https://api.biblioteca.sembrandodatos.com';
         
@@ -225,7 +227,14 @@ async function intentarConResolverCORS() {
   loading.value = true
   try {
     const token = localStorage.getItem('authToken')
-    const res = await fetch(`${BACKEND_URL}/usuarios`, {
+    // Usar la URL completa directamente
+    const endpoint = esDesarrollo 
+      ? 'http://localhost:4000/api/usuarios' 
+      : 'https://api.biblioteca.sembrandodatos.com/api/usuarios'
+    
+    console.log('UsuariosView - Intentando con endpoint directo:', endpoint)
+    
+    const res = await fetch(endpoint, {
       method: 'GET',
       headers: { 
         'Authorization': `Bearer ${token}`,
