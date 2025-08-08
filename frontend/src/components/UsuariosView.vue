@@ -103,6 +103,7 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { API_CONFIG, buildApiUrl } from '../config/api.js'
+import { fetchUsuariosDirect } from '../config/api-direct.js'
 
 // Variables reactivas para el estado
 const users = ref([])
@@ -134,10 +135,12 @@ async function fetchUsers() {
       console.log('UsuariosView - No se encontró token de autenticación')
     }
     
-    // Intentar diferentes rutas en secuencia, priorizando la ruta pública
+    // Intentar diferentes rutas en secuencia, priorizando las rutas específicas del backend
     let response = null
     let success = false
     const rutas = [
+      '/backend-usuarios',           // Nueva ruta específica del backend
+      '/server-usuarios',            // Nueva ruta específica del servidor
       '/test-usuarios',              // Nueva ruta de prueba
       '/api/test-usuarios',          // Nueva ruta de prueba con prefijo
       '/usuarios-publico',           // Ruta directa en index.js
@@ -167,12 +170,30 @@ async function fetchUsers() {
       }
     }
     
-    // Si todas las rutas fallan, intenta directamente con el servidor sin /api
+    // Si todas las rutas fallan, intenta conexión directa al backend
     if (!success) {
       try {
-        console.log('UsuariosView - Intentando conexión directa al backend')
+        console.log('UsuariosView - Intentando conexión directa al backend Node.js')
+        const usuariosDirectos = await fetchUsuariosDirect()
+        
+        if (usuariosDirectos && usuariosDirectos.length > 0) {
+          users.value = usuariosDirectos
+          console.log('UsuariosView - ¡Usuarios obtenidos mediante conexión directa!:', users.value)
+          return
+        }
+      } catch (directError) {
+        console.error('UsuariosView - Error en conexión directa:', directError)
+      }
+    }
+    
+    // Si aún no tenemos éxito, intentar con URLs modificadas sin el prefijo /api
+    if (!success) {
+      try {
+        console.log('UsuariosView - Intentando conexión directa al backend sin proxy')
         const baseUrl = API_CONFIG.BASE_URL.replace('/api', '')
         const directUrls = [
+          `${baseUrl}/backend-usuarios`,
+          `${baseUrl}/server-usuarios`,
           `${baseUrl}/test-usuarios`,
           `${baseUrl}/usuarios-publico`,
           `${baseUrl}/usuarios/usuarios-publico`,

@@ -78,13 +78,26 @@ const corsOptions = {
       callback(null, true); // Permitir por ahora para desarrollo
     }
   },
-  credentials: true,
+  credentials: false, // Cambiado a false para evitar problemas CORS
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Origin', 'Accept'],
   optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));
+
+// Middleware adicional para CORS en todas las respuestas
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Origin, Accept');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 // Middleware para parsear JSON
 app.use(express.json({ limit: '50mb' }));
@@ -345,6 +358,61 @@ app.get('/test-usuarios', async (req, res) => {
       error: error.message,
       timestamp: new Date().toISOString(),
       endpoint: '/test-usuarios'
+    });
+  }
+});
+
+// Endpoints específicos del backend que no entren en conflicto con el frontend
+app.get('/backend-usuarios', async (req, res) => {
+  console.log('=== GET /backend-usuarios ===');
+  console.log('Headers recibidos:', req.headers);
+  console.log('Origin:', req.get('Origin'));
+  
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  try {
+    const query = `SELECT id, usuario, rol, activo FROM usuarios ORDER BY id`;
+    const result = await pool.query(query);
+    
+    console.log(`Backend usuarios - encontrados: ${result.rows.length}`);
+    
+    res.json(result.rows);
+    
+  } catch (error) {
+    console.error('Error en backend-usuarios:', error);
+    res.status(500).json({ 
+      error: 'Error al obtener los usuarios',
+      details: error.message
+    });
+  }
+});
+
+app.get('/server-usuarios', async (req, res) => {
+  console.log('=== GET /server-usuarios ===');
+  console.log('Headers recibidos:', req.headers);
+  console.log('Origin:', req.get('Origin'));
+  
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  try {
+    const query = `SELECT id, usuario, rol, activo FROM usuarios ORDER BY id`;
+    const result = await pool.query(query);
+    
+    console.log(`Server usuarios - encontrados: ${result.rows.length}`);
+    
+    res.json(result.rows);
+    
+  } catch (error) {
+    console.error('Error en server-usuarios:', error);
+    res.status(500).json({ 
+      error: 'Error al obtener los usuarios',
+      details: error.message
     });
   }
 });
