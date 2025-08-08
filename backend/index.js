@@ -267,6 +267,111 @@ app.get('/api/usuarios', verificarToken, verificarAdmin, async (req, res) => {
   }
 });
 
+// Actualizar un usuario (SOLO admin)
+app.put('/api/usuarios/:id', verificarToken, verificarAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { usuario, rol, activo, contrasena } = req.body;
+    
+    console.log(`PUT /api/usuarios/${id} - Actualizando usuario`);
+    
+    // Construir la consulta dinámicamente según los campos proporcionados
+    let query = 'UPDATE usuarios SET ';
+    const setValues = [];
+    const queryParams = [];
+    
+    if (usuario !== undefined) {
+      setValues.push(`usuario = $${queryParams.length + 1}`);
+      queryParams.push(usuario);
+    }
+    
+    if (rol !== undefined) {
+      // Verificar que el rol sea válido (solo 'admin' o 'user')
+      if (rol !== 'admin' && rol !== 'user') {
+        return res.status(400).json({ ok: false, error: 'Rol no válido. Solo se permiten los valores "admin" o "user"' });
+      }
+      setValues.push(`rol = $${queryParams.length + 1}`);
+      queryParams.push(rol);
+    }
+    
+    if (activo !== undefined) {
+      setValues.push(`activo = $${queryParams.length + 1}`);
+      queryParams.push(activo);
+    }
+    
+    // Si se proporciona contraseña, la hasheamos
+    if (contrasena) {
+      const hashedPassword = await bcrypt.hash(contrasena, 10);
+      setValues.push(`contrasena = $${queryParams.length + 1}`);
+      queryParams.push(hashedPassword);
+    }
+    
+    // Si no hay nada para actualizar, retornar error
+    if (setValues.length === 0) {
+      return res.status(400).json({ ok: false, error: 'No se proporcionaron datos para actualizar' });
+    }
+    
+    // Completar la consulta
+    query += setValues.join(', ');
+    query += ` WHERE id = $${queryParams.length + 1} RETURNING id, usuario, rol, activo`;
+    queryParams.push(id);
+    
+    const result = await pool.query(query, queryParams);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ ok: false, error: 'Usuario no encontrado' });
+    }
+    
+    console.log(`Usuario ${id} actualizado con éxito`);
+    res.json({ ok: true, usuario: result.rows[0] });
+  } catch (err) {
+    console.error(`Error al actualizar usuario ${req.params.id}:`, err);
+    res.status(500).json({ ok: false, error: 'Error al actualizar usuario: ' + err.message });
+  }
+});
+
+// Eliminar un usuario (SOLO admin)
+app.delete('/api/usuarios/:id', verificarToken, verificarAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(`DELETE /api/usuarios/${id} - Eliminando usuario`);
+    
+    // Verificar que no se está eliminando el propio usuario administrador
+    if (parseInt(id) === req.usuario.id) {
+      return res.status(400).json({ 
+        ok: false, 
+        error: 'No puedes eliminar tu propio usuario' 
+      });
+    }
+    
+    // Verificar que exista el usuario
+    const checkResult = await pool.query(
+      'SELECT id, usuario, rol FROM usuarios WHERE id = $1',
+      [id]
+    );
+    
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ ok: false, error: 'Usuario no encontrado' });
+    }
+    
+    // Eliminar el usuario
+    const deleteResult = await pool.query(
+      'DELETE FROM usuarios WHERE id = $1 RETURNING id, usuario',
+      [id]
+    );
+    
+    console.log(`Usuario ${id} eliminado con éxito`);
+    res.json({ 
+      ok: true, 
+      mensaje: 'Usuario eliminado correctamente',
+      usuario: deleteResult.rows[0]
+    });
+  } catch (err) {
+    console.error(`Error al eliminar usuario ${req.params.id}:`, err);
+    res.status(500).json({ ok: false, error: 'Error al eliminar usuario: ' + err.message });
+  }
+});
+
 // Función para determinar el tipo MIME basado en la extensión
 function determinarContentType(tipo) {
   const mimeTypes = {
