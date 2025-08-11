@@ -91,7 +91,7 @@
               <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             </div>
             
-            <!-- NUEVO: Botón compacto "Subir archivo" en morado - Solo visible para usuarios autorizados -->
+            <!-- NUEVO: Botón compacto "Subir archivo" en morado - Solo visible para usuarios con rol 'admin' -->
             <button 
               v-if="esUsuarioAutorizado"
               @click="modalSubidaVisible = true"
@@ -292,7 +292,7 @@
                     </svg>
                   </button>
                   
-                  <!-- Botón Editar - Solo visible para adminsv (ID 1) y ericksv (ID 19) -->
+                  <!-- Botón Editar - Solo visible para usuarios con rol 'admin' -->
                   <button 
                     v-if="esUsuarioAutorizado"
                     @click="abrirModalEditar(archivo)"
@@ -316,7 +316,7 @@
                     </svg>
                   </a>
                   
-                  <!-- Botón Eliminar - Solo visible para adminsv (ID 1) y ericksv (ID 19) -->
+                  <!-- Botón Eliminar - Solo visible para usuarios con rol 'admin' -->
                   <button 
                     v-if="esUsuarioAutorizado"
                     @click="confirmarEliminar(archivo)"
@@ -1114,15 +1114,15 @@ import { formatFileSize, calculateTotalSize, bytesToMB } from '../utils/fileUtil
 // Definir emits
 defineEmits(['ver'])
 
-// Verificar si el usuario actual está autorizado (adminsv con ID 1 o ericksv con ID 19)
+// Verificar si el usuario actual está autorizado (cualquier usuario con rol 'admin')
 const esUsuarioAutorizado = computed(() => {
   const userData = localStorage.getItem('userData')
   if (!userData) return false
   
   try {
     const usuario = JSON.parse(userData)
-    // Comprobar si el ID de usuario es 1 (adminsv) o 19 (ericksv)
-    return usuario.id === 1 || usuario.id === 19
+    // Comprobar si el usuario tiene el rol 'admin'
+    return usuario.rol === 'admin'
   } catch (error) {
     console.error('Error al verificar autorización del usuario:', error)
     return false
@@ -1183,7 +1183,7 @@ const sugerenciasUbicacion = ref([])
 const mostrarSugerencias = ref(false)
 const cargandoUbicaciones = ref(false)
 
-// Watcher para asegurar que el modal de subida solo se abra si el usuario está autorizado
+// Watcher para asegurar que el modal de subida solo se abra si el usuario tiene rol 'admin'
 watch(modalSubidaVisible, (nuevoValor) => {
   if (nuevoValor && !esUsuarioAutorizado.value) {
     modalSubidaVisible.value = false
@@ -1435,7 +1435,7 @@ async function cargarArchivos() {
 
 // Funciones del modal de edición
 function abrirModalEditar(archivo) {
-  // Verificar si el usuario está autorizado antes de abrir el modal
+  // Verificar si el usuario tiene rol 'admin' antes de abrir el modal
   if (!esUsuarioAutorizado.value) {
     mostrarNotificacion('No tienes permiso para editar archivos', 'error')
     return
@@ -1496,7 +1496,7 @@ function seleccionarNuevoArchivo(event) {
 async function guardarCambios() {
   if (!archivoEditando.value) return
   
-  // Verificación adicional de seguridad para asegurar que solo usuarios autorizados puedan guardar cambios
+  // Verificación adicional de seguridad para asegurar que solo usuarios con rol 'admin' puedan guardar cambios
   if (!esUsuarioAutorizado.value) {
     mostrarNotificacion('No tienes permiso para modificar archivos', 'error')
     cerrarModalEditar()
@@ -1568,7 +1568,7 @@ async function guardarCambios() {
 
 // Funciones para eliminar archivo
 function confirmarEliminar(archivo) {
-  // Verificar si el usuario está autorizado antes de abrir el modal de confirmación
+  // Verificar si el usuario tiene rol 'admin' antes de abrir el modal de confirmación
   if (!esUsuarioAutorizado.value) {
     mostrarNotificacion('No tienes permiso para eliminar archivos', 'error')
     return
@@ -1586,7 +1586,7 @@ function cerrarModalEliminar() {
 async function eliminarArchivo() {
   if (!archivoAEliminar.value) return
   
-  // Verificación adicional de seguridad para asegurar que solo usuarios autorizados puedan eliminar archivos
+  // Verificación adicional de seguridad para asegurar que solo usuarios con rol 'admin' puedan eliminar archivos
   if (!esUsuarioAutorizado.value) {
     mostrarNotificacion('No tienes permiso para eliminar archivos', 'error')
     cerrarModalEliminar()
@@ -1759,7 +1759,7 @@ function gestionarTeclasAlcance(event) {
 
 // Función principal para subir archivo
 async function subirArchivo() {
-  // Verificación adicional de seguridad para asegurar que solo usuarios autorizados puedan subir archivos
+  // Verificación adicional de seguridad para asegurar que solo usuarios con rol 'admin' puedan subir archivos
   if (!esUsuarioAutorizado.value) {
     mostrarNotificacion('No tienes permiso para subir archivos', 'error')
     modalSubidaVisible.value = false
