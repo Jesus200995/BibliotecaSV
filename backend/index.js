@@ -276,38 +276,40 @@ app.get('/api/historiales', requireAuth, requireAdmin, async (req, res) => {
     
     const limit = parseInt(req.query.limit) || 50;
     const offset = parseInt(req.query.offset) || 0;
-    const archivo_id = req.query.archivo_id;
-    const usuario_id = req.query.usuario_id;
-    const desde = req.query.desde;
-    const hasta = req.query.hasta;
+    const archivo_id = req.query.archivo_id ? parseInt(req.query.archivo_id) : null;
+    const usuario_id = req.query.usuario_id ? parseInt(req.query.usuario_id) : null;
+    const desde = req.query.desde || null;
+    const hasta = req.query.hasta || null;
     
+    console.log('Filtros recibidos:', { limit, offset, archivo_id, usuario_id, desde, hasta });
+    
+    // Construir la consulta dinámicamente
     let whereClause = '';
-    const params = [limit, offset];
-    let paramIndex = 3;
-    
     const conditions = [];
+    const queryParams = []; // Los filtros van primero
+    let paramIndex = 1; // Empezar desde $1
     
     if (archivo_id) {
       conditions.push(`h.archivo_id = $${paramIndex}`);
-      params.push(archivo_id);
+      queryParams.push(archivo_id);
       paramIndex++;
     }
     
     if (usuario_id) {
       conditions.push(`h.usuario_id = $${paramIndex}`);
-      params.push(usuario_id);
+      queryParams.push(usuario_id);
       paramIndex++;
     }
     
     if (desde) {
-      conditions.push(`h.creado_en >= $${paramIndex}`);
-      params.push(desde);
+      conditions.push(`h.creado_en >= $${paramIndex}::timestamptz`);
+      queryParams.push(desde);
       paramIndex++;
     }
     
     if (hasta) {
-      conditions.push(`h.creado_en <= $${paramIndex}`);
-      params.push(hasta);
+      conditions.push(`h.creado_en <= $${paramIndex}::timestamptz`);
+      queryParams.push(hasta);
       paramIndex++;
     }
     
@@ -315,43 +317,52 @@ app.get('/api/historiales', requireAuth, requireAdmin, async (req, res) => {
       whereClause = 'WHERE ' + conditions.join(' AND ');
     }
     
-    // Query principal con JOIN para obtener contexto
+    // Agregar limit y offset al final de los parámetros
+    const limitParam = paramIndex;
+    const offsetParam = paramIndex + 1;
+    queryParams.push(limit, offset);
+    
+    // Query principal simplificada SIN JOINs para evitar problemas
     const query = `
       SELECT 
         h.id,
         h.archivo_id,
-        ca.nombre as archivo_nombre,
         h.usuario_id,
-        u.usuario as usuario,
         h.accion,
         h.detalle,
         h.ip,
         h.user_agent,
         h.creado_en
       FROM historiales h
-      LEFT JOIN usuarios u ON h.usuario_id = u.id
-      LEFT JOIN catalogo_archivos ca ON h.archivo_id = ca.id
       ${whereClause}
       ORDER BY h.creado_en DESC
-      LIMIT $1 OFFSET $2
+      LIMIT $${limitParam} OFFSET $${offsetParam}
     `;
     
-    // Query para contar total
+    // Query para contar total con los mismos filtros
     const countQuery = `
       SELECT COUNT(*) as total
       FROM historiales h
-      LEFT JOIN usuarios u ON h.usuario_id = u.id
-      LEFT JOIN catalogo_archivos ca ON h.archivo_id = ca.id
       ${whereClause}
     `;
     
     console.log('Query historiales:', query);
-    console.log('Parámetros:', params);
+    console.log('Parámetros:', queryParams);
     
-    const [result, countResult] = await Promise.all([
-      pool.query(query, params),
-      pool.query(countQuery, params.slice(2)) // Excluir limit y offset para el count
-    ]);
+    // Para el count, necesitamos solo los parámetros de filtro (sin limit y offset)
+    const countParams = queryParams.slice(0, -2); // Remover los dos últimos (limit y offset)
+    
+    console.log('Query count:', countQuery);
+    console.log('Parámetros count:', countParams);
+    
+    // Ejecutar queries por separado para mejor debugging
+    console.log('Ejecutando query principal...');
+    const result = await pool.query(query, queryParams);
+    console.log('✅ Query principal exitosa, filas:', result.rows.length);
+    
+    console.log('Ejecutando query de conteo...');
+    const countResult = await pool.query(countQuery, countParams);
+    console.log('✅ Query de conteo exitosa');
     
     const total = parseInt(countResult.rows[0].total);
     
@@ -364,8 +375,11 @@ app.get('/api/historiales', requireAuth, requireAdmin, async (req, res) => {
     });
     
   } catch (err) {
-    console.error('Error /api/historiales:', err);
-    res.status(500).json({ ok: false, error: 'DB error' });
+    console.error('❌ Error /api/historiales:', err.message);
+    console.error('Stack:', err.stack);
+    console.error('SQL State:', err.code);
+    console.error('Detail:', err.detail);
+    res.status(500).json({ ok: false, error: 'DB error', details: err.message });
   }
 });
 
