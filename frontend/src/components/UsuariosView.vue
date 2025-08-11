@@ -2,14 +2,15 @@
   <div>
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-semibold text-gray-800">Gestión de Usuarios</h1>
-      <div class="flex space-x-2">
+      <div class="flex space-x-3">
         <button 
           @click="cargar" 
-          class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors flex items-center"
+          class="glass-button-large glass-purple group"
           :disabled="loading"
+          title="Refrescar lista de usuarios"
         >
           <svg xmlns="http://www.w3.org/2000/svg" 
-               class="h-4 w-4 mr-2" 
+               class="h-5 w-5 mr-2 group-hover:scale-110 transition-transform duration-200" 
                :class="{'animate-spin': loading}" 
                fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -20,9 +21,10 @@
         <button 
           v-if="error"
           @click="mostrarDebug = !mostrarDebug" 
-          class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors flex items-center"
+          class="glass-button-large glass-gray group"
+          title="Mostrar información de debug"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 group-hover:scale-110 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           Info Debug
@@ -55,9 +57,10 @@
           <h2>Usuarios del Sistema</h2>
           <button 
             @click="abrirModalAgregar" 
-            class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md transition-colors flex items-center text-sm"
+            class="glass-button-large glass-green group"
+            title="Crear nuevo usuario"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 group-hover:scale-110 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
             Nuevo Usuario
@@ -73,59 +76,135 @@
         </div>
         <div v-else-if="error" class="alert alert-danger">{{ error }}</div>
 
-        <table v-else class="table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Usuario</th>
-              <th>Rol</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="u in usuarios" :key="u.id">
-              <td>{{ u.id }}</td>
-              <td>{{ u.usuario }}</td>
-              <td>
-                <span 
-                  :class="[
-                    'badge', 
-                    u.rol === 'admin' ? 'bg-purple-100 text-purple-800' : 
-                    u.rol === 'editor' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
-                  ]"
-                >
-                  {{ u.rol }}
-                </span>
-              </td>
-              <td>
-                <span :class="['pill', u.activo ? 'pill--green' : 'pill--gray']">
-                  {{ u.activo ? 'Activo' : 'Inactivo' }}
-                </span>
-              </td>
-              <td class="flex space-x-2">
-                <button 
-                  @click="abrirModalEditar(u)" 
-                  class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md transition-colors flex items-center text-sm"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  Editar
-                </button>
-                <button 
-                  @click="abrirModalEliminar(u)" 
-                  class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition-colors flex items-center text-sm"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  Eliminar
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <!-- Tabla responsiva con diseño moderno -->
+        <div v-else class="overflow-x-auto">
+          <div class="min-w-full inline-block align-middle">
+            <!-- Vista de tabla para pantallas grandes -->
+            <div class="hidden md:block">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
+                  <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Usuario</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Rol</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Estado</th>
+                    <th class="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr v-for="u in usuarios" :key="u.id" class="hover:bg-gray-50 transition-colors duration-200">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ u.id }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm font-medium text-gray-900">{{ u.usuario }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span 
+                        :class="[
+                          'inline-flex px-2 py-1 text-xs font-medium rounded-full',
+                          u.rol === 'admin' ? 'bg-orange-100 text-orange-800' : 
+                          u.rol === 'editor' ? 'bg-blue-100 text-blue-800' : 'bg-blue-100 text-blue-800'
+                        ]"
+                      >
+                        {{ u.rol }}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span 
+                        :class="[
+                          'inline-flex px-2 py-1 text-xs font-medium rounded-full',
+                          u.activo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        ]"
+                      >
+                        {{ u.activo ? 'Activo' : 'Inactivo' }}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                      <div class="flex justify-center space-x-3">
+                        <!-- Botón Editar con efecto de vidrio -->
+                        <button 
+                          @click="abrirModalEditar(u)" 
+                          class="glass-button glass-blue group relative"
+                          title="Editar usuario"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:scale-110 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <!-- Botón Eliminar con efecto de vidrio -->
+                        <button 
+                          @click="abrirModalEliminar(u)" 
+                          class="glass-button glass-red group relative"
+                          title="Eliminar usuario"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:scale-110 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Vista de tarjetas para pantallas pequeñas -->
+            <div class="md:hidden space-y-4">
+              <div 
+                v-for="u in usuarios" 
+                :key="u.id" 
+                class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-200"
+              >
+                <div class="flex justify-between items-start mb-3">
+                  <div>
+                    <h3 class="text-lg font-medium text-gray-900">{{ u.usuario }}</h3>
+                    <p class="text-sm text-gray-500">ID: {{ u.id }}</p>
+                  </div>
+                  <div class="flex space-x-2">
+                    <!-- Botones con efecto de vidrio para móvil -->
+                    <button 
+                      @click="abrirModalEditar(u)" 
+                      class="glass-button glass-blue group"
+                      title="Editar usuario"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:scale-110 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button 
+                      @click="abrirModalEliminar(u)" 
+                      class="glass-button glass-red group"
+                      title="Eliminar usuario"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:scale-110 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="flex flex-wrap gap-2 mb-3">
+                  <span 
+                    :class="[
+                      'inline-flex px-2 py-1 text-xs font-medium rounded-full',
+                      u.rol === 'admin' ? 'bg-orange-100 text-orange-800' : 
+                      u.rol === 'editor' ? 'bg-blue-100 text-blue-800' : 'bg-blue-100 text-blue-800'
+                    ]"
+                  >
+                    {{ u.rol }}
+                  </span>
+                  <span 
+                    :class="[
+                      'inline-flex px-2 py-1 text-xs font-medium rounded-full',
+                      u.activo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                    ]"
+                  >
+                    {{ u.activo ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
     
@@ -771,14 +850,14 @@ async function crearUsuario() {
 <style scoped>
 .card {
   background-color: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   overflow: hidden;
 }
 
 .card-header {
-  background-color: #f9fafb;
-  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  padding: 1.5rem;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -790,21 +869,222 @@ async function crearUsuario() {
 }
 
 .card-body {
-  padding: 1rem 1.5rem;
+  padding: 1.5rem;
 }
 
 .alert {
   padding: 1rem;
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
   margin-bottom: 1rem;
+  border: 1px solid transparent;
 }
 
 .alert-danger {
   background-color: #fee2e2;
   color: #991b1b;
-  border: 1px solid #fecaca;
+  border-color: #fecaca;
 }
 
+/* Estilos para botones con efecto de vidrio */
+.glass-button {
+  position: relative;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(0);
+  transition: all 0.3s ease-in-out;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  
+  /* Efecto de vidrio base */
+  background: rgba(255, 255, 255, 0.1);
+  
+  /* Animación hover */
+}
+
+.glass-button:hover {
+  transform: translateY(-2px) scale(1.1);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.glass-button:active {
+  transform: translateY(0) scale(0.95);
+}
+
+.glass-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5), 0 0 0 4px rgba(59, 130, 246, 0.3);
+}
+
+/* Efecto de ondas al hacer clic */
+.glass-button:before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(0);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.glass-button:active:before {
+  transform: scale(1);
+  opacity: 1;
+  transition: transform 0s, opacity 0s;
+}
+
+/* Botones de vidrio grandes para acciones principales */
+.glass-button-large {
+  position: relative;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(0);
+  transition: all 0.3s ease-in-out;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  font-weight: 500;
+  font-size: 0.875rem;
+  
+  /* Efecto de vidrio base */
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.glass-button-large:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.08);
+}
+
+.glass-button-large:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.glass-button-large:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5), 0 0 0 4px rgba(59, 130, 246, 0.3);
+}
+
+/* Efecto de ondas para botones grandes */
+.glass-button-large:before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(0);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.glass-button-large:active:before {
+  transform: scale(1);
+  opacity: 1;
+  transition: transform 0s, opacity 0s;
+}
+
+/* Variantes de color para los botones de vidrio */
+.glass-blue {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(147, 197, 253, 0.1) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  color: #2563eb;
+  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15);
+}
+
+.glass-blue:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(147, 197, 253, 0.2) 100%);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 12px 40px rgba(59, 130, 246, 0.25);
+  color: #1d4ed8;
+}
+
+.glass-blue:focus {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5), 0 0 0 4px rgba(59, 130, 246, 0.3);
+}
+
+.glass-red {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(252, 165, 165, 0.1) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #dc2626;
+  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.15);
+}
+
+.glass-red:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(252, 165, 165, 0.2) 100%);
+  border-color: rgba(239, 68, 68, 0.3);
+  box-shadow: 0 12px 40px rgba(239, 68, 68, 0.25);
+  color: #b91c1c;
+}
+
+.glass-red:focus {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5), 0 0 0 4px rgba(239, 68, 68, 0.3);
+}
+
+/* Nuevas variantes de color para botones grandes */
+.glass-purple {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.15) 0%, rgba(196, 181, 253, 0.1) 100%);
+  border: 1px solid rgba(147, 51, 234, 0.2);
+  color: #7c3aed;
+  box-shadow: 0 8px 32px rgba(147, 51, 234, 0.15);
+}
+
+.glass-purple:hover {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.25) 0%, rgba(196, 181, 253, 0.2) 100%);
+  border-color: rgba(147, 51, 234, 0.3);
+  box-shadow: 0 12px 40px rgba(147, 51, 234, 0.25);
+  color: #6d28d9;
+}
+
+.glass-purple:focus {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5), 0 0 0 4px rgba(147, 51, 234, 0.3);
+}
+
+.glass-green {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(134, 239, 172, 0.1) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  color: #059669;
+  box-shadow: 0 8px 32px rgba(34, 197, 94, 0.15);
+}
+
+.glass-green:hover {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.25) 0%, rgba(134, 239, 172, 0.2) 100%);
+  border-color: rgba(34, 197, 94, 0.3);
+  box-shadow: 0 12px 40px rgba(34, 197, 94, 0.25);
+  color: #047857;
+}
+
+.glass-green:focus {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5), 0 0 0 4px rgba(34, 197, 94, 0.3);
+}
+
+.glass-gray {
+  background: linear-gradient(135deg, rgba(107, 114, 128, 0.15) 0%, rgba(209, 213, 219, 0.1) 100%);
+  border: 1px solid rgba(107, 114, 128, 0.2);
+  color: #4b5563;
+  box-shadow: 0 8px 32px rgba(107, 114, 128, 0.15);
+}
+
+.glass-gray:hover {
+  background: linear-gradient(135deg, rgba(107, 114, 128, 0.25) 0%, rgba(209, 213, 219, 0.2) 100%);
+  border-color: rgba(107, 114, 128, 0.3);
+  box-shadow: 0 12px 40px rgba(107, 114, 128, 0.25);
+  color: #374151;
+}
+
+.glass-gray:focus {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5), 0 0 0 4px rgba(107, 114, 128, 0.3);
+}
+
+/* Estilos para tabla responsiva */
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -813,38 +1093,46 @@ async function crearUsuario() {
 
 .table th {
   text-align: left;
-  padding: 0.75rem 1rem;
-  background-color: #f3f4f6;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   font-weight: 600;
-  color: #4b5563;
-  border-bottom: 2px solid #e5e7eb;
+  color: #475569;
+  border-bottom: 2px solid #e2e8f0;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .table td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
 }
 
 .table tr:hover {
-  background-color: #f9fafb;
+  background-color: #f8fafc;
+  transition: background-color 0.2s ease;
 }
 
+/* Mejoras visuales para badges y pills */
 .badge {
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
-  background-color: #ede9fe;
-  color: #5b21b6;
-  border-radius: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .pill {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .pill--green {
@@ -855,5 +1143,174 @@ async function crearUsuario() {
 .pill--gray {
   background-color: #f3f4f6;
   color: #4b5563;
+}
+
+/* Animaciones suaves */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Aplicar animaciones a elementos de la tabla */
+.table tbody tr {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Responsividad mejorada */
+@media (max-width: 768px) {
+  .card-header {
+    padding: 1rem;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .glass-button {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+  
+  .glass-button-large {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .card-header h2 {
+    font-size: 1.125rem;
+  }
+  
+  .glass-button {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  .glass-button-large {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.75rem;
+  }
+  
+  .glass-button-large svg {
+    width: 1rem;
+    height: 1rem;
+    margin-right: 0.25rem;
+  }
+}
+
+/* Efectos de hover mejorados para las tarjetas en móvil */
+@media (max-width: 768px) {
+  .bg-white.border.border-gray-200 {
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+/* Estilos adicionales para mejorar la accesibilidad */
+.glass-button:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+/* Mejora en el contraste de texto */
+.text-gray-600 {
+  color: #4b5563;
+}
+
+.text-gray-900 {
+  color: #111827;
+}
+
+/* Transiciones suaves para elementos interactivos */
+.transition-colors {
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.transition-shadow {
+  transition: box-shadow 0.2s ease;
+}
+
+.transition-transform {
+  transition: transform 0.2s ease;
+}
+
+/* Estilos para el estado de loading */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mejoras en el spacing y layout */
+.space-x-3 > * + * {
+  margin-left: 0.75rem;
+}
+
+.space-x-2 > * + * {
+  margin-left: 0.5rem;
+}
+
+.space-y-4 > * + * {
+  margin-top: 1rem;
+}
+
+/* Estados hover para elementos de la tabla */
+.hover\:bg-gray-50:hover {
+  background-color: #f9fafb;
+}
+
+/* Bordes y sombras más suaves */
+.divide-y > * + * {
+  border-top-width: 1px;
+  border-color: #e5e7eb;
+}
+
+.divide-gray-200 > * + * {
+  border-color: #e5e7eb;
+}
+
+.shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 </style>
