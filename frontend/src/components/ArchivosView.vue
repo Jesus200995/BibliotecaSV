@@ -305,16 +305,22 @@
                   </button>
                   
                   <!-- Botón Descargar - Visible para todos -->
-                  <a 
-                    :href="`http://localhost:4000/archivos/${archivo.id}/download`"
+                  <button 
+                    @click="descargarArchivo(archivo)"
                     class="w-8 h-8 bg-green-100 hover:bg-green-200 text-green-600 hover:text-green-700 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
-                    target="_blank"
                     title="Descargar archivo"
+                    :disabled="descargandoArchivos[archivo.id]"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <!-- Mostrar spinner si se está descargando -->
+                    <svg v-if="descargandoArchivos[archivo.id]" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <!-- Icono normal de descarga -->
+                    <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                  </a>
+                  </button>
                   
                   <!-- Botón Eliminar - Solo visible para usuarios con rol 'admin' -->
                   <button 
@@ -1163,6 +1169,9 @@ const modalEliminarVisible = ref(false)
 const archivoAEliminar = ref(null)
 const eliminandoArchivo = ref(false)
 
+// Variables para controlar el estado de descarga
+const descargandoArchivos = ref({})
+
 // NUEVO: Variables para el modal de subida de archivos (reutilizando lógica del Dashboard)
 const modalSubidaVisible = ref(false)
 const archivo = ref(null)
@@ -1839,6 +1848,75 @@ function limpiarFormularioSubida() {
 // Función para cerrar confirmación
 function cerrarConfirmacion() {
   confirmacionVisible.value = false
+}
+
+// Función para descargar archivo
+async function descargarArchivo(archivo) {
+  console.log('Iniciando descarga del archivo:', archivo.nombre)
+  
+  try {
+    // Marcar como descargando
+    descargandoArchivos.value[archivo.id] = true
+    
+    // Construir la URL de descarga - usar el endpoint correcto del backend
+    // El backend tiene los endpoints: /archivos/descargar/:id y /api/archivos/descargar/:id
+    const downloadUrl = `${BACKEND_URL}/archivos/descargar/${archivo.id}`
+    
+    console.log('URL de descarga:', downloadUrl)
+    
+    // Realizar la petición de descarga
+    const response = await fetch(downloadUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': '*/*',
+      },
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`)
+    }
+    
+    // Obtener el blob del archivo
+    const blob = await response.blob()
+    
+    // Crear un enlace temporal para la descarga
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    
+    // Usar el nombre original del archivo o extraer de los headers de respuesta
+    let filename = archivo.nombre
+    const contentDisposition = response.headers.get('content-disposition')
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+      if (match && match[1]) {
+        filename = match[1].replace(/['"]/g, '')
+        filename = decodeURIComponent(filename)
+      }
+    }
+    
+    link.download = filename
+    
+    // Agregar al DOM, hacer click y remover
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    // Limpiar la URL temporal
+    window.URL.revokeObjectURL(url)
+    
+    // Mostrar notificación de éxito
+    mostrarNotificacion(`Descarga iniciada: ${filename}`, 'success')
+    
+    console.log('Descarga completada exitosamente')
+    
+  } catch (error) {
+    console.error('Error al descargar archivo:', error)
+    mostrarNotificacion(`Error al descargar el archivo: ${error.message}`, 'error')
+  } finally {
+    // Remover el estado de descargando
+    delete descargandoArchivos.value[archivo.id]
+  }
 }
 </script>
 
