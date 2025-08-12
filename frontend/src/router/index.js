@@ -4,7 +4,6 @@ import MapaView from '../components/MapaView.vue'
 import EstadisticasView from '../components/EstadisticasView.vue'
 import LoginView from '../components/LoginView.vue'
 import UsuariosView from '../components/UsuariosView.vue'
-import HistorialesView from '../components/HistorialesView.vue'
 
 const routes = [
   {
@@ -40,12 +39,6 @@ const routes = [
     path: '/usuarios',
     name: 'Usuarios',
     component: UsuariosView,
-    meta: { requiresAuth: true, requiresAdmin: true }
-  },
-  {
-    path: '/historiales',
-    name: 'Historiales',
-    component: HistorialesView,
     meta: { requiresAuth: true, requiresAdmin: true }
   }
 ]

@@ -251,7 +251,7 @@ app.get('/api/verify-token', verificarToken, (req, res) => {
 // ============ ENDPOINT DE GESTIÓN DE USUARIOS ============
 
 // Lista de usuarios (SOLO admin) - Endpoint específico según las instrucciones
-app.get('/api/usuarios', requireAuth, requireAdmin, async (req, res) => {
+app.get('/api/usuarios', verificarToken, verificarAdmin, async (req, res) => {
   try {
     console.log('GET /api/usuarios - Solicitud recibida');
     const { rows } = await pool.query(`
@@ -266,143 +266,6 @@ app.get('/api/usuarios', requireAuth, requireAdmin, async (req, res) => {
     res.status(500).json({ ok:false, error:'DB error' });
   }
 });
-
-// ============ ENDPOINT DE HISTORIALES ============
-
-// Endpoint GET /api/historiales (solo admin)
-app.get('/api/historiales', requireAuth, requireAdmin, async (req, res) => {
-  try {
-    console.log('GET /api/historiales - Solicitud recibida');
-    
-    const limit = parseInt(req.query.limit) || 50;
-    const offset = parseInt(req.query.offset) || 0;
-    const archivo_id = req.query.archivo_id;
-    const usuario_id = req.query.usuario_id;
-    const desde = req.query.desde;
-    const hasta = req.query.hasta;
-    
-    let whereClause = '';
-    const params = [limit, offset];
-    let paramIndex = 3;
-    
-    const conditions = [];
-    
-    if (archivo_id) {
-      conditions.push(`h.archivo_id = $${paramIndex}`);
-      params.push(archivo_id);
-      paramIndex++;
-    }
-    
-    if (usuario_id) {
-      conditions.push(`h.usuario_id = $${paramIndex}`);
-      params.push(usuario_id);
-      paramIndex++;
-    }
-    
-    if (desde) {
-      conditions.push(`h.creado_en >= $${paramIndex}`);
-      params.push(desde);
-      paramIndex++;
-    }
-    
-    if (hasta) {
-      conditions.push(`h.creado_en <= $${paramIndex}`);
-      params.push(hasta);
-      paramIndex++;
-    }
-    
-    if (conditions.length > 0) {
-      whereClause = 'WHERE ' + conditions.join(' AND ');
-    }
-    
-    // Query principal con JOIN para obtener contexto
-    const query = `
-      SELECT 
-        h.id,
-        h.archivo_id,
-        ca.nombre as archivo_nombre,
-        h.usuario_id,
-        u.usuario as usuario,
-        h.accion,
-        h.detalle,
-        h.ip,
-        h.user_agent,
-        h.creado_en
-      FROM historiales h
-      LEFT JOIN usuarios u ON h.usuario_id = u.id
-      LEFT JOIN catalogo_archivos ca ON h.archivo_id = ca.id
-      ${whereClause}
-      ORDER BY h.creado_en DESC
-      LIMIT $1 OFFSET $2
-    `;
-    
-    // Query para contar total
-    const countQuery = `
-      SELECT COUNT(*) as total
-      FROM historiales h
-      LEFT JOIN usuarios u ON h.usuario_id = u.id
-      LEFT JOIN catalogo_archivos ca ON h.archivo_id = ca.id
-      ${whereClause}
-    `;
-    
-    console.log('Query historiales:', query);
-    console.log('Parámetros:', params);
-    
-    const [result, countResult] = await Promise.all([
-      pool.query(query, params),
-      pool.query(countQuery, params.slice(2)) // Excluir limit y offset para el count
-    ]);
-    
-    const total = parseInt(countResult.rows[0].total);
-    
-    console.log('GET /api/historiales - Registros encontrados:', result.rows.length, 'de', total);
-    
-    res.json({
-      ok: true,
-      data: result.rows,
-      total: total
-    });
-    
-  } catch (err) {
-    console.error('Error /api/historiales:', err);
-    res.status(500).json({ ok: false, error: 'DB error' });
-  }
-});
-
-// Función para registrar historial automáticamente
-async function registrarHistorial(archivo_id, usuario_id, accion, detalle, req) {
-  try {
-    console.log('=== REGISTRANDO HISTORIAL ===');
-    console.log('archivo_id:', archivo_id);
-    console.log('usuario_id:', usuario_id);
-    console.log('accion:', accion);
-    console.log('detalle:', detalle);
-    
-    const ip = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || '127.0.0.1';
-    const user_agent = req.headers['user-agent'] || 'Unknown';
-    
-    console.log('IP detectada:', ip);
-    console.log('User Agent:', user_agent);
-    
-    const query = `
-      INSERT INTO historiales (archivo_id, usuario_id, accion, detalle, ip, user_agent)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING id, archivo_id, usuario_id, accion, detalle, ip, user_agent, creado_en
-    `;
-    
-    console.log('Ejecutando query:', query);
-    console.log('Parámetros:', [archivo_id, usuario_id, accion, detalle, ip, user_agent]);
-    
-    const result = await pool.query(query, [archivo_id, usuario_id, accion, detalle, ip, user_agent]);
-    console.log('✅ Historial registrado exitosamente:', result.rows[0]);
-    return result.rows[0].id;
-  } catch (error) {
-    console.error('❌ ERROR al registrar historial:', error);
-    console.error('Stack trace:', error.stack);
-    // No lanzar error para no interrumpir el flujo principal
-    return null;
-  }
-}
 
 // Crear un nuevo usuario (SOLO admin)
 app.post('/api/usuarios', verificarToken, verificarAdmin, async (req, res) => {
@@ -684,9 +547,8 @@ app.get('/archivos/descargar/:id', async (req, res) => {
 });
 
 // Endpoint para upload de archivos - DEBE IR ANTES DE LA RUTA GENÉRICA
-app.post('/archivos/upload', requireAuth, upload.single('file'), async (req, res) => {
-  console.log('=== POST /archivos/upload ===');
-  console.log('Usuario autenticado:', req.user);
+app.post('/archivos/upload', verificarToken, upload.single('file'), async (req, res) => {
+  console.log('Recibida solicitud en /archivos/upload');
   
   try {
     if (!req.file) {
@@ -699,8 +561,6 @@ app.post('/archivos/upload', requireAuth, upload.single('file'), async (req, res
     const fecha_actualizacion = new Date();
     const tamano = archivo.size;
     const archivo_url = Date.now() + '-' + nombre.replace(/[^a-zA-Z0-9\-_.]/g, '_');
-
-    console.log('Subiendo archivo:', nombre, 'para usuario:', req.user?.usuario);
 
     // Campos del formulario
     const descripcion = req.body.descripcion || '';
@@ -747,25 +607,7 @@ app.post('/archivos/upload', requireAuth, upload.single('file'), async (req, res
     ];
 
     const result = await pool.query(query, values);
-    console.log('✅ Archivo guardado en la base de datos con ID:', result.rows[0].id);
-    
-    // Registrar automáticamente en historiales
-    const detalleHistorial = `Archivo: ${nombre}, Tipo: ${tipo}, Tamaño: ${(tamano / 1024 / 1024).toFixed(2)} MB`;
-    console.log('Intentando registrar historial para archivo ID:', result.rows[0].id, 'usuario ID:', req.user?.id);
-    
-    const historialId = await registrarHistorial(
-      result.rows[0].id,
-      req.user?.id,
-      'subida',
-      detalleHistorial,
-      req
-    );
-    
-    if (historialId) {
-      console.log('✅ Historial registrado correctamente con ID:', historialId);
-    } else {
-      console.log('⚠️  Historial NO se registró correctamente');
-    }
+    console.log('Archivo guardado en la base de datos con ID:', result.rows[0].id);
     
     res.json({ mensaje: 'Archivo subido y registrado', registro: result.rows[0] });
   } catch (error) {
@@ -972,10 +814,7 @@ app.get('/api/archivos/descargar/:id', async (req, res) => {
   }
 });
 
-app.post('/api/archivos/upload', requireAuth, upload.single('file'), async (req, res) => {
-  console.log('=== POST /api/archivos/upload ===');
-  console.log('Usuario autenticado:', req.user);
-  
+app.post('/api/archivos/upload', verificarToken, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No se ha subido ningún archivo' });
@@ -987,8 +826,6 @@ app.post('/api/archivos/upload', requireAuth, upload.single('file'), async (req,
     const fecha_actualizacion = new Date();
     const tamano = archivo.size;
     const archivo_url = Date.now() + '-' + nombre.replace(/[^a-zA-Z0-9\-_.]/g, '_');
-
-    console.log('Subiendo archivo:', nombre, 'para usuario:', req.user?.usuario);
 
     const descripcion = req.body.descripcion || '';
     const etiquetas = req.body.etiquetas || '';
@@ -1033,26 +870,6 @@ app.post('/api/archivos/upload', requireAuth, upload.single('file'), async (req,
     ];
 
     const result = await pool.query(query, values);
-    console.log('✅ Archivo guardado en la base de datos con ID:', result.rows[0].id);
-    
-    // Registrar automáticamente en historiales
-    const detalleHistorial = `Archivo: ${nombre}, Tipo: ${tipo}, Tamaño: ${(tamano / 1024 / 1024).toFixed(2)} MB`;
-    console.log('Intentando registrar historial para archivo ID:', result.rows[0].id, 'usuario ID:', req.user?.id);
-    
-    const historialId = await registrarHistorial(
-      result.rows[0].id,
-      req.user?.id,
-      'subida',
-      detalleHistorial,
-      req
-    );
-    
-    if (historialId) {
-      console.log('✅ Historial registrado correctamente con ID:', historialId);
-    } else {
-      console.log('⚠️  Historial NO se registró correctamente');
-    }
-    
     res.json({ mensaje: 'Archivo subido y registrado', registro: result.rows[0] });
   } catch (error) {
     res.status(500).json({ error: error.message });
