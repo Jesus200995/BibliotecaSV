@@ -1963,8 +1963,7 @@ async function subirArchivo() {
 
     const response = await axios.post(`${BACKEND_URL}/archivos/upload`, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        'Content-Type': 'multipart/form-data'
       }
     })
 
